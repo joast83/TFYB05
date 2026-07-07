@@ -91,14 +91,143 @@ def _render_gauss_page() -> None:
             )
         st.markdown(
             "### Vad figuren i testlabbet ska visa\n"
-            "- Färgen på ytan visar lokalt \\(\\mathbf{E}\\cdot\\hat{\\mathbf{n}}\\): rött = utåt, blått = inåt.\n"
-            "- Totalen jämförs med \\(Q_{\\mathrm{innesluten}}/\\varepsilon_0\\).\n"
+            "- Färgen på ytan visar lokalt **E·n̂**: rött = utåt, blått = inåt.\n"
+            "- Totalen jämförs med **Q_innesluten/ε₀**.\n"
             "- Öppna ytor och laddningar på själva ytan markeras som fall där satsen inte kan användas direkt."
         )
         return
 
     if section == "Testlabb":
+        st.markdown("### Flytta en laddning genom en Gaussyta")
+        st.write(
+            "Det här testet använder **en enda laddning**. Dra positionsreglaget från centrum, genom ytan och vidare utanför. "
+            "För en sluten yta ska totalflödet hoppa från q/ε₀ till 0 när laddningen passerar ut, medan det lokala flödesmönstret ändras kontinuerligt."
+        )
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            q_nc = st.slider("Laddning q [nC]", -10.0, 10.0, 5.0, 0.5, key="gauss_moving_q")
+            radius = st.slider("Ytradie R [m]", 0.8, 2.0, 1.1, 0.1, key="gauss_radius")
+        with c2:
+            position_ratio = st.slider(
+                "Laddningens position x/R",
+                -0.50,
+                2.00,
+                0.45,
+                0.05,
+                key="gauss_position_ratio",
+                help="x/R < 1 betyder innanför. x/R = 1 ligger på ytan. x/R > 1 betyder utanför.",
+            )
+            surface_kind = st.radio(
+                "Yta",
+                ["Sluten sfär", "Öppen hemisfär utan lock"],
+                index=0,
+                key="gauss_surface_kind",
+            )
+        with c3:
+            show_field_arrows = st.checkbox("Visa E-pilar på ytan", value=True, key="gauss_arrows")
+            show_position_axis = st.checkbox("Visa positionsaxel", value=True, key="gauss_position_axis")
+
+        fig, report = _gauss_figure(
+            radius=radius,
+            q_nc=q_nc,
+            position_ratio=position_ratio,
+            surface_kind=surface_kind,
+            show_field_arrows=show_field_arrows,
+            show_position_axis=show_position_axis,
+        )
+        st.plotly_chart(fig, use_container_width=True, config={"displaylogo": False})
+
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Laddningens läge", report["position_text"])
+        m2.metric("Q_innesluten", report["q_enclosed_text"])
+        m3.metric("Numerisk ∫E·dA", report["numeric_flux_text"])
+        m4.metric("Gauss förutsägelse", report["gauss_flux_text"])
+
+        if report["status"] == "ok":
+            st.success(report["message"])
+        elif report["status"] == "warning":
+            st.warning(report["message"])
+        else:
+            st.error(report["message"])
+
+        st.markdown(
+            "#### Läs figuren så här\n"
+            "- Färgen på ytan är lokalt **E·n̂**: rött betyder utåt och blått betyder inåt.\n"
+            "- När laddningen är **innanför** finns ett nettoöverskott av utgående fält genom den slutna ytan.\n"
+            "- När laddningen är **utanför** går fältlinjer in genom vissa delar och ut genom andra; totalen blir noll.\n"
+            "- När laddningen ligger **på ytan** är fältet singulärt där, så satsen måste hanteras som ett gränsfall.\n"
+            "- Om du byter till **öppen hemisfär** saknas en sluten volym, så Gauss sats i denna form kan inte användas direkt."
+        )
+        return
+
+    st.markdown(
+        "### Beräkningsrecept\n"
+        "1. **Välj en sluten yta**. Den måste omsluta en volym.\n"
+        "2. **Räkna nettoladdningen innanför**: positiva och negativa laddningar summeras algebraiskt.\n"
+        "3. **Skriv flödet** som ∮ₛ E·dA.\n"
+        "4. **Använd symmetri bara om den faktiskt finns.** För sfärisk, cylindrisk eller plan symmetri kan E ofta tas ut ur integralen.\n"
+        "5. **Kontrollera fallgroparna:** öppen yta, laddning på randen, eller för lite symmetri för att lösa E direkt."
+    )
+    st.info(
+        "**Viktig distinktion:** Gauss sats är alltid en stark kontroll för totalflöde genom en sluten yta. "
+        "Men den är bara en enkel metod för att hitta själva fältet när geometrin har tillräcklig symmetri."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Stokes theorem for magnetostatics
+# ---------------------------------------------------------------------------
+
+
+def _render_stokes_page() -> None:
+    import streamlit as st
+
+    st.title("Teori: Stokes sats i magnetostatik")
+    st.caption("Här kopplas Stokes sats till Ampères lag för stationära strömmar.")
+
+    section = st.radio(
+        "Välj del",
+        ["Intuition", "Testlabb", "Beräkningsrecept"],
+        horizontal=True,
+        key="stokes_section",
+    )
+
+    if section == "Intuition":
+        st.latex(r"\oint_C \mathbf{H}\cdot d\mathbf{l} = \iint_S (\nabla\times\mathbf{H})\cdot\hat{\mathbf{n}}\,dS")
+        st.latex(r"\nabla\times\mathbf{H}=\mathbf{J}_{\mathrm{fri}}\quad\Rightarrow\quad\oint_C \mathbf{H}\cdot d\mathbf{l}=I_{\mathrm{fri, genom}\;S}")
+        c1, c2 = st.columns([1.1, 1.0])
+        with c1:
+            st.markdown(
+                "### Magnetostatisk tolkning\n"
+                "I magnetostatik är fria strömmar källan till virvling i **H-fältet**. "
+                "Stokes sats säger att cirkulationen runt den slutna randen **C** är samma sak som den totala curlen genom ytan **S**. "
+                "Med Ampères lokala lag blir denna curl-flux lika med fri ström genom ytan."
+            )
+        with c2:
+            st.info(
+                "**Kom ihåg orienteringen:**\n\n"
+                "Högerhandsregeln kopplar randens riktning till ytans normal. Om du vänder normalen byter även randintegralens tecken."
+            )
+            st.warning(
+                "**Magnetostatik betyder stationärt.**\n\n"
+                "Vid tidsvarierande elektriska fält måste Maxwell-termen ∂D/∂t tas med. Då räcker inte den magnetostatiska Ampèreformen."
+            )
+        st.markdown(
+            "### Vad testlabbet visar\n"
+            "- En strömtub genom en vald yta skapar cirkulation hos **H** längs randen.\n"
+            "- Om ingen fri ström går genom ytan blir cirkulationen noll.\n"
+            "- Om randen skär strömtuben räknas bara den del av strömmen som faktiskt passerar genom ytan.\n"
+            "- Öppna kurvor och tidsvarierande kondensatorfält markeras som fall där den använda magnetostatiska formen inte är rätt verktyg."
+        )
+        return
+
+    if section == "Testlabb":
         st.markdown("### Flytta strömtuben från insidan till utsidan")
+        st.write(
+            "Det här testet använder **en enda stationär strömtub**. Dra reglaget så att strömmen flyttas från insidan av randen, "
+            "via ett delvis överlapp, till utsidan. Då ser studenten direkt att Ampères lag räknar den fria ström som faktiskt passerar genom den valda ytan."
+        )
         c1, c2, c3 = st.columns(3)
         with c1:
             scenario = st.selectbox(
@@ -154,26 +283,26 @@ def _render_gauss_page() -> None:
 
         if scenario == "Stationär fri ström genom ytan":
             st.info(
-                "Flytta **strömtubens centrum** med slidern. När tuben ligger helt innanför blir hela strömmen innesluten. "
+                "Flytta **strömtubens centrum** med slidern. När tuben ligger helt innanför blir hela strömmen medräknad. "
                 "När den flyttas mot randen får du ett **delvis genomskuret** fall. När den ligger helt utanför blir strömmen genom ytan noll."
             )
 
         st.markdown(
             "#### Läs figuren så här\n"
-            "- Den gröna skivan är ytan S, och den mörka cirkeln är randen C.\n"
-            "- Orange cylinder/pilar visar fri ström J_fri genom ytan.\n"
-            "- Blå pilar längs randen visar H-fältets tangentbidrag till randintegralen.\n"
+            "- Den gröna skivan är ytan **S**, och den mörka cirkeln är randen **C**.\n"
+            "- Orange cylinder/pilar visar fri ström **J_fri** genom ytan.\n"
+            "- Blå pilar längs randen visar **H-fältets tangentbidrag** till randintegralen.\n"
             "- Det som ska jämföras är **cirkulation runt randen** mot **fri ström genom ytan**."
         )
         return
 
     st.markdown(
         "### Beräkningsrecept för magnetostatik\n"
-        "1. Välj en **sluten randkurva** \\(C\\).\n"
-        "2. Välj en orienterad yta \\(S\\) vars rand är just \\(C\\).\n"
+        "1. Välj en **sluten randkurva** C.\n"
+        "2. Välj en orienterad yta S vars rand är just C.\n"
         "3. Använd högerhandsregeln för att koppla randriktning och normalriktning.\n"
-        "4. Beräkna den fria stationära strömmen genom ytan: \\(I_{fri}=\\iint_S\\mathbf{J}_{fri}\\cdot\\hat{\\mathbf{n}}dS\\).\n"
-        "5. Sätt \\(\\oint_C\\mathbf{H}\\cdot d\\mathbf{l}=I_{fri}\\). Om symmetrin gör \\(H\\) konstant längs randen kan du lösa ut \\(H\\)."
+        "4. Beräkna den fria stationära strömmen genom ytan: I_fri = ∬S J_fri·n̂ dS.\n"
+        "5. Sätt ∮C H·dl = I_fri. Om symmetrin gör H konstant längs randen kan du lösa ut H."
     )
     st.warning(
         "**När den magnetostatiska formen inte räcker:**\n\n"
@@ -190,49 +319,79 @@ def _render_gauss_page() -> None:
 
 
 def _gauss_figure(
-    case: str,
     radius: float,
-    q_inside_nc: float,
-    q_outside_nc: float,
-    offset_fraction: float,
+    q_nc: float,
+    position_ratio: float,
+    surface_kind: str,
     show_field_arrows: bool,
+    show_position_axis: bool,
 ) -> tuple[go.Figure, dict[str, str]]:
-    q_inside = q_inside_nc * 1e-9
-    q_outside = q_outside_nc * 1e-9
+    """Interactive Gauss test with one movable charge.
 
-    if case == "Sluten yta: laddning innanför":
-        charges = [(q_inside, np.array([offset_fraction * radius, 0.0, 0.0]), "q_in")]
-        surface = "closed"
-        q_enclosed = q_inside
-        status_kind = "ok"
-        validity = "Ja"
-    elif case == "Sluten yta: laddning utanför":
-        charges = [(q_outside, np.array([2.15 * radius, 0.35 * radius, 0.0]), "q_ut")]
-        surface = "closed"
-        q_enclosed = 0.0
-        status_kind = "ok"
-        validity = "Ja"
-    elif case == "Sluten yta: laddning både inne och ute":
-        charges = [
-            (q_inside, np.array([offset_fraction * radius, 0.0, 0.0]), "q_in"),
-            (q_outside, np.array([2.15 * radius, 0.35 * radius, 0.0]), "q_ut"),
-        ]
-        surface = "closed"
-        q_enclosed = q_inside
-        status_kind = "ok"
-        validity = "Ja"
-    elif case == "Öppen yta: hemisfär utan lock":
-        charges = [(q_inside, np.array([0.0, 0.0, 0.0]), "q")]
-        surface = "open_hemisphere"
+    The old version separated "inside" and "outside" into different cases, which
+    hid the important limiting process. This version keeps the charge and the
+    Gaussian surface fixed as concepts, and lets the charge coordinate x/R cross
+    the boundary continuously.
+    """
+    q = q_nc * 1e-9
+    charge_pos = np.array([position_ratio * radius, 0.0, 0.0])
+    radial_position = abs(position_ratio)
+    boundary_tol = 0.025
+    is_open = surface_kind == "Öppen hemisfär utan lock"
+    on_surface = abs(radial_position - 1.0) <= boundary_tol
+    inside_closed_surface = radial_position < 1.0 - boundary_tol
+    outside_closed_surface = radial_position > 1.0 + boundary_tol
+
+    surface = "open_hemisphere" if is_open else "closed"
+    charges = [(q, charge_pos, "q")]
+
+    if is_open:
         q_enclosed = math.nan
+        gauss_flux = math.nan
         status_kind = "warning"
         validity = "Nej"
-    else:
-        charges = [(q_inside, np.array([radius, 0.0, 0.0]), "q på ytan")]
-        surface = "closed"
+        if on_surface:
+            position_text = "på öppna kanten"
+        elif inside_closed_surface:
+            position_text = "under hemisfären"
+        else:
+            position_text = "utanför"
+        message = (
+            "Den öppna hemisfären är ett viktigt motexempel: flödet genom ytan kan beräknas, "
+            "men Gauss sats i formen ∮E·dA = Q_in/ε₀ kräver en sluten yta. Lägg till ett lock i basplanet för att få en Gaussyta."
+        )
+    elif on_surface:
         q_enclosed = math.nan
+        gauss_flux = math.nan
         status_kind = "error"
-        validity = "Nej"
+        validity = "Gränsfall"
+        position_text = "på ytan"
+        message = (
+            "Laddningen ligger på själva integrationsytan. Fältet blir singulärt där och 'innanför' är inte väldefinierat. "
+            "Flytta laddningen ett steg inåt eller utåt och jämför gränsvärdena."
+        )
+    elif inside_closed_surface:
+        q_enclosed = q
+        gauss_flux = q_enclosed / EPS0
+        status_kind = "ok"
+        validity = "Ja"
+        position_text = "innanför"
+        message = (
+            "Laddningen är innanför den slutna ytan. Totalflödet ska därför vara q/ε₀, även om laddningen inte ligger i centrum "
+            "och färgmönstret på ytan blir osymmetriskt."
+        )
+    else:
+        # Includes the deliberately outside region. A charge outside a closed
+        # surface contributes zero net flux: field lines enter and leave.
+        q_enclosed = 0.0
+        gauss_flux = 0.0
+        status_kind = "ok"
+        validity = "Ja"
+        position_text = "utanför"
+        message = (
+            "Laddningen är utanför den slutna ytan. Den kan ge starkt lokalt flöde på närmaste sida, "
+            "men lika mycket fält går in som ut, så nettot blir noll."
+        )
 
     X, Y, Z, NX, NY, NZ, dA, theta_range = _sphere_surface(radius, surface)
     pts = np.column_stack([X.ravel(), Y.ravel(), Z.ravel()])
@@ -244,28 +403,6 @@ def _gauss_figure(
         numeric_flux = math.nan
     else:
         numeric_flux = float(np.nansum(Edotn * dA))
-
-    if surface == "closed" and status_kind == "ok":
-        gauss_flux = q_enclosed / EPS0
-        rel_err = abs(numeric_flux - gauss_flux) / max(abs(gauss_flux), 1.0)
-        if abs(gauss_flux) < 1e-20:
-            rel_err = abs(numeric_flux)
-        message = (
-            "Satsen gäller: ytan är sluten och laddningen är inte på ytan. "
-            "Den numeriska flödesintegralen följer Gauss förutsägelse inom diskretiseringsfelet."
-        )
-    elif surface == "open_hemisphere":
-        gauss_flux = math.nan
-        message = (
-            "Detta är en medveten fälla: hemisfären saknar lock och omsluter därför ingen volym ensam. "
-            "Flödet genom den öppna ytan kan beräknas, men det är inte Gauss sats i sluten-yta-form. Lägg till locket så blir ytan sluten."
-        )
-    else:
-        gauss_flux = math.nan
-        message = (
-            "Laddningen ligger på själva ytan. Då är fältet singulärt på integrationsytan och frågan om 'innanför' blir tvetydig. "
-            "Flytta laddningen lite inåt eller utåt och ta sedan ett gränsvärde."
-        )
 
     fig = go.Figure()
     finite = Edotn[np.isfinite(Edotn)]
@@ -294,25 +431,26 @@ def _gauss_figure(
     if surface == "open_hemisphere":
         _add_open_rim(fig, radius)
 
-    for q, pos, label in charges:
-        if abs(q) < 1e-30:
-            continue
+    if show_position_axis:
+        _add_gauss_position_axis(fig, radius, max(2.05 * radius, abs(charge_pos[0]) + 0.25 * radius))
+
+    if abs(q) > 1e-30:
         color = "#d62728" if q > 0 else "#1f77b4"
         fig.add_trace(go.Scatter3d(
-            x=[pos[0]], y=[pos[1]], z=[pos[2]],
+            x=[charge_pos[0]], y=[charge_pos[1]], z=[charge_pos[2]],
             mode="markers+text",
-            marker=dict(size=8, color=color),
-            text=[label], textposition="top center",
-            hovertemplate=f"{label}: {q/1e-9:.2f} nC<extra></extra>",
+            marker=dict(size=9, color=color, line=dict(color="#111827", width=1)),
+            text=["q"], textposition="top center",
+            hovertemplate=f"q={q_nc:.2f} nC<br>x/R={position_ratio:.2f}<extra></extra>",
             showlegend=False,
         ))
 
     if show_field_arrows:
         _add_gauss_surface_arrows(fig, X, Y, Z, E.reshape(X.shape + (3,)), radius, surface)
 
-    lim = 2.65 * radius
+    lim = max(2.35 * radius, abs(charge_pos[0]) + 0.65 * radius)
     fig.update_layout(
-        title=dict(text="Gauss flödessats: lokalt flöde på ytan", x=0.02),
+        title=dict(text="Gauss flödessats: flytta laddningen genom ytan", x=0.02),
         scene=dict(
             xaxis=dict(title="x [m]", range=[-lim, lim]),
             yaxis=dict(title="y [m]", range=[-lim, lim]),
@@ -328,13 +466,13 @@ def _gauss_figure(
     report = {
         "status": status_kind,
         "validity_short": validity,
+        "position_text": f"{position_text} (x/R={position_ratio:.2f})",
         "q_enclosed_text": "—" if not math.isfinite(q_enclosed) else _fmt_eng(q_enclosed, "C"),
         "numeric_flux_text": "odefinierad" if not math.isfinite(numeric_flux) else _fmt_eng(numeric_flux, "V·m"),
         "gauss_flux_text": "gäller ej" if not math.isfinite(gauss_flux) else _fmt_eng(gauss_flux, "V·m"),
         "message": message,
     }
     return fig, report
-
 
 def _sphere_surface(radius: float, surface: str):
     if surface == "open_hemisphere":
@@ -389,6 +527,31 @@ def _add_open_rim(fig: go.Figure, radius: float) -> None:
     ))
 
 
+def _add_gauss_position_axis(fig: go.Figure, radius: float, extent: float) -> None:
+    """Draw the x-axis used by the moving-charge Gauss experiment."""
+    xs = np.linspace(-extent, extent, 80)
+    fig.add_trace(go.Scatter3d(
+        x=xs,
+        y=np.zeros_like(xs),
+        z=np.zeros_like(xs),
+        mode="lines",
+        line=dict(color="#111827", width=3, dash="dash"),
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[-radius, radius],
+        y=[0, 0],
+        z=[0, 0],
+        mode="markers+text",
+        marker=dict(size=5, color="#111827"),
+        text=["x/R=-1", "x/R=1"],
+        textposition=["bottom center", "bottom center"],
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+
+
 def _add_gauss_surface_arrows(fig: go.Figure, X: np.ndarray, Y: np.ndarray, Z: np.ndarray, E: np.ndarray, radius: float, surface: str) -> None:
     step_theta = 7 if surface == "closed" else 5
     step_phi = 12
@@ -427,6 +590,7 @@ def _stokes_magnetostatic_slider_figure(
     show_h_arrows: bool,
     show_surface_current: bool,
 ) -> tuple[go.Figure, dict[str, str]]:
+    """Interactive magnetostatic Stokes/Ampere test with one movable current tube."""
     conductor_offset = center_ratio * loop_radius
     center = np.array([conductor_offset, 0.0])
 
@@ -436,7 +600,7 @@ def _stokes_magnetostatic_slider_figure(
     current_through = current * fraction
     circulation = _line_integral_H_around_circle(current, conductor_radius, center, loop_radius, closed=True)
 
-    area_tol = 1e-9 * max(loop_radius * loop_radius, 1.0)
+    area_tol = 1e-9 * max(loop_radius * loop_radius, conductor_radius * conductor_radius, 1.0)
     if overlap_area >= conductor_area - area_tol:
         case_label = "helt innanför"
         status = "ok"
@@ -465,8 +629,10 @@ def _stokes_magnetostatic_slider_figure(
         x=[center[0]], y=[center[1]], z=[0.82 * loop_radius],
         mode="markers+text",
         marker=dict(size=5, color="#111827"),
-        text=[f"x/R={center_ratio:.2f}"], textposition="top center",
-        hoverinfo="skip", showlegend=False,
+        text=[f"x/R={center_ratio:.2f}"],
+        textposition="top center",
+        hoverinfo="skip",
+        showlegend=False,
     ))
 
     lim = max(2.2 * loop_radius, abs(conductor_offset) + 2.0 * conductor_radius + 0.4)
@@ -485,7 +651,7 @@ def _stokes_magnetostatic_slider_figure(
     )
 
     diff = circulation - current_through
-    message = message_prefix + " Den numeriska randintegralen ska följa den fria ström som faktiskt passerar genom ytan."
+    message = message_prefix + " Den numeriska randintegralen följer den fria ström som faktiskt passerar genom ytan."
     report = {
         "status": status,
         "case_label": case_label,
@@ -545,16 +711,21 @@ def _add_position_axis(fig: go.Figure, loop_radius: float) -> None:
         x=[-axis_len, axis_len], y=[0, 0], z=[-0.02, -0.02],
         mode="lines",
         line=dict(color="#64748b", width=4, dash="dash"),
-        hoverinfo="skip", showlegend=False,
+        hoverinfo="skip",
+        showlegend=False,
     ))
     marks = np.array([-loop_radius, 0.0, loop_radius])
     labels = ["-R", "0", "+R"]
     fig.add_trace(go.Scatter3d(
-        x=marks, y=np.zeros(3), z=np.full(3, -0.02),
+        x=marks,
+        y=np.zeros(3),
+        z=np.full(3, -0.02),
         mode="markers+text",
         marker=dict(size=4, color="#64748b"),
-        text=labels, textposition="bottom center",
-        hoverinfo="skip", showlegend=False,
+        text=labels,
+        textposition="bottom center",
+        hoverinfo="skip",
+        showlegend=False,
     ))
 
 

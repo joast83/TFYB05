@@ -18,28 +18,39 @@ from em_visualisering.theory_pages import (
 assert len(THEORY_PAGES) >= 2
 
 fig, report = _gauss_figure(
-    case="Sluten yta: laddning innanför",
     radius=1.1,
-    q_inside_nc=5.0,
-    q_outside_nc=0.0,
-    offset_fraction=0.25,
+    q_nc=5.0,
+    position_ratio=0.25,
+    surface_kind="Sluten sfär",
     show_field_arrows=True,
+    show_position_axis=True,
 )
 assert len(fig.data) >= 2
-assert report["validity_short"] == "Ja"
+assert report["status"] == "ok"
 
 fig2, report2 = _gauss_figure(
-    case="Öppen yta: hemisfär utan lock",
     radius=1.1,
-    q_inside_nc=5.0,
-    q_outside_nc=0.0,
-    offset_fraction=0.0,
+    q_nc=5.0,
+    position_ratio=0.25,
+    surface_kind="Öppen hemisfär utan lock",
     show_field_arrows=False,
+    show_position_axis=True,
 )
 assert len(fig2.data) >= 2
-assert report2["validity_short"] == "Nej"
+assert report2["status"] == "warning"
 
-fig3, report3 = _stokes_magnetostatic_slider_figure(
+fig3, report3 = _gauss_figure(
+    radius=1.1,
+    q_nc=5.0,
+    position_ratio=1.0,
+    surface_kind="Sluten sfär",
+    show_field_arrows=False,
+    show_position_axis=True,
+)
+assert len(fig3.data) >= 2
+assert report3["status"] == "error"
+
+fig4, report4 = _stokes_magnetostatic_slider_figure(
     current=2.0,
     loop_radius=1.2,
     conductor_radius=0.25,
@@ -47,25 +58,46 @@ fig3, report3 = _stokes_magnetostatic_slider_figure(
     show_h_arrows=True,
     show_surface_current=True,
 )
-assert len(fig3.data) >= 5
-assert report3["case_label"] == "helt innanför"
+assert len(fig4.data) >= 5
+assert report4["case_label"] == "helt innanför"
 
-fig4, report4 = _stokes_magnetostatic_slider_figure(
+fig5, report5 = _stokes_magnetostatic_slider_figure(
     current=2.0,
     loop_radius=1.2,
     conductor_radius=0.25,
-    center_ratio=1.6,
+    center_ratio=1.0,
     show_h_arrows=True,
     show_surface_current=True,
 )
-assert len(fig4.data) >= 4
-assert report4["case_label"] == "helt utanför"
+assert len(fig5.data) >= 5
+assert report5["case_label"] == "delvis genomskuren"
 
-fig5, report5 = _charging_capacitor_figure(
+fig6, report6 = _stokes_magnetostatic_slider_figure(
+    current=2.0,
+    loop_radius=1.2,
+    conductor_radius=0.25,
+    center_ratio=1.8,
+    show_h_arrows=True,
+    show_surface_current=True,
+)
+assert len(fig6.data) >= 4
+assert report6["case_label"] == "helt utanför"
+
+fig7, report7 = _charging_capacitor_figure(
     current=2.0,
     loop_radius=1.2,
 )
-assert len(fig5.data) >= 4
-assert report5["case_label"] == "ej magnetostatik"
+assert len(fig7.data) >= 4
+assert report7["case_label"] == "ej magnetostatik"
 
-print("theory pages ok", len(THEORY_PAGES), len(fig.data), len(fig2.data), len(fig3.data), len(fig4.data), len(fig5.data))
+print(
+    "theory pages ok",
+    len(THEORY_PAGES),
+    len(fig.data),
+    len(fig2.data),
+    len(fig3.data),
+    len(fig4.data),
+    len(fig5.data),
+    len(fig6.data),
+    len(fig7.data),
+)
