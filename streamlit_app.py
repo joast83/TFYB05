@@ -10,6 +10,7 @@ matplotlib.use("Agg", force=True)
 import streamlit as st
 from matplotlib.figure import Figure
 
+from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem
 
@@ -92,15 +93,19 @@ except Exception as exc:
         st.error(f"Fel i geometriskiss: {exc}")
 
 try:
-    view3d_fig = Figure(figsize=(4.8, 6.0), dpi=110)
-    problem.draw_3d(view3d_fig, params, mode)
-    view3d_fig.tight_layout()
+    view3d_fig = make_plotly_3d_figure(problem, params, mode)
     with col3:
         st.markdown("#### 3-D-vy")
-        st.pyplot(view3d_fig, clear_figure=True)
+        st.caption("Rotera, zooma och panorera direkt i webbläsaren.")
+        st.plotly_chart(view3d_fig, use_container_width=True, config={"displaylogo": False})
 except Exception as exc:
     with col3:
-        st.error(f"Fel i 3-D-vy: {exc}")
+        st.error(f"Fel i interaktiv 3-D-vy: {exc}")
+        st.info("Reservvisning med Matplotlib visas eftersom Plotly-renderingen misslyckades.")
+        fallback_fig = Figure(figsize=(4.8, 6.0), dpi=110)
+        problem.draw_3d(fallback_fig, params, mode)
+        fallback_fig.tight_layout()
+        st.pyplot(fallback_fig, clear_figure=True)
 
 with st.expander("Kontrollera formel/gränsfall"):
     try:

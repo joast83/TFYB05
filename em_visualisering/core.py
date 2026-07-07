@@ -43,7 +43,13 @@ def _surface_of_revolution(ax3d, r_vals, z_vals, scalar_vals, n_phi=60, title=''
             vmax = vmin + 1.0
     norm = Normalize(vmin=vmin, vmax=vmax)
     fc = colormaps[cmap](norm(S))
-    ax3d.plot_surface(X, Y, Z, facecolors=fc, rstride=1, cstride=1, antialiased=False, shade=False)
+    if getattr(ax3d, 'plotly_bridge', False):
+        ax3d.plot_surface(
+            X, Y, Z, surfacecolor=S, cmap=cmap, cmin=vmin, cmax=vmax,
+            rstride=1, cstride=1, antialiased=False, shade=False
+        )
+    else:
+        ax3d.plot_surface(X, Y, Z, facecolors=fc, rstride=1, cstride=1, antialiased=False, shade=False)
     ax3d.set_xlabel('x [m]')
     ax3d.set_ylabel('y [m]')
     ax3d.set_zlabel(zlabel)
