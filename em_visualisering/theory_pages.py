@@ -91,8 +91,8 @@ def _render_gauss_page() -> None:
             )
         st.markdown(
             "### Vad figuren i testlabbet ska visa\n"
-            "- Färgen på ytan visar lokalt \\(\\mathbf{E}\\cdot\\hat{\\mathbf{n}}\\): rött = utåt, blått = inåt.\n"
-            "- Totalen jämförs med \\(Q_{\\mathrm{innesluten}}/\\varepsilon_0\\).\n"
+            "- Färgen på ytan visar lokalt **E·n̂**: rött = utåt, blått = inåt.\n"
+            "- Totalen jämförs med **Q_innesluten/ε₀**.\n"
             "- Öppna ytor och laddningar på själva ytan markeras som fall där satsen inte kan användas direkt."
         )
         return
@@ -101,7 +101,7 @@ def _render_gauss_page() -> None:
         st.markdown("### Flytta en laddning genom en Gaussyta")
         st.write(
             "Det här testet använder **en enda laddning**. Dra positionsreglaget från centrum, genom ytan och vidare utanför. "
-            "För en sluten yta ska totalflödet hoppa från \(q/\varepsilon_0\) till 0 när laddningen passerar ut, medan det lokala flödesmönstret ändras kontinuerligt."
+            "För en sluten yta ska totalflödet hoppa från q/ε₀ till 0 när laddningen passerar ut, medan det lokala flödesmönstret ändras kontinuerligt."
         )
 
         c1, c2, c3 = st.columns(3)
@@ -153,7 +153,7 @@ def _render_gauss_page() -> None:
 
         st.markdown(
             "#### Läs figuren så här\n"
-            "- Färgen på ytan är lokalt \(\mathbf{E}\cdot\hat{\mathbf{n}}\): rött betyder utåt och blått betyder inåt.\n"
+            "- Färgen på ytan är lokalt **E·n̂**: rött betyder utåt och blått betyder inåt.\n"
             "- När laddningen är **innanför** finns ett nettoöverskott av utgående fält genom den slutna ytan.\n"
             "- När laddningen är **utanför** går fältlinjer in genom vissa delar och ut genom andra; totalen blir noll.\n"
             "- När laddningen ligger **på ytan** är fältet singulärt där, så satsen måste hanteras som ett gränsfall.\n"
@@ -165,9 +165,9 @@ def _render_gauss_page() -> None:
         "### Beräkningsrecept\n"
         "1. **Välj en sluten yta**. Den måste omsluta en volym.\n"
         "2. **Räkna nettoladdningen innanför**: positiva och negativa laddningar summeras algebraiskt.\n"
-        "3. **Skriv flödet** \\(\\oint_S \\mathbf{E}\\cdot d\\mathbf{A}\\).\n"
-        "4. **Använd symmetri bara om den faktiskt finns.** För sfärisk, cylindrisk eller plan symmetri kan \\(E\\) ofta tas ut ur integralen.\n"
-        "5. **Kontrollera fallgroparna:** öppen yta, laddning på randen, eller för lite symmetri för att lösa \\(E\\) direkt."
+        "3. **Skriv flödet** som ∮ₛ E·dA.\n"
+        "4. **Använd symmetri bara om den faktiskt finns.** För sfärisk, cylindrisk eller plan symmetri kan E ofta tas ut ur integralen.\n"
+        "5. **Kontrollera fallgroparna:** öppen yta, laddning på randen, eller för lite symmetri för att lösa E direkt."
     )
     st.info(
         "**Viktig distinktion:** Gauss sats är alltid en stark kontroll för totalflöde genom en sluten yta. "
@@ -200,8 +200,8 @@ def _render_stokes_page() -> None:
         with c1:
             st.markdown(
                 "### Magnetostatisk tolkning\n"
-                "I magnetostatik är fria strömmar källan till virvling i \\(\\mathbf{H}\\)-fältet. "
-                "Stokes sats säger att cirkulationen runt den slutna randen \\(C\\) är samma sak som den totala curlen genom ytan \\(S\\). "
+                "I magnetostatik är fria strömmar källan till virvling i **H-fältet**. "
+                "Stokes sats säger att cirkulationen runt den slutna randen **C** är samma sak som den totala curlen genom ytan **S**. "
                 "Med Ampères lokala lag blir denna curl-flux lika med fri ström genom ytan."
             )
         with c2:
@@ -211,11 +211,11 @@ def _render_stokes_page() -> None:
             )
             st.warning(
                 "**Magnetostatik betyder stationärt.**\n\n"
-                "Vid tidsvarierande elektriska fält måste Maxwell-termen \\(\\partial\\mathbf{D}/\\partial t\\) tas med. Då räcker inte den magnetostatiska Ampèreformen."
+                "Vid tidsvarierande elektriska fält måste Maxwell-termen ∂D/∂t tas med. Då räcker inte den magnetostatiska Ampèreformen."
             )
         st.markdown(
             "### Vad testlabbet visar\n"
-            "- En strömtub genom en vald yta skapar cirkulation hos \\(\\mathbf{H}\\) längs randen.\n"
+            "- En strömtub genom en vald yta skapar cirkulation hos **H** längs randen.\n"
             "- Om ingen fri ström går genom ytan blir cirkulationen noll.\n"
             "- Om randen skär strömtuben räknas bara den del av strömmen som faktiskt passerar genom ytan.\n"
             "- Öppna kurvor och tidsvarierande kondensatorfält markeras som fall där den använda magnetostatiska formen inte är rätt verktyg."
@@ -270,20 +270,20 @@ def _render_stokes_page() -> None:
 
         st.markdown(
             "#### Läs figuren så här\n"
-            "- Den gröna skivan är ytan \\(S\\), och den mörka kurvan är randen \\(C\\).\n"
-            "- Orange cylinder/pilar visar fri ström \\(\\mathbf{J}_{fri}\\).\n"
-            "- Blå pilar längs randen visar \\(\\mathbf{H}\\)-fältets tangentbidrag till \\(\\oint_C\\mathbf{H}\\cdot d\\mathbf{l}\\).\n"
-            "- När strömtuben bara delvis skär ytan är \\(I_{genom S}\\) inte hela strömmen, utan bara överlappande del."
+            "- Den gröna skivan är ytan **S**, och den mörka kurvan är randen **C**.\n"
+            "- Orange cylinder/pilar visar fri ström **J_fri**.\n"
+            "- Blå pilar längs randen visar **H-fältets tangentbidrag** till ∮C H·dl.\n"
+            "- När strömtuben bara delvis skär ytan är **I_genom S** inte hela strömmen, utan bara överlappande del."
         )
         return
 
     st.markdown(
         "### Beräkningsrecept för magnetostatik\n"
-        "1. Välj en **sluten randkurva** \\(C\\).\n"
-        "2. Välj en orienterad yta \\(S\\) vars rand är just \\(C\\).\n"
+        "1. Välj en **sluten randkurva** C.\n"
+        "2. Välj en orienterad yta S vars rand är just C.\n"
         "3. Använd högerhandsregeln för att koppla randriktning och normalriktning.\n"
-        "4. Beräkna den fria stationära strömmen genom ytan: \\(I_{fri}=\\iint_S\\mathbf{J}_{fri}\\cdot\\hat{\\mathbf{n}}dS\\).\n"
-        "5. Sätt \\(\\oint_C\\mathbf{H}\\cdot d\\mathbf{l}=I_{fri}\\). Om symmetrin gör \\(H\\) konstant längs randen kan du lösa ut \\(H\\)."
+        "4. Beräkna den fria stationära strömmen genom ytan: I_fri = ∬S J_fri·n̂ dS.\n"
+        "5. Sätt ∮C H·dl = I_fri. Om symmetrin gör H konstant längs randen kan du lösa ut H."
     )
     st.warning(
         "**När den magnetostatiska formen inte räcker:**\n\n"
