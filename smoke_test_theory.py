@@ -11,76 +11,61 @@ sys.path.insert(0, ".")
 from em_visualisering.theory_pages import (
     THEORY_PAGES,
     _gauss_figure,
-    _stokes_magnetostatic_figure,
+    _stokes_magnetostatic_slider_figure,
+    _charging_capacitor_figure,
 )
 
 assert len(THEORY_PAGES) >= 2
 
 fig, report = _gauss_figure(
+    case="Sluten yta: laddning innanför",
     radius=1.1,
-    q_nc=5.0,
-    position_ratio=0.45,
-    surface_kind="Sluten sfär",
+    q_inside_nc=5.0,
+    q_outside_nc=0.0,
+    offset_fraction=0.25,
     show_field_arrows=True,
-    show_position_axis=True,
 )
-assert len(fig.data) >= 3
-assert report["status"] == "ok"
-assert "innanför" in report["position_text"]
+assert len(fig.data) >= 2
+assert report["validity_short"] == "Ja"
 
 fig2, report2 = _gauss_figure(
+    case="Öppen yta: hemisfär utan lock",
     radius=1.1,
-    q_nc=5.0,
-    position_ratio=1.35,
-    surface_kind="Sluten sfär",
+    q_inside_nc=5.0,
+    q_outside_nc=0.0,
+    offset_fraction=0.0,
     show_field_arrows=False,
-    show_position_axis=True,
 )
-assert len(fig2.data) >= 3
-assert report2["status"] == "ok"
-assert "utanför" in report2["position_text"]
-assert report2["q_enclosed_text"].startswith("0")
+assert len(fig2.data) >= 2
+assert report2["validity_short"] == "Nej"
 
-fig3, report3 = _gauss_figure(
-    radius=1.1,
-    q_nc=5.0,
-    position_ratio=1.0,
-    surface_kind="Sluten sfär",
-    show_field_arrows=False,
-    show_position_axis=False,
-)
-assert report3["status"] == "error"
-
-fig4, report4 = _gauss_figure(
-    radius=1.1,
-    q_nc=5.0,
-    position_ratio=0.45,
-    surface_kind="Öppen hemisfär utan lock",
-    show_field_arrows=False,
-    show_position_axis=False,
-)
-assert report4["validity_short"] == "Nej"
-
-fig5, report5 = _stokes_magnetostatic_figure(
-    case="Stationär ström: hela strömtuben omsluts",
+fig3, report3 = _stokes_magnetostatic_slider_figure(
     current=2.0,
     loop_radius=1.2,
     conductor_radius=0.25,
+    center_ratio=0.0,
     show_h_arrows=True,
     show_surface_current=True,
+)
+assert len(fig3.data) >= 5
+assert report3["case_label"] == "helt innanför"
+
+fig4, report4 = _stokes_magnetostatic_slider_figure(
+    current=2.0,
+    loop_radius=1.2,
+    conductor_radius=0.25,
+    center_ratio=1.6,
+    show_h_arrows=True,
+    show_surface_current=True,
+)
+assert len(fig4.data) >= 4
+assert report4["case_label"] == "helt utanför"
+
+fig5, report5 = _charging_capacitor_figure(
+    current=2.0,
+    loop_radius=1.2,
 )
 assert len(fig5.data) >= 4
-assert report5["validity_short"] == "Ja"
+assert report5["case_label"] == "ej magnetostatik"
 
-fig6, report6 = _stokes_magnetostatic_figure(
-    case="Inte magnetostatik: laddande kondensator",
-    current=2.0,
-    loop_radius=1.2,
-    conductor_radius=0.25,
-    show_h_arrows=True,
-    show_surface_current=True,
-)
-assert len(fig6.data) >= 4
-assert report6["validity_short"] == "Nej"
-
-print("theory pages ok", len(THEORY_PAGES), len(fig.data), len(fig2.data), len(fig3.data), len(fig4.data), len(fig5.data), len(fig6.data))
+print("theory pages ok", len(THEORY_PAGES), len(fig.data), len(fig2.data), len(fig3.data), len(fig4.data), len(fig5.data))
