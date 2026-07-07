@@ -1,33 +1,63 @@
-"""Smoke test for the added theory pages.
+"""Smoke test for theory pages.
 
-This script intentionally avoids importing Streamlit. It validates that the
-new theory-page helper module loads, and that both interactive Plotly figures
-can be built numerically without errors.
+Avoids importing Streamlit and validates that the Plotly figure builders and
+numerical theorem checks can run in a deployment environment.
 """
 
 import sys
 
 sys.path.insert(0, ".")
 
-from em_visualisering.theory_pages import THEORY_PAGES, _gauss_figure, _stokes_figure
-
+from em_visualisering.theory_pages import (
+    THEORY_PAGES,
+    _gauss_figure,
+    _stokes_magnetostatic_figure,
+)
 
 assert len(THEORY_PAGES) >= 2
 
-gauss_fig = _gauss_figure("Sfär", 1.2, 5.0, 2.0, 2.6, False)
-assert len(gauss_fig.data) >= 2
-
-stokes_fig, circulation, curl_flux, _ = _stokes_figure(
-    "Roterande fält F = (-ωy, ωx, 0)", 1.0, 1.1, 25, True, True
+fig, report = _gauss_figure(
+    case="Sluten yta: laddning innanför",
+    radius=1.1,
+    q_inside_nc=5.0,
+    q_outside_nc=0.0,
+    offset_fraction=0.25,
+    show_field_arrows=True,
 )
-assert len(stokes_fig.data) >= 3
-assert abs(circulation - curl_flux) < 1e-10
+assert len(fig.data) >= 2
+assert report["validity_short"] == "Ja"
 
-stokes_fig2, circulation2, curl_flux2, _ = _stokes_figure(
-    "Virvelfritt gradientfält F = (x, y, 0)", 1.0, 1.1, 25, True, True
+fig2, report2 = _gauss_figure(
+    case="Öppen yta: hemisfär utan lock",
+    radius=1.1,
+    q_inside_nc=5.0,
+    q_outside_nc=0.0,
+    offset_fraction=0.0,
+    show_field_arrows=False,
 )
-assert len(stokes_fig2.data) >= 2
-assert circulation2 == 0.0
-assert curl_flux2 == 0.0
+assert len(fig2.data) >= 2
+assert report2["validity_short"] == "Nej"
 
-print("theory pages ok", len(THEORY_PAGES), len(gauss_fig.data), len(stokes_fig.data), len(stokes_fig2.data))
+fig3, report3 = _stokes_magnetostatic_figure(
+    case="Stationär ström: hela strömtuben omsluts",
+    current=2.0,
+    loop_radius=1.2,
+    conductor_radius=0.25,
+    show_h_arrows=True,
+    show_surface_current=True,
+)
+assert len(fig3.data) >= 4
+assert report3["validity_short"] == "Ja"
+
+fig4, report4 = _stokes_magnetostatic_figure(
+    case="Inte magnetostatik: laddande kondensator",
+    current=2.0,
+    loop_radius=1.2,
+    conductor_radius=0.25,
+    show_h_arrows=True,
+    show_surface_current=True,
+)
+assert len(fig4.data) >= 4
+assert report4["validity_short"] == "Nej"
+
+print("theory pages ok", len(THEORY_PAGES), len(fig.data), len(fig2.data), len(fig3.data), len(fig4.data))
