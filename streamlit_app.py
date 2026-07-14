@@ -14,6 +14,7 @@ from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem
 from em_visualisering.theory_pages import THEORY_PAGES, render_theory_page
+from em_visualisering.unit_scaling import display_scale_for, suggested_step
 
 
 st.set_page_config(
@@ -55,16 +56,29 @@ with st.sidebar:
         mode = normalize_mode_for_problem(problem, requested_mode)
 
         st.markdown("### Parametrar")
+        st.caption("Värden visas i praktiska enheter; fysikberäkningen använder SI-enheter.")
         defaults = problem.defaults()
         params = {}
-        for key, label, _unit in problem.parameters:
-            default_value = float(defaults[key])
-            params[key] = st.number_input(
-                label,
-                value=default_value,
+        for key, label, _default in problem.parameters:
+            default_value_si = float(defaults[key])
+            scale = display_scale_for(label, default_value_si)
+            default_value_display = scale.to_display(default_value_si)
+            value_display = st.number_input(
+                scale.label,
+                value=default_value_display,
+                step=suggested_step(default_value_display),
                 format="%.12g",
-                key=f"{problem.__class__.__name__}:{key}",
+                key=(
+                    f"{problem.__class__.__name__}:{key}:"
+                    f"{scale.display_unit or 'dimensionless'}"
+                ),
+                help=(
+                    f"Visas i {scale.display_unit}; beräkningen använder {scale.si_unit}."
+                    if scale.factor != 1.0
+                    else None
+                ),
             )
+            params[key] = scale.to_si(value_display)
 
 if content_type == "Teori":
     render_theory_page(theory_page)

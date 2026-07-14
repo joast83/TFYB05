@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from .core import *
 from .registry import PROBLEMS
 from .modes import mode_options_for_problem, normalize_mode_for_problem
+from .unit_scaling import display_scale_for, format_display_value
 
 class ElectrostaticsApp(tk.Tk):
 
@@ -18,6 +19,7 @@ class ElectrostaticsApp(tk.Tk):
         self.problem_lookup = {p.name: p for p in PROBLEMS}
         self.current_problem = PROBLEMS[0]
         self.param_vars = {}
+        self.param_scales = {}
         self._build_layout()
         self._load_problem(self.current_problem.name)
 
@@ -87,14 +89,22 @@ class ElectrostaticsApp(tk.Tk):
         for child in self.params_frame.winfo_children():
             child.destroy()
         self.param_vars.clear()
+        self.param_scales.clear()
         defaults = self.current_problem.defaults()
-        for i, (key, label, _) in enumerate(self.current_problem.parameters):
-            ttk.Label(self.params_frame, text=label).grid(row=i, column=0, sticky='w', pady=3)
-            var = tk.StringVar(value=str(defaults[key]))
+        for i, (key, label, _default) in enumerate(self.current_problem.parameters):
+            default_value_si = float(defaults[key])
+            scale = display_scale_for(label, default_value_si)
+            ttk.Label(self.params_frame, text=scale.label).grid(
+                row=i, column=0, sticky='w', pady=3
+            )
+            var = tk.StringVar(
+                value=format_display_value(scale.to_display(default_value_si))
+            )
             entry = ttk.Entry(self.params_frame, textvariable=var, width=18)
             entry.grid(row=i, column=1, sticky='ew', pady=3)
             entry.bind('<Return>', lambda _event: self.refresh_plot())
             self.param_vars[key] = var
+            self.param_scales[key] = scale
         mode_options = mode_options_for_problem(self.current_problem)
         self.mode_display_to_internal = dict(mode_options)
         self.mode_combo.configure(values=[label for label, _internal in mode_options])
@@ -104,14 +114,16 @@ class ElectrostaticsApp(tk.Tk):
     def reset_defaults(self):
         defaults = self.current_problem.defaults()
         for key, var in self.param_vars.items():
-            var.set(str(defaults[key]))
+            scale = self.param_scales[key]
+            var.set(format_display_value(scale.to_display(defaults[key])))
         self.refresh_plot()
 
     def _read_params(self):
         params = {}
         for key, var in self.param_vars.items():
             try:
-                params[key] = float(var.get())
+                display_value = float(var.get().replace(',', '.'))
+                params[key] = self.param_scales[key].to_si(display_value)
             except ValueError as exc:
                 raise ValueError(f"Parametern '{key}' måste vara ett tal.") from exc
         return params
