@@ -39,7 +39,7 @@ _LENGTH_PREFIXES = (
     ("k", 3),
 )
 
-_PREFIXABLE_SYMBOLS = ("Wb", "C", "V", "A", "F", "S", "T", "N", "Ω", "H")
+_PREFIXABLE_SYMBOLS = ("Wb", "Hz", "C", "V", "A", "F", "S", "T", "N", "Ω", "H", "J", "W")
 
 
 @dataclass(frozen=True)
@@ -184,6 +184,83 @@ def display_scales_for(label: str) -> tuple[DisplayScale, ...]:
     if not any(scale.factor == 1.0 for scale in scales):
         scales.append(base)
     return tuple(sorted(scales, key=lambda scale: scale.factor))
+
+
+def display_scale_by_unit(label: str, display_unit: str) -> DisplayScale:
+    """Return the conversion for one explicitly requested display unit.
+
+    Raises ``ValueError`` when the unit is not a valid presentation of the SI unit in
+    ``label``.  This catches metadata typos during tests instead of silently applying
+    an incorrect factor.
+    """
+
+    for scale in display_scales_for(label):
+        if scale.display_unit == display_unit:
+            return scale
+    _text, si_unit = split_label(label)
+    raise ValueError(
+        f"Visningsenheten {display_unit!r} stöds inte för SI-enheten {si_unit!r}."
+    )
+
+
+def selectable_display_scales(
+    label: str,
+    default_value: float,
+    display_units: tuple[str, ...] = (),
+    *,
+    max_options: int = 5,
+) -> tuple[DisplayScale, ...]:
+    """Return a compact, stable set of scales for an explicit unit selector.
+
+    Problem metadata may provide an ordered allow-list.  Otherwise the automatically
+    selected engineering prefix, nearby prefixes and the SI unit are retained.  The
+    result does not change as the user edits the value, preventing surprising unit
+    jumps.
+    """
+
+    all_scales = display_scales_for(label)
+    if len(all_scales) == 1:
+        return all_scales
+
+    by_unit = {scale.display_unit: scale for scale in all_scales}
+    if display_units:
+        selected = []
+        for unit in display_units:
+            if unit not in by_unit:
+                _text, si_unit = split_label(label)
+                raise ValueError(
+                    f"Visningsenheten {unit!r} stöds inte för SI-enheten {si_unit!r}."
+                )
+            selected.append(by_unit[unit])
+        return tuple(selected)
+
+    preferred = display_scale_for(label, default_value)
+    ordered = list(all_scales)
+    preferred_index = ordered.index(next(scale for scale in ordered if scale.display_unit == preferred.display_unit))
+    indices = {preferred_index}
+    for distance in range(1, len(ordered)):
+        indices.add(preferred_index - distance)
+        indices.add(preferred_index + distance)
+        indices = {index for index in indices if 0 <= index < len(ordered)}
+        if len(indices) >= max_options:
+            break
+
+    # Keep the base SI scale when possible because it is the canonical stored unit.
+    si_index = next((i for i, scale in enumerate(ordered) if scale.factor == 1.0), None)
+    if si_index is not None:
+        indices.add(si_index)
+    compact = [ordered[index] for index in sorted(indices)]
+    if len(compact) > max_options:
+        compact.sort(
+            key=lambda scale: (
+                0 if scale.display_unit == preferred.display_unit else 1,
+                0 if scale.factor == 1.0 else 1,
+                abs(math.log10(scale.factor / preferred.factor)),
+            )
+        )
+        compact = compact[:max_options]
+        compact.sort(key=lambda scale: scale.factor)
+    return tuple(compact)
 
 def display_scale_for(label: str, default_value: float) -> DisplayScale:
     """Choose a readable display unit from a parameter label and SI default.

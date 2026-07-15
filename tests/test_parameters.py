@@ -64,3 +64,30 @@ def test_mapping_definitions_are_supported():
     )
     assert specs[0].key == "frequency"
     assert specs[0].minimum_si == 0.0
+
+
+def test_ui_bounds_do_not_become_hard_validation_bounds():
+    spec = ParameterSpec(
+        key="length",
+        label="Längd [m]",
+        default_si=1.0,
+        minimum_si=0.0,
+        ui_minimum_si=0.1,
+        ui_maximum_si=2.0,
+        control="slider",
+    )
+    assert spec.validate(5.0) == []
+
+
+def test_discrete_parameter_contract():
+    spec = ParameterSpec(
+        key="geometry",
+        label="Geometri",
+        default_si=1.0,
+        control="select",
+        choices=(1.0, 2.0),
+        choice_labels=("Båge", "Slinga"),
+        integer=True,
+    )
+    assert spec.choice_map == {"Båge": 1.0, "Slinga": 2.0}
+    assert spec.validate(1.5)[0].severity == "error"

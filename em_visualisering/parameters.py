@@ -1,8 +1,9 @@
 """Structured metadata and validation for editable problem parameters.
 
-Legacy problem definitions use three-tuples ``(key, label, default_si)``.  The
-normalisation helpers in this module keep those definitions working while allowing
-new problems to opt into explicit bounds, control types, help text and unit choices.
+All numerical physics calculations use SI values.  ``ParameterSpec`` describes how a
+value should be validated and edited without coupling the problem classes to a
+specific GUI toolkit.  Historical three-tuples remain supported and are enriched by
+``parameter_catalog`` when a problem is loaded.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from typing import Iterable, Literal, Mapping, Sequence
 
 from .unit_scaling import split_label
 
-ControlKind = Literal["number", "slider", "log"]
+ControlKind = Literal["number", "slider", "log", "select"]
 Severity = Literal["error", "warning"]
 
 _POSITIVE_LABEL_WORDS = (
@@ -38,6 +39,8 @@ _POSITIVE_LABEL_WORDS = (
     "volume",
     "konduktivitet",
     "conductivity",
+    "resistivitet",
+    "resistivity",
     "resistans",
     "resistance",
     "kapacitans",
@@ -46,6 +49,10 @@ _POSITIVE_LABEL_WORDS = (
     "inductance",
     "frekvens",
     "frequency",
+    "densitet",
+    "density",
+    "antal",
+    "varv",
 )
 
 
@@ -62,9 +69,9 @@ class ValidationIssue:
 class ParameterSpec:
     """Metadata for one parameter stored internally in SI units.
 
-    ``label`` may retain the historical ``"Text [SI-unit]"`` form.  ``si_unit`` is
-    filled automatically from the label when omitted, so legacy definitions and new
-    explicit definitions can coexist during a gradual migration.
+    ``minimum_si`` and ``maximum_si`` are hard physical/model bounds.  The separate
+    ``ui_minimum_si`` and ``ui_maximum_si`` fields only define a convenient editing
+    range and therefore never reject a manually entered value.
     """
 
     key: str
@@ -74,27 +81,65 @@ class ParameterSpec:
     display_units: tuple[str, ...] = ()
     minimum_si: float | None = None
     maximum_si: float | None = None
+    ui_minimum_si: float | None = None
+    ui_maximum_si: float | None = None
     step_si: float | None = None
     control: ControlKind = "number"
     help_text: str = ""
+    integer: bool = False
+    choices: tuple[float, ...] = ()
+    choice_labels: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.si_unit:
             _text, inferred_unit = split_label(self.label)
             object.__setattr__(self, "si_unit", inferred_unit)
+        object.__setattr__(self, "display_units", tuple(self.display_units))
+        object.__setattr__(self, "choices", tuple(float(value) for value in self.choices))
+        object.__setattr__(self, "choice_labels", tuple(self.choice_labels))
+
         if not self.key:
             raise ValueError("ParameterSpec.key får inte vara tom.")
-        if self.control not in {"number", "slider", "log"}:
+        if self.control not in {"number", "slider", "log", "select"}:
             raise ValueError(f"Okänd kontrolltyp: {self.control}")
-        if self.minimum_si is not None and self.maximum_si is not None:
-            if self.minimum_si > self.maximum_si:
-                raise ValueError(
-                    f"minimum_si är större än maximum_si för parametern {self.key}."
-                )
+        self._validate_range("minimum_si", self.minimum_si, "maximum_si", self.maximum_si)
+        self._validate_range(
+            "ui_minimum_si", self.ui_minimum_si, "ui_maximum_si", self.ui_maximum_si
+        )
         if self.step_si is not None and self.step_si <= 0:
             raise ValueError(f"step_si måste vara positiv för parametern {self.key}.")
-        if self.control == "log" and self.minimum_si is not None and self.minimum_si <= 0:
-            raise ValueError(f"Logaritmisk parameter {self.key} måste ha positiv minimum_si.")
+        if self.control == "log":
+            lower = self.ui_minimum_si if self.ui_minimum_si is not None else self.minimum_si
+            if lower is not None and lower <= 0:
+                raise ValueError(
+                    f"Logaritmisk parameter {self.key} måste ha en positiv UI-minimigräns."
+                )
+            if self.default_si <= 0:
+                raise ValueError(
+                    f"Logaritmisk parameter {self.key} måste ha ett positivt standardvärde."
+                )
+        if self.control == "select" and not self.choices:
+            raise ValueError(f"Select-parametern {self.key} saknar choices.")
+        if self.choice_labels and len(self.choice_labels) != len(self.choices):
+            raise ValueError(
+                f"choice_labels och choices måste vara lika långa för {self.key}."
+            )
+        if self.choices and self.default_si not in self.choices:
+            raise ValueError(
+                f"Standardvärdet för {self.key} måste finnas bland choices."
+            )
+        if self.integer and not float(self.default_si).is_integer():
+            raise ValueError(f"Standardvärdet för heltalsparametern {self.key} är inte heltal.")
+
+    @staticmethod
+    def _validate_range(
+        lower_name: str,
+        lower: float | None,
+        upper_name: str,
+        upper: float | None,
+    ) -> None:
+        if lower is not None and upper is not None and lower > upper:
+            raise ValueError(f"{lower_name} är större än {upper_name}.")
 
     @classmethod
     def from_legacy(cls, parameter: Sequence[object]) -> "ParameterSpec":
@@ -108,19 +153,18 @@ class ParameterSpec:
         label = str(label)
         _text, unit = split_label(label)
         default = float(default_si)
-        minimum = _inferred_minimum(label, unit)
-        control: ControlKind = "number"
-        if minimum is not None and minimum > 0 and default > 0:
-            if abs(default) < 1e-4 or abs(default) >= 1e4:
-                control = "log"
         return cls(
             key=str(key),
             label=label,
             default_si=default,
             si_unit=unit,
-            minimum_si=minimum,
-            control=control,
+            minimum_si=_inferred_minimum(label, unit),
         )
+
+    @property
+    def choice_map(self) -> dict[str, float]:
+        labels = self.choice_labels or tuple(f"{value:g}" for value in self.choices)
+        return dict(zip(labels, self.choices))
 
     def validate(self, value: object) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
@@ -140,7 +184,7 @@ class ParameterSpec:
                 )
             ]
 
-        unit_suffix = f" {self.si_unit}" if self.si_unit else ""
+        unit_suffix = f" {self.si_unit}" if self.si_unit and self.si_unit != "-" else ""
         if self.minimum_si is not None and number < self.minimum_si:
             issues.append(
                 ValidationIssue(
@@ -165,9 +209,28 @@ class ParameterSpec:
                     key=self.key,
                 )
             )
+        if self.integer and not number.is_integer():
+            issues.append(
+                ValidationIssue(
+                    "error", f"{self.label} måste vara ett heltal.", key=self.key
+                )
+            )
+        if self.choices and number not in self.choices:
+            allowed = ", ".join(f"{value:g}" for value in self.choices)
+            issues.append(
+                ValidationIssue(
+                    "error",
+                    f"{self.label} måste vara ett av följande värden: {allowed}.",
+                    key=self.key,
+                )
+            )
 
         default = float(self.default_si)
-        if default != 0 and number != 0 and math.copysign(1.0, number) == math.copysign(1.0, default):
+        if (
+            default != 0
+            and number != 0
+            and math.copysign(1.0, number) == math.copysign(1.0, default)
+        ):
             ratio = abs(number / default)
             if ratio >= 1e12 or ratio <= 1e-12:
                 issues.append(
@@ -182,13 +245,17 @@ class ParameterSpec:
 
 
 def _inferred_minimum(label: str, unit: str) -> float | None:
-    """Infer only conservative non-negativity constraints for legacy parameters."""
+    """Infer conservative non-negativity constraints for legacy parameters."""
 
     text, _unit = split_label(label)
     normalized = re.sub(r"\s+", " ", text.casefold())
+    # Start/end coordinates and signed coefficients must remain free to be negative.
+    signed_markers = ("min", "start", "koefficient", "laddning", "fält", "potential")
+    if any(marker in normalized for marker in signed_markers):
+        return None
     if any(word in normalized for word in _POSITIVE_LABEL_WORDS):
         return 0.0
-    if unit in {"kg", "m²", "m³", "Hz", "Ω", "F", "H", "S/m"}:
+    if unit in {"kg", "m²", "m³", "Hz", "Ω", "F", "H", "S/m", "s"}:
         return 0.0
     return None
 

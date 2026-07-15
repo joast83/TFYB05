@@ -22,12 +22,8 @@ from matplotlib.patches import Circle, Ellipse, Rectangle
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-from .parameters import (
-    ParameterSpec,
-    ValidationIssue,
-    normalize_parameter_specs,
-    validate_parameter_values,
-)
+from .parameters import ParameterSpec, ValidationIssue, validate_parameter_values
+from .parameter_catalog import parameter_specs_for_problem
 EPS0 = 8.854187817e-12
 MU0 = 4e-07 * math.pi
 
@@ -304,7 +300,7 @@ class ProblemBase:
 
     def parameter_specs(self):
         """Return structured parameter metadata with legacy tuple compatibility."""
-        return normalize_parameter_specs(self.parameters)
+        return parameter_specs_for_problem(self.__class__.__name__, self.parameters)
 
     def defaults(self):
         return {spec.key: spec.default_si for spec in self.parameter_specs()}
