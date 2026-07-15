@@ -21,6 +21,13 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+from .parameters import (
+    ParameterSpec,
+    ValidationIssue,
+    normalize_parameter_specs,
+    validate_parameter_values,
+)
 EPS0 = 8.854187817e-12
 MU0 = 4e-07 * math.pi
 
@@ -295,11 +302,34 @@ class ProblemBase:
     description = ''
     parameters = []
 
+    def parameter_specs(self):
+        """Return structured parameter metadata with legacy tuple compatibility."""
+        return normalize_parameter_specs(self.parameters)
+
     def defaults(self):
-        return {p[0]: p[2] for p in self.parameters}
+        return {spec.key: spec.default_si for spec in self.parameter_specs()}
 
     def validate(self, params):
+        """Problem-specific validation hook retained for existing subclasses."""
         return None
+
+    def validation_issues(self, params):
+        """Combine generic metadata validation with the problem's own checks."""
+        issues = validate_parameter_values(self.parameter_specs(), params)
+        if any(issue.severity == 'error' for issue in issues):
+            return issues
+        try:
+            problem_error = self.validate(params)
+        except Exception as exc:
+            issues.append(ValidationIssue('error', f'Valideringen misslyckades: {exc}'))
+            return issues
+        if problem_error:
+            issues.append(ValidationIssue('error', str(problem_error)))
+        return issues
+
+    def validate_all(self, params):
+        """Compatibility alias used by the user interfaces and tests."""
+        return self.validation_issues(params)
 
     def plot(self, fig, params, mode):
         raise NotImplementedError

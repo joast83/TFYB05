@@ -59,7 +59,7 @@ class DisplayScale:
         return float(display_value) * self.factor
 
 
-def _split_label(label: str) -> tuple[str, str]:
+def split_label(label: str) -> tuple[str, str]:
     match = _LABEL_UNIT_RE.match(label)
     if not match:
         return label.strip(), ""
@@ -149,6 +149,42 @@ def _candidate_score(display_value: float, factor: float) -> tuple[float, float,
     return (range_penalty + prefix_penalty, target_penalty, abs(math.log10(factor)))
 
 
+
+def display_scales_for(label: str) -> tuple[DisplayScale, ...]:
+    """Return all supported display scales for a label, including the SI scale.
+
+    The result is useful for interfaces that expose an explicit unit selector.  It is
+    deliberately independent of the current value so changing a parameter does not
+    silently change its unit.
+    """
+
+    text, unit = split_label(label)
+    base = DisplayScale(label, label, unit, unit, 1.0)
+    if not unit or unit == "-":
+        return (base,)
+
+    candidates = (
+        _mass_unit_candidates(unit)
+        or _length_unit_candidates(unit)
+        or _general_unit_candidates(unit)
+    )
+    if not candidates:
+        return (base,)
+
+    scales = [
+        DisplayScale(
+            original_label=label,
+            label=f"{text} [{display_unit}]",
+            si_unit=unit,
+            display_unit=display_unit,
+            factor=factor,
+        )
+        for display_unit, factor in candidates
+    ]
+    if not any(scale.factor == 1.0 for scale in scales):
+        scales.append(base)
+    return tuple(sorted(scales, key=lambda scale: scale.factor))
+
 def display_scale_for(label: str, default_value: float) -> DisplayScale:
     """Choose a readable display unit from a parameter label and SI default.
 
@@ -156,7 +192,7 @@ def display_scale_for(label: str, default_value: float) -> DisplayScale:
     purely presentational; ``factor`` always converts the displayed value back to SI.
     """
 
-    text, unit = _split_label(label)
+    text, unit = split_label(label)
     base = DisplayScale(label, label, unit, unit, 1.0)
     if not unit or unit == "-":
         return base

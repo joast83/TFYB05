@@ -20,6 +20,7 @@ class ElectrostaticsApp(tk.Tk):
         self.current_problem = PROBLEMS[0]
         self.param_vars = {}
         self.param_scales = {}
+        self.param_specs = {}
         self._build_layout()
         self._load_problem(self.current_problem.name)
 
@@ -90,10 +91,12 @@ class ElectrostaticsApp(tk.Tk):
             child.destroy()
         self.param_vars.clear()
         self.param_scales.clear()
+        self.param_specs.clear()
         defaults = self.current_problem.defaults()
-        for i, (key, label, _default) in enumerate(self.current_problem.parameters):
+        for i, spec in enumerate(self.current_problem.parameter_specs()):
+            key = spec.key
             default_value_si = float(defaults[key])
-            scale = display_scale_for(label, default_value_si)
+            scale = display_scale_for(spec.label, default_value_si)
             ttk.Label(self.params_frame, text=scale.label).grid(
                 row=i, column=0, sticky='w', pady=3
             )
@@ -105,6 +108,7 @@ class ElectrostaticsApp(tk.Tk):
             entry.bind('<Return>', lambda _event: self.refresh_plot())
             self.param_vars[key] = var
             self.param_scales[key] = scale
+            self.param_specs[key] = spec
         mode_options = mode_options_for_problem(self.current_problem)
         self.mode_display_to_internal = dict(mode_options)
         self.mode_combo.configure(values=[label for label, _internal in mode_options])
@@ -128,12 +132,20 @@ class ElectrostaticsApp(tk.Tk):
                 raise ValueError(f"Parametern '{key}' måste vara ett tal.") from exc
         return params
 
+    def _validate_params(self, params):
+        issues = self.current_problem.validate_all(params)
+        errors = [issue.message for issue in issues if issue.severity == 'error']
+        warnings = [issue.message for issue in issues if issue.severity == 'warning']
+        if errors:
+            raise ValueError('\n'.join(errors))
+        if warnings:
+            self.status_var.set('Varning: ' + ' '.join(warnings))
+        return warnings
+
     def run_current_check(self):
         try:
             params = self._read_params()
-            error = self.current_problem.validate(params)
-            if error:
-                raise ValueError(error)
+            self._validate_params(params)
             text = self.current_problem.physics_check(params)
             self.result_label.configure(text=text)
             self.status_var.set(f'Kontrollerad: {self.current_problem.name}')
@@ -144,9 +156,7 @@ class ElectrostaticsApp(tk.Tk):
     def refresh_plot(self):
         try:
             params = self._read_params()
-            error = self.current_problem.validate(params)
-            if error:
-                raise ValueError(error)
+            warnings = self._validate_params(params)
             requested_mode = self.mode_display_to_internal.get(self.mode_var.get(), 'Field')
             normalized_mode = normalize_mode_for_problem(self.current_problem, requested_mode)
             self.current_problem.plot(self.figure, params, normalized_mode)
@@ -159,7 +169,8 @@ class ElectrostaticsApp(tk.Tk):
             self.view3d_figure.tight_layout()
             self.view3d_canvas.draw()
             self.result_label.configure(text=self.current_problem.result_summary(params, normalized_mode))
-            self.status_var.set(f'Ritad: {self.current_problem.name} — {self.mode_var.get()}')
+            if not warnings:
+                self.status_var.set(f'Ritad: {self.current_problem.name} — {self.mode_var.get()}')
         except Exception as exc:
             self.status_var.set(f'Fel: {exc}')
             messagebox.showerror('Fel vid plottning', str(exc))

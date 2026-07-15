@@ -1,0 +1,1126 @@
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+new file mode 100644
+index 0000000..b057a4f
+--- /dev/null
++++ b/.github/workflows/tests.yml
+@@ -0,0 +1,29 @@
++name: Tests
++
++on:
++  push:
++  pull_request:
++
++jobs:
++  test:
++    runs-on: ubuntu-latest
++    strategy:
++      matrix:
++        python-version: ["3.10", "3.11", "3.12"]
++    env:
++      MPLBACKEND: Agg
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-python@v5
++        with:
++          python-version: ${{ matrix.python-version }}
++          cache: pip
++      - name: Install dependencies
++        run: |
++          python -m pip install --upgrade pip
++          pip install -r requirements.txt
++          pip install "pytest>=8,<10"
++      - name: Compile source
++        run: python -m compileall -q em_visualisering streamlit_app.py
++      - name: Run tests
++        run: python -m pytest -q
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..3359273
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,14 @@
++__pycache__/
++*.py[cod]
++*$py.class
++.pytest_cache/
++.ruff_cache/
++.mypy_cache/
++.coverage
++htmlcov/
++.venv/
++venv/
++env/
++.env
++.DS_Store
++*.patch
+diff --git a/IMPLEMENTATION_NOTES.md b/IMPLEMENTATION_NOTES.md
+new file mode 100644
+index 0000000..c9e01db
+--- /dev/null
++++ b/IMPLEMENTATION_NOTES.md
+@@ -0,0 +1,61 @@
++# Parameter and reliability improvements
++
++This change set introduces the first reliability-focused improvement package without
++requiring an immediate rewrite of every problem definition.
++
++## What changed
++
++- Legacy `(key, label, default_si)` parameter tuples remain supported.
++- New problems can use `ParameterSpec` for explicit units, bounds, increments,
++  controls, and help text.
++- Generic finite-value and bound validation is combined with each problem's existing
++  `validate()` implementation.
++- Streamlit parameter editing uses a form, avoiding expensive plot regeneration on
++  every input change.
++- Streamlit can render all views or only one selected view and supports three
++  Matplotlib quality levels.
++- Tkinter and Streamlit now use the same parameter metadata and validation pipeline.
++- Pytest contract and rendering tests cover every registered problem and mode.
++- GitHub Actions runs compilation and tests on Python 3.10, 3.11, and 3.12.
++- `.gitignore` and `pyproject.toml` establish basic repository hygiene and packaging.
++
++## Defining a new structured parameter
++
++```python
++from ..core import ParameterSpec, ProblemBase
++
++
++class ExampleProblem(ProblemBase):
++    parameters = [
++        ParameterSpec(
++            key="Q",
++            label="Laddning Q [C]",
++            default_si=30e-9,
++            minimum_si=0.0,
++            maximum_si=1e-6,
++            step_si=1e-9,
++            control="slider",
++            help_text="Total fri laddning på kroppen.",
++        ),
++        # Legacy tuples can remain alongside structured parameters.
++        ("a", "Radie a [m]", 0.1),
++    ]
++```
++
++Supported control values are `number`, `slider`, and `log`. Sliders require explicit
++minimum and maximum values; otherwise the interfaces safely fall back to a numerical
++input.
++
++## Applying the files
++
++Extract the replacement archive at the repository root and overwrite existing files.
++Then run:
++
++```bash
++python -m pip install -r requirements.txt
++python -m pip install "pytest>=8,<10"
++python -m pytest -q
++streamlit run streamlit_app.py
++```
++
++The automated suite contains 499 tests in the supplied repository snapshot.
+diff --git a/em_visualisering/app.py b/em_visualisering/app.py
+index 739756a..b24b2f5 100644
+--- a/em_visualisering/app.py
++++ b/em_visualisering/app.py
+@@ -20,6 +20,7 @@ class ElectrostaticsApp(tk.Tk):
+         self.current_problem = PROBLEMS[0]
+         self.param_vars = {}
+         self.param_scales = {}
++        self.param_specs = {}
+         self._build_layout()
+         self._load_problem(self.current_problem.name)
+ 
+@@ -90,10 +91,12 @@ class ElectrostaticsApp(tk.Tk):
+             child.destroy()
+         self.param_vars.clear()
+         self.param_scales.clear()
++        self.param_specs.clear()
+         defaults = self.current_problem.defaults()
+-        for i, (key, label, _default) in enumerate(self.current_problem.parameters):
++        for i, spec in enumerate(self.current_problem.parameter_specs()):
++            key = spec.key
+             default_value_si = float(defaults[key])
+-            scale = display_scale_for(label, default_value_si)
++            scale = display_scale_for(spec.label, default_value_si)
+             ttk.Label(self.params_frame, text=scale.label).grid(
+                 row=i, column=0, sticky='w', pady=3
+             )
+@@ -105,6 +108,7 @@ class ElectrostaticsApp(tk.Tk):
+             entry.bind('<Return>', lambda _event: self.refresh_plot())
+             self.param_vars[key] = var
+             self.param_scales[key] = scale
++            self.param_specs[key] = spec
+         mode_options = mode_options_for_problem(self.current_problem)
+         self.mode_display_to_internal = dict(mode_options)
+         self.mode_combo.configure(values=[label for label, _internal in mode_options])
+@@ -128,12 +132,20 @@ class ElectrostaticsApp(tk.Tk):
+                 raise ValueError(f"Parametern '{key}' måste vara ett tal.") from exc
+         return params
+ 
++    def _validate_params(self, params):
++        issues = self.current_problem.validate_all(params)
++        errors = [issue.message for issue in issues if issue.severity == 'error']
++        warnings = [issue.message for issue in issues if issue.severity == 'warning']
++        if errors:
++            raise ValueError('\n'.join(errors))
++        if warnings:
++            self.status_var.set('Varning: ' + ' '.join(warnings))
++        return warnings
++
+     def run_current_check(self):
+         try:
+             params = self._read_params()
+-            error = self.current_problem.validate(params)
+-            if error:
+-                raise ValueError(error)
++            self._validate_params(params)
+             text = self.current_problem.physics_check(params)
+             self.result_label.configure(text=text)
+             self.status_var.set(f'Kontrollerad: {self.current_problem.name}')
+@@ -144,9 +156,7 @@ class ElectrostaticsApp(tk.Tk):
+     def refresh_plot(self):
+         try:
+             params = self._read_params()
+-            error = self.current_problem.validate(params)
+-            if error:
+-                raise ValueError(error)
++            warnings = self._validate_params(params)
+             requested_mode = self.mode_display_to_internal.get(self.mode_var.get(), 'Field')
+             normalized_mode = normalize_mode_for_problem(self.current_problem, requested_mode)
+             self.current_problem.plot(self.figure, params, normalized_mode)
+@@ -159,7 +169,8 @@ class ElectrostaticsApp(tk.Tk):
+             self.view3d_figure.tight_layout()
+             self.view3d_canvas.draw()
+             self.result_label.configure(text=self.current_problem.result_summary(params, normalized_mode))
+-            self.status_var.set(f'Ritad: {self.current_problem.name} — {self.mode_var.get()}')
++            if not warnings:
++                self.status_var.set(f'Ritad: {self.current_problem.name} — {self.mode_var.get()}')
+         except Exception as exc:
+             self.status_var.set(f'Fel: {exc}')
+             messagebox.showerror('Fel vid plottning', str(exc))
+diff --git a/em_visualisering/core.py b/em_visualisering/core.py
+index b045511..5c60701 100644
+--- a/em_visualisering/core.py
++++ b/em_visualisering/core.py
+@@ -21,6 +21,13 @@ from matplotlib.lines import Line2D
+ from matplotlib.patches import Circle, Ellipse, Rectangle
+ from mpl_toolkits.mplot3d import Axes3D
+ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
++
++from .parameters import (
++    ParameterSpec,
++    ValidationIssue,
++    normalize_parameter_specs,
++    validate_parameter_values,
++)
+ EPS0 = 8.854187817e-12
+ MU0 = 4e-07 * math.pi
+ 
+@@ -295,12 +302,35 @@ class ProblemBase:
+     description = ''
+     parameters = []
+ 
++    def parameter_specs(self):
++        """Return structured parameter metadata with legacy tuple compatibility."""
++        return normalize_parameter_specs(self.parameters)
++
+     def defaults(self):
+-        return {p[0]: p[2] for p in self.parameters}
++        return {spec.key: spec.default_si for spec in self.parameter_specs()}
+ 
+     def validate(self, params):
++        """Problem-specific validation hook retained for existing subclasses."""
+         return None
+ 
++    def validation_issues(self, params):
++        """Combine generic metadata validation with the problem's own checks."""
++        issues = validate_parameter_values(self.parameter_specs(), params)
++        if any(issue.severity == 'error' for issue in issues):
++            return issues
++        try:
++            problem_error = self.validate(params)
++        except Exception as exc:
++            issues.append(ValidationIssue('error', f'Valideringen misslyckades: {exc}'))
++            return issues
++        if problem_error:
++            issues.append(ValidationIssue('error', str(problem_error)))
++        return issues
++
++    def validate_all(self, params):
++        """Compatibility alias used by the user interfaces and tests."""
++        return self.validation_issues(params)
++
+     def plot(self, fig, params, mode):
+         raise NotImplementedError
+ 
+diff --git a/em_visualisering/parameters.py b/em_visualisering/parameters.py
+new file mode 100644
+index 0000000..1f957fb
+--- /dev/null
++++ b/em_visualisering/parameters.py
+@@ -0,0 +1,232 @@
++"""Structured metadata and validation for editable problem parameters.
++
++Legacy problem definitions use three-tuples ``(key, label, default_si)``.  The
++normalisation helpers in this module keep those definitions working while allowing
++new problems to opt into explicit bounds, control types, help text and unit choices.
++"""
++
++from __future__ import annotations
++
++from dataclasses import dataclass
++import math
++import re
++from typing import Iterable, Literal, Mapping, Sequence
++
++from .unit_scaling import split_label
++
++ControlKind = Literal["number", "slider", "log"]
++Severity = Literal["error", "warning"]
++
++_POSITIVE_LABEL_WORDS = (
++    "radie",
++    "radius",
++    "längd",
++    "length",
++    "avstånd",
++    "distance",
++    "bredd",
++    "width",
++    "tjocklek",
++    "thickness",
++    "höjd",
++    "height",
++    "diameter",
++    "massa",
++    "mass",
++    "area",
++    "volym",
++    "volume",
++    "konduktivitet",
++    "conductivity",
++    "resistans",
++    "resistance",
++    "kapacitans",
++    "capacitance",
++    "induktans",
++    "inductance",
++    "frekvens",
++    "frequency",
++)
++
++
++@dataclass(frozen=True)
++class ValidationIssue:
++    """One user-facing validation result."""
++
++    severity: Severity
++    message: str
++    key: str | None = None
++
++
++@dataclass(frozen=True)
++class ParameterSpec:
++    """Metadata for one parameter stored internally in SI units.
++
++    ``label`` may retain the historical ``"Text [SI-unit]"`` form.  ``si_unit`` is
++    filled automatically from the label when omitted, so legacy definitions and new
++    explicit definitions can coexist during a gradual migration.
++    """
++
++    key: str
++    label: str
++    default_si: float
++    si_unit: str = ""
++    display_units: tuple[str, ...] = ()
++    minimum_si: float | None = None
++    maximum_si: float | None = None
++    step_si: float | None = None
++    control: ControlKind = "number"
++    help_text: str = ""
++
++    def __post_init__(self) -> None:
++        if not self.si_unit:
++            _text, inferred_unit = split_label(self.label)
++            object.__setattr__(self, "si_unit", inferred_unit)
++        if not self.key:
++            raise ValueError("ParameterSpec.key får inte vara tom.")
++        if self.control not in {"number", "slider", "log"}:
++            raise ValueError(f"Okänd kontrolltyp: {self.control}")
++        if self.minimum_si is not None and self.maximum_si is not None:
++            if self.minimum_si > self.maximum_si:
++                raise ValueError(
++                    f"minimum_si är större än maximum_si för parametern {self.key}."
++                )
++        if self.step_si is not None and self.step_si <= 0:
++            raise ValueError(f"step_si måste vara positiv för parametern {self.key}.")
++        if self.control == "log" and self.minimum_si is not None and self.minimum_si <= 0:
++            raise ValueError(f"Logaritmisk parameter {self.key} måste ha positiv minimum_si.")
++
++    @classmethod
++    def from_legacy(cls, parameter: Sequence[object]) -> "ParameterSpec":
++        """Convert a historical ``(key, label, default_si)`` tuple."""
++
++        if len(parameter) != 3:
++            raise ValueError(
++                "Legacy-parametrar måste ha formen (key, label, default_si)."
++            )
++        key, label, default_si = parameter
++        label = str(label)
++        _text, unit = split_label(label)
++        default = float(default_si)
++        minimum = _inferred_minimum(label, unit)
++        control: ControlKind = "number"
++        if minimum is not None and minimum > 0 and default > 0:
++            if abs(default) < 1e-4 or abs(default) >= 1e4:
++                control = "log"
++        return cls(
++            key=str(key),
++            label=label,
++            default_si=default,
++            si_unit=unit,
++            minimum_si=minimum,
++            control=control,
++        )
++
++    def validate(self, value: object) -> list[ValidationIssue]:
++        issues: list[ValidationIssue] = []
++        try:
++            number = float(value)
++        except (TypeError, ValueError):
++            return [
++                ValidationIssue(
++                    "error", f"{self.label} måste vara ett tal.", key=self.key
++                )
++            ]
++
++        if not math.isfinite(number):
++            return [
++                ValidationIssue(
++                    "error", f"{self.label} måste vara ett ändligt tal.", key=self.key
++                )
++            ]
++
++        unit_suffix = f" {self.si_unit}" if self.si_unit else ""
++        if self.minimum_si is not None and number < self.minimum_si:
++            issues.append(
++                ValidationIssue(
++                    "error",
++                    f"{self.label} får inte vara mindre än {self.minimum_si:g}{unit_suffix}.",
++                    key=self.key,
++                )
++            )
++        if self.maximum_si is not None and number > self.maximum_si:
++            issues.append(
++                ValidationIssue(
++                    "error",
++                    f"{self.label} får inte vara större än {self.maximum_si:g}{unit_suffix}.",
++                    key=self.key,
++                )
++            )
++        if self.control == "log" and number <= 0:
++            issues.append(
++                ValidationIssue(
++                    "error",
++                    f"{self.label} måste vara positiv för logaritmisk skala.",
++                    key=self.key,
++                )
++            )
++
++        default = float(self.default_si)
++        if default != 0 and number != 0 and math.copysign(1.0, number) == math.copysign(1.0, default):
++            ratio = abs(number / default)
++            if ratio >= 1e12 or ratio <= 1e-12:
++                issues.append(
++                    ValidationIssue(
++                        "warning",
++                        f"{self.label} ligger mer än tolv storleksordningar från standardvärdet; "
++                        "visualiseringen kan bli numeriskt svårtolkad.",
++                        key=self.key,
++                    )
++                )
++        return issues
++
++
++def _inferred_minimum(label: str, unit: str) -> float | None:
++    """Infer only conservative non-negativity constraints for legacy parameters."""
++
++    text, _unit = split_label(label)
++    normalized = re.sub(r"\s+", " ", text.casefold())
++    if any(word in normalized for word in _POSITIVE_LABEL_WORDS):
++        return 0.0
++    if unit in {"kg", "m²", "m³", "Hz", "Ω", "F", "H", "S/m"}:
++        return 0.0
++    return None
++
++
++def normalize_parameter_specs(
++    parameters: Iterable[ParameterSpec | Sequence[object] | Mapping[str, object]],
++) -> tuple[ParameterSpec, ...]:
++    """Return immutable specs from mixed legacy and structured definitions."""
++
++    specs: list[ParameterSpec] = []
++    seen: set[str] = set()
++    for parameter in parameters:
++        if isinstance(parameter, ParameterSpec):
++            spec = parameter
++        elif isinstance(parameter, Mapping):
++            spec = ParameterSpec(**parameter)
++        else:
++            spec = ParameterSpec.from_legacy(parameter)
++        if spec.key in seen:
++            raise ValueError(f"Dubblett av parameternyckeln {spec.key!r}.")
++        seen.add(spec.key)
++        specs.append(spec)
++    return tuple(specs)
++
++
++def validate_parameter_values(
++    specs: Iterable[ParameterSpec], params: Mapping[str, object]
++) -> list[ValidationIssue]:
++    """Validate presence, finiteness and per-parameter bounds."""
++
++    issues: list[ValidationIssue] = []
++    for spec in specs:
++        if spec.key not in params:
++            issues.append(
++                ValidationIssue(
++                    "error", f"Parametern {spec.key!r} saknas.", key=spec.key
++                )
++            )
++            continue
++        issues.extend(spec.validate(params[spec.key]))
++    return issues
+diff --git a/em_visualisering/unit_scaling.py b/em_visualisering/unit_scaling.py
+index dc48b42..e3c111a 100644
+--- a/em_visualisering/unit_scaling.py
++++ b/em_visualisering/unit_scaling.py
+@@ -59,7 +59,7 @@ class DisplayScale:
+         return float(display_value) * self.factor
+ 
+ 
+-def _split_label(label: str) -> tuple[str, str]:
++def split_label(label: str) -> tuple[str, str]:
+     match = _LABEL_UNIT_RE.match(label)
+     if not match:
+         return label.strip(), ""
+@@ -149,6 +149,42 @@ def _candidate_score(display_value: float, factor: float) -> tuple[float, float,
+     return (range_penalty + prefix_penalty, target_penalty, abs(math.log10(factor)))
+ 
+ 
++
++def display_scales_for(label: str) -> tuple[DisplayScale, ...]:
++    """Return all supported display scales for a label, including the SI scale.
++
++    The result is useful for interfaces that expose an explicit unit selector.  It is
++    deliberately independent of the current value so changing a parameter does not
++    silently change its unit.
++    """
++
++    text, unit = split_label(label)
++    base = DisplayScale(label, label, unit, unit, 1.0)
++    if not unit or unit == "-":
++        return (base,)
++
++    candidates = (
++        _mass_unit_candidates(unit)
++        or _length_unit_candidates(unit)
++        or _general_unit_candidates(unit)
++    )
++    if not candidates:
++        return (base,)
++
++    scales = [
++        DisplayScale(
++            original_label=label,
++            label=f"{text} [{display_unit}]",
++            si_unit=unit,
++            display_unit=display_unit,
++            factor=factor,
++        )
++        for display_unit, factor in candidates
++    ]
++    if not any(scale.factor == 1.0 for scale in scales):
++        scales.append(base)
++    return tuple(sorted(scales, key=lambda scale: scale.factor))
++
+ def display_scale_for(label: str, default_value: float) -> DisplayScale:
+     """Choose a readable display unit from a parameter label and SI default.
+ 
+@@ -156,7 +192,7 @@ def display_scale_for(label: str, default_value: float) -> DisplayScale:
+     purely presentational; ``factor`` always converts the displayed value back to SI.
+     """
+ 
+-    text, unit = _split_label(label)
++    text, unit = split_label(label)
+     base = DisplayScale(label, label, unit, unit, 1.0)
+     if not unit or unit == "-":
+         return base
+diff --git a/pyproject.toml b/pyproject.toml
+new file mode 100644
+index 0000000..206f2df
+--- /dev/null
++++ b/pyproject.toml
+@@ -0,0 +1,28 @@
++[build-system]
++requires = ["setuptools>=69"]
++build-backend = "setuptools.build_meta"
++
++[project]
++name = "tfyb05-em-visualiseringar"
++version = "0.2.0"
++description = "Interactive electromagnetic-field visualisations for TFYB05"
++readme = "README.md"
++requires-python = ">=3.10"
++dependencies = [
++  "matplotlib>=3.8,<4",
++  "numpy>=1.26,<3",
++  "plotly>=5.20,<7",
++  "streamlit>=1.36,<2",
++]
++
++[project.optional-dependencies]
++dev = [
++  "pytest>=8,<10",
++]
++
++[tool.pytest.ini_options]
++addopts = "-ra"
++testpaths = ["tests"]
++
++[tool.setuptools.packages.find]
++include = ["em_visualisering*"]
+diff --git a/streamlit_app.py b/streamlit_app.py
+index 0ad1102..fd43899 100644
+--- a/streamlit_app.py
++++ b/streamlit_app.py
+@@ -24,7 +24,10 @@ st.set_page_config(
+ )
+ 
+ st.title("EM-visualiseringar")
+-st.caption("Interaktiva visualiseringar för elektrostatik, magnetostatik och teoriavsnitt med interaktiva figurer.")
++st.caption(
++    "Interaktiva visualiseringar för elektrostatik, magnetostatik och "
++    "teoriavsnitt med interaktiva figurer."
++)
+ 
+ problem_lookup = {problem.name: problem for problem in PROBLEMS}
+ theory_lookup = {page.title: page for page in THEORY_PAGES}
+@@ -55,30 +58,114 @@ with st.sidebar:
+         requested_mode = dict(mode_options)[mode_label]
+         mode = normalize_mode_for_problem(problem, requested_mode)
+ 
++        view_mode = st.selectbox(
++            "Vyer",
++            ["Alla", "Huvudgraf", "Geometriskiss", "3-D-vy"],
++            index=0,
++            help="Välj en enskild vy för snabbare uppdatering på långsamma datorer.",
++        )
++        quality = st.select_slider(
++            "Återgivningskvalitet",
++            options=["Snabb", "Normal", "Hög"],
++            value="Normal",
++            help="Påverkar upplösningen för Matplotlib-vyerna.",
++        )
++
+         st.markdown("### Parametrar")
+-        st.caption("Värden visas i praktiska enheter; fysikberäkningen använder SI-enheter.")
++        st.caption(
++            "Värden visas i praktiska enheter; fysikberäkningen använder SI-enheter. "
++            "Ändringar ritas först när du trycker på knappen."
++        )
+         defaults = problem.defaults()
+         params = {}
+-        for key, label, _default in problem.parameters:
+-            default_value_si = float(defaults[key])
+-            scale = display_scale_for(label, default_value_si)
+-            default_value_display = scale.to_display(default_value_si)
+-            value_display = st.number_input(
+-                scale.label,
+-                value=default_value_display,
+-                step=suggested_step(default_value_display),
+-                format="%.12g",
+-                key=(
+-                    f"{problem.__class__.__name__}:{key}:"
+-                    f"{scale.display_unit or 'dimensionless'}"
+-                ),
+-                help=(
+-                    f"Visas i {scale.display_unit}; beräkningen använder {scale.si_unit}."
+-                    if scale.factor != 1.0
++        with st.form(
++            key=f"parameters:{problem.__class__.__name__}",
++            clear_on_submit=False,
++        ):
++            for spec in problem.parameter_specs():
++                default_value_si = float(defaults[spec.key])
++                scale = display_scale_for(spec.label, default_value_si)
++                default_display = scale.to_display(default_value_si)
++                min_display = (
++                    scale.to_display(spec.minimum_si)
++                    if spec.minimum_si is not None
+                     else None
+-                ),
+-            )
+-            params[key] = scale.to_si(value_display)
++                )
++                max_display = (
++                    scale.to_display(spec.maximum_si)
++                    if spec.maximum_si is not None
++                    else None
++                )
++                step_display = (
++                    spec.step_si / scale.factor
++                    if spec.step_si is not None
++                    else suggested_step(default_display)
++                )
++                help_parts = []
++                if spec.help_text:
++                    help_parts.append(spec.help_text)
++                if scale.factor != 1.0:
++                    help_parts.append(
++                        f"Visas i {scale.display_unit}; beräkningen använder {scale.si_unit}."
++                    )
++                widget_help = " ".join(help_parts) or None
++                widget_key = (
++                    f"{problem.__class__.__name__}:{spec.key}:"
++                    f"{scale.display_unit or 'dimensionless'}"
++                )
++
++                if (
++                    spec.control == "slider"
++                    and min_display is not None
++                    and max_display is not None
++                ):
++                    value_display = st.slider(
++                        scale.label,
++                        min_value=float(min_display),
++                        max_value=float(max_display),
++                        value=float(default_display),
++                        step=float(step_display),
++                        key=widget_key,
++                        help=widget_help,
++                    )
++                elif (
++                    spec.control == "log"
++                    and min_display is not None
++                    and min_display > 0
++                    and max_display is not None
++                    and max_display > min_display
++                ):
++                    import math
++
++                    exponent = st.slider(
++                        scale.label,
++                        min_value=float(math.log10(min_display)),
++                        max_value=float(math.log10(max_display)),
++                        value=float(math.log10(default_display)),
++                        step=0.05,
++                        key=widget_key,
++                        help=(widget_help or "") + " Logaritmisk skala.",
++                        format="10^%.2f",
++                    )
++                    value_display = 10.0 ** exponent
++                else:
++                    number_kwargs = {
++                        "label": scale.label,
++                        "value": float(default_display),
++                        "step": float(step_display),
++                        "format": "%.12g",
++                        "key": widget_key,
++                        "help": widget_help,
++                    }
++                    if min_display is not None:
++                        number_kwargs["min_value"] = float(min_display)
++                    if max_display is not None:
++                        number_kwargs["max_value"] = float(max_display)
++                    value_display = st.number_input(**number_kwargs)
++
++                params[spec.key] = scale.to_si(value_display)
++
++            st.form_submit_button("Uppdatera figurer", type="primary", use_container_width=True)
+ 
+ if content_type == "Teori":
+     render_theory_page(theory_page)
+@@ -90,9 +177,13 @@ st.write(problem.description)
+ with st.expander("Fysikalisk idé", expanded=True):
+     st.write(problem.pedagogical_note())
+ 
+-validation_error = problem.validate(params)
+-if validation_error:
+-    st.error(validation_error)
++issues = problem.validate_all(params)
++for issue in issues:
++    if issue.severity == "error":
++        st.error(issue.message)
++    else:
++        st.warning(issue.message)
++if any(issue.severity == "error" for issue in issues):
+     st.stop()
+ 
+ try:
+@@ -100,44 +191,70 @@ try:
+ except Exception as exc:
+     st.warning(f"Kunde inte beräkna sammanfattning: {exc}")
+ 
+-col1, col2, col3 = st.columns([5, 3, 4])
++quality_dpi = {"Snabb": 82, "Normal": 110, "Hög": 145}[quality]
+ 
+-try:
+-    fig = Figure(figsize=(7.0, 6.0), dpi=110)
+-    problem.plot(fig, params, mode)
+-    fig.tight_layout()
+-    with col1:
+-        st.markdown("#### Huvudgraf")
+-        st.pyplot(fig, clear_figure=True)
+-except Exception as exc:
+-    with col1:
+-        st.error(f"Fel i huvudgraf: {exc}")
+ 
+-try:
+-    geometry_fig = Figure(figsize=(3.8, 6.0), dpi=110)
+-    problem.draw_geometry(geometry_fig, params)
+-    geometry_fig.tight_layout()
+-    with col2:
+-        st.markdown("#### Geometriskiss")
+-        st.pyplot(geometry_fig, clear_figure=True)
+-except Exception as exc:
+-    with col2:
+-        st.error(f"Fel i geometriskiss: {exc}")
++def render_main_graph(container):
++    try:
++        fig = Figure(figsize=(7.0, 6.0), dpi=quality_dpi)
++        problem.plot(fig, params, mode)
++        fig.tight_layout()
++        with container:
++            st.markdown("#### Huvudgraf")
++            st.pyplot(fig, clear_figure=True)
++    except Exception as exc:
++        with container:
++            st.error(f"Fel i huvudgraf: {exc}")
+ 
+-try:
+-    view3d_fig = make_plotly_3d_figure(problem, params, mode)
+-    with col3:
+-        st.markdown("#### 3-D-vy")
+-        st.caption("Rotera, zooma och panorera direkt i webbläsaren.")
+-        st.plotly_chart(view3d_fig, use_container_width=True, config={"displaylogo": False})
+-except Exception as exc:
+-    with col3:
+-        st.error(f"Fel i interaktiv 3-D-vy: {exc}")
+-        st.info("Reservvisning med Matplotlib visas eftersom Plotly-renderingen misslyckades.")
+-        fallback_fig = Figure(figsize=(4.8, 6.0), dpi=110)
+-        problem.draw_3d(fallback_fig, params, mode)
+-        fallback_fig.tight_layout()
+-        st.pyplot(fallback_fig, clear_figure=True)
++
++def render_geometry(container):
++    try:
++        geometry_fig = Figure(figsize=(3.8, 6.0), dpi=quality_dpi)
++        problem.draw_geometry(geometry_fig, params)
++        geometry_fig.tight_layout()
++        with container:
++            st.markdown("#### Geometriskiss")
++            st.pyplot(geometry_fig, clear_figure=True)
++    except Exception as exc:
++        with container:
++            st.error(f"Fel i geometriskiss: {exc}")
++
++
++def render_3d(container):
++    try:
++        view3d_fig = make_plotly_3d_figure(problem, params, mode)
++        with container:
++            st.markdown("#### 3-D-vy")
++            st.caption("Rotera, zooma och panorera direkt i webbläsaren.")
++            st.plotly_chart(
++                view3d_fig,
++                use_container_width=True,
++                config={"displaylogo": False},
++                key=f"plotly:{problem.__class__.__name__}:{mode}",
++            )
++    except Exception as exc:
++        with container:
++            st.error(f"Fel i interaktiv 3-D-vy: {exc}")
++            st.info(
++                "Reservvisning med Matplotlib visas eftersom Plotly-renderingen misslyckades."
++            )
++            fallback_fig = Figure(figsize=(4.8, 6.0), dpi=quality_dpi)
++            problem.draw_3d(fallback_fig, params, mode)
++            fallback_fig.tight_layout()
++            st.pyplot(fallback_fig, clear_figure=True)
++
++
++if view_mode == "Alla":
++    col1, col2, col3 = st.columns([5, 3, 4])
++    render_main_graph(col1)
++    render_geometry(col2)
++    render_3d(col3)
++elif view_mode == "Huvudgraf":
++    render_main_graph(st.container())
++elif view_mode == "Geometriskiss":
++    render_geometry(st.container())
++else:
++    render_3d(st.container())
+ 
+ with st.expander("Kontrollera formel/gränsfall"):
+     try:
+diff --git a/tests/test_parameters.py b/tests/test_parameters.py
+new file mode 100644
+index 0000000..1f400a5
+--- /dev/null
++++ b/tests/test_parameters.py
+@@ -0,0 +1,66 @@
++import math
++
++from em_visualisering.core import ProblemBase
++from em_visualisering.parameters import ParameterSpec, normalize_parameter_specs
++
++
++class ExampleProblem(ProblemBase):
++    parameters = [
++        ("q", "Laddning q [C]", 30e-9),
++        ParameterSpec(
++            key="radius",
++            label="Radie [m]",
++            default_si=0.2,
++            minimum_si=0.01,
++            maximum_si=2.0,
++            step_si=0.01,
++            control="slider",
++            help_text="Geometrisk radie.",
++        ),
++    ]
++
++    def validate(self, params):
++        if params["q"] == 0:
++            return "Laddningen får inte vara noll i denna exempelmodell."
++        return None
++
++
++def test_legacy_and_structured_parameters_can_coexist():
++    specs = ExampleProblem().parameter_specs()
++    assert [spec.key for spec in specs] == ["q", "radius"]
++    assert specs[0].si_unit == "C"
++    assert specs[1].control == "slider"
++    assert ExampleProblem().defaults() == {"q": 30e-9, "radius": 0.2}
++
++
++def test_generic_and_problem_specific_validation_are_combined():
++    problem = ExampleProblem()
++    issues = problem.validate_all({"q": 0.0, "radius": -1.0})
++    messages = [issue.message for issue in issues]
++    assert any("mindre än" in message for message in messages)
++    # Generic errors short-circuit model-specific validation to avoid invalid calculations.
++    assert not any("Laddningen" in message for message in messages)
++
++    issues = problem.validate_all({"q": 0.0, "radius": 0.2})
++    assert any("Laddningen" in issue.message for issue in issues)
++
++
++def test_non_finite_values_are_rejected():
++    problem = ExampleProblem()
++    issues = problem.validate_all({"q": math.nan, "radius": 0.2})
++    assert any(issue.severity == "error" and "ändligt" in issue.message for issue in issues)
++
++
++def test_mapping_definitions_are_supported():
++    specs = normalize_parameter_specs(
++        [
++            {
++                "key": "frequency",
++                "label": "Frekvens [Hz]",
++                "default_si": 50.0,
++                "minimum_si": 0.0,
++            }
++        ]
++    )
++    assert specs[0].key == "frequency"
++    assert specs[0].minimum_si == 0.0
+diff --git a/tests/test_problem_contracts.py b/tests/test_problem_contracts.py
+new file mode 100644
+index 0000000..8c2cfed
+--- /dev/null
++++ b/tests/test_problem_contracts.py
+@@ -0,0 +1,39 @@
++import math
++
++import pytest
++
++from em_visualisering.modes import mode_options_for_problem
++from em_visualisering.registry import PROBLEMS
++from em_visualisering.unit_scaling import display_scale_for
++
++
++@pytest.mark.parametrize("problem", PROBLEMS, ids=lambda problem: problem.__class__.__name__)
++def test_problem_defaults_satisfy_parameter_contract(problem):
++    specs = problem.parameter_specs()
++    defaults = problem.defaults()
++
++    assert specs
++    assert set(defaults) == {spec.key for spec in specs}
++    assert len(defaults) == len(specs)
++    assert all(math.isfinite(float(value)) for value in defaults.values())
++
++    errors = [
++        issue.message
++        for issue in problem.validate_all(defaults)
++        if issue.severity == "error"
++    ]
++    assert not errors
++
++
++@pytest.mark.parametrize("problem", PROBLEMS, ids=lambda problem: problem.__class__.__name__)
++def test_default_display_units_round_trip(problem):
++    for spec in problem.parameter_specs():
++        scale = display_scale_for(spec.label, spec.default_si)
++        assert scale.to_si(scale.to_display(spec.default_si)) == pytest.approx(spec.default_si)
++
++
++@pytest.mark.parametrize("problem", PROBLEMS, ids=lambda problem: problem.__class__.__name__)
++def test_every_problem_has_at_least_one_mode(problem):
++    options = mode_options_for_problem(problem)
++    assert options
++    assert len({internal for _label, internal in options}) == len(options)
+diff --git a/tests/test_render_smoke.py b/tests/test_render_smoke.py
+new file mode 100644
+index 0000000..934d75b
+--- /dev/null
++++ b/tests/test_render_smoke.py
+@@ -0,0 +1,45 @@
++import matplotlib
++matplotlib.use("Agg", force=True)
++
++from matplotlib.figure import Figure
++import pytest
++
++from em_visualisering.modes import mode_options_for_problem
++from em_visualisering.plotly_bridge import make_plotly_3d_figure
++from em_visualisering.registry import PROBLEMS
++
++
++CASES = [
++    (problem, internal_mode)
++    for problem in PROBLEMS
++    for _label, internal_mode in mode_options_for_problem(problem)
++]
++
++
++def case_id(case):
++    problem, mode = case
++    return f"{problem.__class__.__name__}-{mode}"
++
++
++@pytest.mark.parametrize("problem,mode", CASES, ids=[case_id(case) for case in CASES])
++def test_default_matplotlib_rendering(problem, mode):
++    params = problem.defaults()
++
++    main = Figure(figsize=(4, 3), dpi=60)
++    problem.plot(main, params, mode)
++    assert main.axes
++
++    geometry = Figure(figsize=(3, 3), dpi=60)
++    problem.draw_geometry(geometry, params)
++    assert geometry.axes
++
++    view3d = Figure(figsize=(3, 3), dpi=60)
++    problem.draw_3d(view3d, params, mode)
++    assert view3d.axes
++
++
++@pytest.mark.parametrize("problem,mode", CASES, ids=[case_id(case) for case in CASES])
++def test_default_plotly_rendering(problem, mode):
++    figure = make_plotly_3d_figure(problem, problem.defaults(), mode)
++    assert figure is not None
++    assert len(figure.data) >= 0
+diff --git a/tests/test_unit_scaling.py b/tests/test_unit_scaling.py
+index 4a7c8bc..d5b6582 100644
+--- a/tests/test_unit_scaling.py
++++ b/tests/test_unit_scaling.py
+@@ -1,41 +1,45 @@
+ import math
+-import unittest
+-
+-from em_visualisering.registry import PROBLEMS
+-from em_visualisering.unit_scaling import display_scale_for, suggested_step
+-
+-
+-class UnitScalingTests(unittest.TestCase):
+-    def test_charge_is_shown_in_nanocoulombs(self):
+-        scale = display_scale_for("Laddning Q [C]", 3e-8)
+-        self.assertEqual(scale.display_unit, "nC")
+-        self.assertAlmostEqual(scale.to_display(3e-8), 30.0)
+-        self.assertAlmostEqual(scale.to_si(30.0), 3e-8)
+-
+-    def test_compound_unit_keeps_denominator(self):
+-        scale = display_scale_for("Linjeladdningstäthet λ [C/m]", 1e-9)
+-        self.assertEqual(scale.display_unit, "nC/m")
+-        self.assertAlmostEqual(scale.to_display(1e-9), 1.0)
+-
+-    def test_area_prefix_has_squared_factor(self):
+-        scale = display_scale_for("Tvärsnitt S [m²]", 2e-4)
+-        self.assertEqual(scale.display_unit, "cm²")
+-        self.assertAlmostEqual(scale.factor, 1e-4)
+-        self.assertAlmostEqual(scale.to_display(2e-4), 2.0)
+-
+-    def test_every_problem_default_round_trips(self):
+-        for problem in PROBLEMS:
+-            for key, label, default in problem.parameters:
+-                with self.subTest(problem=problem.name, parameter=key):
+-                    default = float(default)
+-                    scale = display_scale_for(label, default)
+-                    shown = scale.to_display(default)
+-                    restored = scale.to_si(shown)
+-                    self.assertTrue(math.isfinite(shown))
+-                    self.assertAlmostEqual(restored, default, delta=max(1e-15, abs(default) * 1e-12))
+-                    self.assertGreater(scale.factor, 0.0)
+-                    self.assertGreater(suggested_step(shown), 0.0)
+-
+-
+-if __name__ == "__main__":
+-    unittest.main()
++
++import pytest
++
++from em_visualisering.unit_scaling import (
++    display_scale_for,
++    display_scales_for,
++    suggested_step,
++)
++
++
++@pytest.mark.parametrize(
++    ("label", "value_si", "expected_unit", "expected_display"),
++    [
++        ("Laddning Q [C]", 30e-9, "nC", 30.0),
++        ("Längd [m]", 0.15, "cm", 15.0),
++        ("Area [m²]", 2e-4, "cm²", 2.0),
++        ("Massa [kg]", 1e-3, "g", 1.0),
++        ("Fält [V/m]", 2e8, "MV/m", 200.0),
++    ],
++)
++def test_engineering_scale_and_round_trip(label, value_si, expected_unit, expected_display):
++    scale = display_scale_for(label, value_si)
++    assert scale.display_unit == expected_unit
++    assert scale.to_display(value_si) == pytest.approx(expected_display)
++    assert scale.to_si(scale.to_display(value_si)) == pytest.approx(value_si)
++
++
++def test_unsupported_unit_is_left_unchanged():
++    scale = display_scale_for("Vinkel [grader]", 12.0)
++    assert scale.factor == 1.0
++    assert scale.label == "Vinkel [grader]"
++
++
++def test_all_scale_candidates_include_si():
++    scales = display_scales_for("Laddning [C]")
++    assert any(scale.display_unit == "C" and scale.factor == 1.0 for scale in scales)
++    assert any(scale.display_unit == "nC" for scale in scales)
++
++
++def test_suggested_step_is_positive_and_finite():
++    for value in (0.0, 1e-12, 3.0, 4e9):
++        step = suggested_step(value)
++        assert step > 0
++        assert math.isfinite(step)

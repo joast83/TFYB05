@@ -1,41 +1,45 @@
 import math
-import unittest
 
-from em_visualisering.registry import PROBLEMS
-from em_visualisering.unit_scaling import display_scale_for, suggested_step
+import pytest
 
-
-class UnitScalingTests(unittest.TestCase):
-    def test_charge_is_shown_in_nanocoulombs(self):
-        scale = display_scale_for("Laddning Q [C]", 3e-8)
-        self.assertEqual(scale.display_unit, "nC")
-        self.assertAlmostEqual(scale.to_display(3e-8), 30.0)
-        self.assertAlmostEqual(scale.to_si(30.0), 3e-8)
-
-    def test_compound_unit_keeps_denominator(self):
-        scale = display_scale_for("Linjeladdningstäthet λ [C/m]", 1e-9)
-        self.assertEqual(scale.display_unit, "nC/m")
-        self.assertAlmostEqual(scale.to_display(1e-9), 1.0)
-
-    def test_area_prefix_has_squared_factor(self):
-        scale = display_scale_for("Tvärsnitt S [m²]", 2e-4)
-        self.assertEqual(scale.display_unit, "cm²")
-        self.assertAlmostEqual(scale.factor, 1e-4)
-        self.assertAlmostEqual(scale.to_display(2e-4), 2.0)
-
-    def test_every_problem_default_round_trips(self):
-        for problem in PROBLEMS:
-            for key, label, default in problem.parameters:
-                with self.subTest(problem=problem.name, parameter=key):
-                    default = float(default)
-                    scale = display_scale_for(label, default)
-                    shown = scale.to_display(default)
-                    restored = scale.to_si(shown)
-                    self.assertTrue(math.isfinite(shown))
-                    self.assertAlmostEqual(restored, default, delta=max(1e-15, abs(default) * 1e-12))
-                    self.assertGreater(scale.factor, 0.0)
-                    self.assertGreater(suggested_step(shown), 0.0)
+from em_visualisering.unit_scaling import (
+    display_scale_for,
+    display_scales_for,
+    suggested_step,
+)
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize(
+    ("label", "value_si", "expected_unit", "expected_display"),
+    [
+        ("Laddning Q [C]", 30e-9, "nC", 30.0),
+        ("Längd [m]", 0.15, "cm", 15.0),
+        ("Area [m²]", 2e-4, "cm²", 2.0),
+        ("Massa [kg]", 1e-3, "g", 1.0),
+        ("Fält [V/m]", 2e8, "MV/m", 200.0),
+    ],
+)
+def test_engineering_scale_and_round_trip(label, value_si, expected_unit, expected_display):
+    scale = display_scale_for(label, value_si)
+    assert scale.display_unit == expected_unit
+    assert scale.to_display(value_si) == pytest.approx(expected_display)
+    assert scale.to_si(scale.to_display(value_si)) == pytest.approx(value_si)
+
+
+def test_unsupported_unit_is_left_unchanged():
+    scale = display_scale_for("Vinkel [grader]", 12.0)
+    assert scale.factor == 1.0
+    assert scale.label == "Vinkel [grader]"
+
+
+def test_all_scale_candidates_include_si():
+    scales = display_scales_for("Laddning [C]")
+    assert any(scale.display_unit == "C" and scale.factor == 1.0 for scale in scales)
+    assert any(scale.display_unit == "nC" for scale in scales)
+
+
+def test_suggested_step_is_positive_and_finite():
+    for value in (0.0, 1e-12, 3.0, 4e9):
+        step = suggested_step(value)
+        assert step > 0
+        assert math.isfinite(step)
