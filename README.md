@@ -1,43 +1,81 @@
-# EM-visualiseringar – web version
+# TFYB05 – interaktiva EM-visualiseringar
 
-This package contains a Streamlit wrapper around the original Tkinter/Matplotlib code. The web version renders the right-hand 3-D panel with Plotly/WebGL so users can rotate, zoom and pan the 3-D views directly in the browser.
+En Streamlit- och Tkinter-applikation för visualisering av elektrostatik,
+magnetostatik och relaterad teori. Alla fysikberäkningar använder SI-enheter,
+medan gränssnitten kan visa praktiska enheter som nC, µC, mm och cm.
 
-## Run locally
+## Funktioner
+
+- 65 registrerade övningsproblem med 2-D-graf, geometriskiss och 3-D-vy.
+- Interaktiv Plotly/WebGL-vy i Streamlit.
+- Enhetsväljare med korrekt konvertering till och från SI.
+- Metadataanpassade talfält, linjära reglage, logaritmiska reglage och valfält.
+- Separata utkast och applicerade parametrar så att figurer inte räknas om vid varje ändring.
+- Export av parametrar till JSON/CSV samt figurer till PNG/HTML.
+- Gemensam validering, renderingskontroller och automatiska tester.
+- Teorisidor för Gauss flödessats och Stokes/Ampères lag.
+
+## Kör webbappen lokalt
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+```
+
+Aktivera miljön:
+
+```bash
+# Linux/macOS
+source .venv/bin/activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+Installera och starta:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-## Deploy on Streamlit Community Cloud
+## Streamlit Community Cloud
 
-1. Create a GitHub repository.
-2. Upload all files in this folder to the repository root.
-3. Go to Streamlit Community Cloud and create a new app from your repository.
-4. Set the main file path to `streamlit_app.py`.
-5. Deploy.
+1. Ladda upp innehållet i denna mapp till roten av GitHub-repot.
+2. Skapa en ny app i Streamlit Community Cloud.
+3. Ange `streamlit_app.py` som appens huvudfil.
+4. Starta deploymenten.
 
-The required Python packages are listed in `requirements.txt`, including `plotly` for browser-interactive 3-D views.
+`requirements.txt` och `pyproject.toml` använder samma versionsintervall för att
+förhindra att en för gammal Streamlit-version installeras.
 
-## Deploy on Render
-
-Use these settings for a Web Service:
-
-- Build command: `pip install -r requirements.txt`
-- Start command: `streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0`
-
-## Notes
-
-The original desktop entry point still exists:
+## Desktopversion
 
 ```bash
 python -m em_visualisering
 ```
 
-For web hosting, use `streamlit_app.py`, not the original Tkinter GUI.
+Desktopversionen kräver ett grafiskt skrivbord med Tk-stöd.
 
-## Interactive 3-D implementation
+## Tester
 
-The original problem classes still define `draw_3d(fig, params, mode)` using Matplotlib-style calls. In the Streamlit app, `em_visualisering.plotly_bridge.make_plotly_3d_figure(...)` captures those calls and converts surfaces, lines, scatter points, arrows and simple 3-D boxes into Plotly traces. The desktop Matplotlib/Tkinter entry point remains unchanged.
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest -q
+```
+
+GitHub Actions kompilerar koden och kör testsviten på Python 3.10, 3.11 och 3.12.
+
+## Projektstruktur
+
+```text
+streamlit_app.py                 Webapp
+em_visualisering/app.py          Tkinter-app
+em_visualisering/core.py         Basmodell och ritverktyg
+em_visualisering/parameters.py   Parameter- och valideringsmetadata
+em_visualisering/parameter_catalog.py
+em_visualisering/unit_scaling.py
+em_visualisering/problems/       Övningsproblem per kapitel
+em_visualisering/theory_pages.py Interaktiva teorisidor
+tests/                           Automatiska tester
+```

@@ -74,3 +74,11 @@ streamlit run streamlit_app.py
 The supplied snapshot passes **634 tests**. The Streamlit default exercise was also
 executed with `streamlit.testing.v1.AppTest`, and the Tkinter application was launched
 headlessly with Xvfb.
+
+## Repository audit completion
+
+The complete upload snapshot also includes aligned dependency ranges in
+`requirements.txt`, a Streamlit execution test, repository hygiene rules, GitHub
+Actions, a cloud-friendly Streamlit configuration, and the theory-page module required
+by `streamlit_app.py`. Generated caches and obsolete patch artifacts are intentionally
+excluded.

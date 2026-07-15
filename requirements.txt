@@ -1,4 +1,4 @@
-streamlit
-matplotlib
-numpy
-plotly
+streamlit>=1.48,<2
+matplotlib>=3.8,<4
+numpy>=1.26,<3
+plotly>=5.20,<7
