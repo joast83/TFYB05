@@ -36,3 +36,13 @@ De obligatoriska fritextfälten har tagits bort.
 - **Utforska** uppmanar fortfarande studenten att göra en mental förutsägelse före figuren, men kräver inte att något skrivs in.
 - Den obligatoriska reflektionsrutan efter figuren är borttagen. I stället visas en kort uppmaning att jämföra figuren med den egna förutsägelsen.
 - Principen är: be studenten tänka, men kräv inte textinmatning om programmet inte faktiskt kan tolka eller ge meningsfull återkoppling på texten.
+
+
+## v2.2: riktigt facit i stället för app-kontroll
+
+- Den tidigare sektionen **Facit / kontroll** är borttagen.
+- `result_summary()` och `physics_check()` används inte längre som ersättning för facit i studieläget.
+- Varje av de 65 registrerade uppgifterna har nu ett **Visa facit**-fält med slutresultatet från den tryckta problemsamlingens facit.
+- Facit är avsiktligt kort: det ger slutresultatet men inte en fullständig lösningsgång.
+- Appens numeriska/analytiska kontroll finns kvar enbart under **Utforska → Avancerat**, där den tydligt märks som appens egen beräkning och inte kursfacit.
+- De pedagogiska **Kontroll 1/2**-punkterna behålls separat som extra ledtrådar för symmetri, tecken, dimensioner och gränsfall.

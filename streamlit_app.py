@@ -22,6 +22,7 @@ import streamlit as st
 from matplotlib.figure import Figure
 
 from em_visualisering.guidance import guidance_for_problem
+from em_visualisering.facit import facit_for_problem
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
@@ -443,42 +444,18 @@ def _render_solution_checks(problem, guidance) -> None:
             st.write(check)
 
 
-def _render_answer_check(problem) -> None:
-    st.markdown("### Facit / kontroll")
-    ready_key = f"answer-ready:{problem.__class__.__name__}"
-    reveal_key = f"answer-reveal:{problem.__class__.__name__}"
-    ready = st.checkbox(
-        "Jag har ett färdigt eget försök",
-        key=ready_key,
-        help="Facitdelen är tänkt som kontroll efter ett seriöst lösningsförsök.",
+def _render_facit(problem) -> None:
+    st.markdown("### Facit")
+    st.caption(
+        "Detta är slutresultatet från problemsamlingens tryckta facit. "
+        "Det är avsiktligt inte en fullständig lösning."
     )
-    if st.button(
-        "Visa appens kontrollresultat",
-        key=f"answer-button:{problem.__class__.__name__}",
-        disabled=not ready,
-        type="secondary",
-    ):
-        st.session_state[reveal_key] = True
-
-    if not st.session_state.get(reveal_key, False):
-        return
-
-    params = _default_params(problem)
-    mode = _default_mode(problem)
-    st.warning(
-        "Detta är appens analytiska/numeriska kontroll med uppgiftens standardvärden. "
-        "Den visas separat från Utforska-läget så att grafer inte fungerar som facit."
-    )
-    try:
-        st.info(problem.result_summary(params, mode))
-    except Exception as exc:
-        st.warning(f"Kontrollresultatet kunde inte beräknas: {exc}")
-
-    with st.expander("Visa formel- och gränsfallskontroller", expanded=False):
-        try:
-            st.write(problem.physics_check(params))
-        except Exception as exc:
-            st.warning(f"Den analytiska kontrollen kunde inte utföras: {exc}")
+    with st.expander("Visa facit", expanded=False):
+        answer = facit_for_problem(problem)
+        if answer:
+            st.markdown(answer)
+        else:
+            st.warning("Inget facit är registrerat för den här uppgiften.")
 
 
 def _render_solve_mode(problem) -> None:
@@ -502,7 +479,7 @@ def _render_solve_mode(problem) -> None:
     _render_targeted_help(problem, guidance)
     _render_progressive_hints(problem, guidance)
     _render_solution_checks(problem, guidance)
-    _render_answer_check(problem)
+    _render_facit(problem)
 
 
 def _render_explore_parameters(problem) -> dict[str, float]:
@@ -690,6 +667,21 @@ def _render_explore_mode(problem) -> None:
             key=f"render-3d:{problem.__class__.__name__}:{mode}",
         ):
             _render_3d(problem, params, mode)
+
+
+    with st.expander("Avancerat: appens beräkning och interna kontroll", expanded=False):
+        st.caption(
+            "Det här är inte kursens facit. Det är appens egen beräkning för de "
+            "parametrar du valt och kan användas vid teknisk utforskning."
+        )
+        try:
+            st.info(problem.result_summary(params, mode))
+        except Exception as exc:
+            st.warning(f"Appens beräkning kunde inte utföras: {exc}")
+        try:
+            st.write(problem.physics_check(params))
+        except Exception as exc:
+            st.warning(f"Den interna kontrollen kunde inte utföras: {exc}")
 
 
 st.title("EM-studiehjälp")

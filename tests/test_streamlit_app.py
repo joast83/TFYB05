@@ -32,6 +32,19 @@ def test_self_checks_are_optional_expanders_not_fake_text_inputs():
     )
 
 
+def test_real_facit_is_a_simple_expander_without_fake_readiness_gate():
+    app = _run_app()
+    assert any(expander.label == "Visa facit" for expander in app.expander)
+    assert not any(
+        checkbox.label == "Jag har ett färdigt eget försök"
+        for checkbox in app.checkbox
+    )
+    assert not any(
+        button.label == "Visa appens kontrollresultat"
+        for button in app.button
+    )
+
+
 def test_explore_mode_exposes_parameters_without_requiring_written_prediction():
     app = _run_app()
     _radio(app, "Arbetssätt").set_value("Utforska").run()
