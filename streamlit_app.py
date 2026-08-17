@@ -1,7 +1,10 @@
-"""Webbversion av EM-visualiseringar.
+"""Webbversion av TFYB05-studiehjälpen.
 
 Kör lokalt med:
     streamlit run streamlit_app.py
+
+Den här versionen lägger lösningsstrategi och progressiva ledtrådar före
+visualiseringarna. De befintliga graferna finns kvar, men är dolda som standard.
 """
 
 from __future__ import annotations
@@ -12,12 +15,14 @@ import json
 import math
 
 import matplotlib
+
 matplotlib.use("Agg", force=True)
 
 import plotly.io as pio
 import streamlit as st
 from matplotlib.figure import Figure
 
+from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
@@ -32,7 +37,7 @@ from em_visualisering.unit_scaling import (
 
 
 st.set_page_config(
-    page_title="EM-visualiseringar",
+    page_title="EM-studiehjälp",
     page_icon="⚡",
     layout="wide",
 )
@@ -50,7 +55,7 @@ def _render_matplotlib_png(
     view: str,
     dpi: int,
 ) -> bytes:
-    """Render a deterministic Matplotlib view and cache the encoded PNG."""
+    """Rendera en Matplotlib-vy och cacha PNG-resultatet."""
 
     problem = problem_class_lookup[problem_class_name]
     params = dict(params_items)
@@ -65,6 +70,7 @@ def _render_matplotlib_png(
         problem.draw_3d(fig, params, mode)
     else:
         raise ValueError(f"Okänd vy: {view}")
+
     fig.tight_layout()
     output = BytesIO()
     fig.savefig(output, format="png", dpi=dpi, bbox_inches="tight")
@@ -134,7 +140,7 @@ def _unit_scale_for_widget(problem, spec):
 
 
 def _render_parameter_control(problem, spec) -> float:
-    """Render one metadata-driven control and return its SI value."""
+    """Rendera en metadata-driven parameterkontroll och returnera SI-värdet."""
 
     draft_key = _draft_key(problem, spec.key)
     draft_si = float(st.session_state[draft_key])
@@ -156,6 +162,7 @@ def _render_parameter_control(problem, spec) -> float:
 
     scales, unit_key = _unit_scale_for_widget(problem, spec)
     text_label, _si_unit = split_label(spec.label)
+
     if len(scales) > 1:
         value_column, unit_column = st.columns([3.4, 1.0], vertical_alignment="bottom")
         with unit_column:
@@ -188,6 +195,7 @@ def _render_parameter_control(problem, spec) -> float:
         if spec.step_si is not None
         else suggested_step(displayed_value)
     )
+
     help_parts = [spec.help_text] if spec.help_text else []
     if scale.factor != 1.0:
         help_parts.append(
@@ -283,10 +291,51 @@ def _configuration_csv(problem, params: dict[str, float]) -> bytes:
     return output.getvalue().encode("utf-8-sig")
 
 
-st.title("EM-visualiseringar")
+def _render_solution_guidance(problem) -> bool:
+    """Visa progressiva ledtrådar. Returnerar True om specifik vägledning finns."""
+
+    guidance = guidance_for_problem(problem)
+    if guidance is None:
+        with st.expander("Fysikalisk idé", expanded=True):
+            st.write(problem.pedagogical_note())
+        st.caption(
+            "Den här uppgiften har ännu inte fått den nya progressiva vägledningen. "
+            "Den äldre fysiknoteringen visas tills vidare."
+        )
+        return False
+
+    st.markdown("### Lösningsstrategi")
+    st.markdown(f"**Mål:** {guidance.learning_goal}")
+    st.caption("Nyckelbegrepp: " + " · ".join(guidance.concepts))
+
+    st.markdown("#### Börja här")
+    st.info(guidance.start_here)
+
+    st.caption(
+        "Försök gå vidare själv efter varje ledtråd. Öppna nästa först när du verkligen har fastnat."
+    )
+    for index, hint in enumerate(guidance.hints, start=1):
+        with st.expander(f"Ledtråd {index}", expanded=False):
+            st.write(hint)
+
+    if guidance.common_pitfall:
+        with st.expander("Vanlig fallgrop", expanded=False):
+            st.warning(guidance.common_pitfall)
+
+    with st.expander("Kontrollera din lösning", expanded=False):
+        for check in guidance.self_checks:
+            st.markdown(f"- {check}")
+
+    if guidance.visualization_note:
+        st.caption("När figuren hjälper: " + guidance.visualization_note)
+
+    return True
+
+
+st.title("EM-studiehjälp")
 st.caption(
-    "Interaktiva visualiseringar för elektrostatik, magnetostatik och "
-    "teoriavsnitt med interaktiva figurer."
+    "Fokus ligger på idéerna som behövs för att lösa uppgifterna. "
+    "Visualiseringarna finns kvar som ett frivilligt stöd efter att du försökt själv."
 )
 
 with st.sidebar:
@@ -320,19 +369,19 @@ with st.sidebar:
             "Vyer",
             ["Alla", "Huvudgraf", "Geometriskiss", "3-D-vy"],
             index=0,
-            help="Välj en enskild vy för snabbare uppdatering på långsamma datorer.",
+            help="Används endast om du väljer att visa visualiseringarna.",
         )
         quality = st.select_slider(
             "Återgivningskvalitet",
             options=["Snabb", "Normal", "Hög"],
             value="Normal",
-            help="Påverkar upplösningen för Matplotlib-vyerna.",
+            help="Påverkar endast Matplotlib-vyerna.",
         )
 
         st.markdown("### Parametrar")
         st.caption(
-            "Redigera ett utkast och tryck sedan på Uppdatera figurer. Enhetsvalet "
-            "påverkar endast presentationen; fysikberäkningen använder SI."
+            "Parametrarna kan användas för att kontrollera gränsfall och figurer. "
+            "Enhetsvalet påverkar endast presentationen; fysikberäkningen använder SI."
         )
 
         for spec in problem.parameter_specs():
@@ -342,16 +391,21 @@ with st.sidebar:
         draft_params = _current_draft(problem)
         applied_params = dict(st.session_state[_applied_key(problem)])
         has_pending_changes = any(
-            not math.isclose(draft_params[key], applied_params[key], rel_tol=1e-12, abs_tol=0.0)
+            not math.isclose(
+                draft_params[key],
+                applied_params[key],
+                rel_tol=1e-12,
+                abs_tol=0.0,
+            )
             for key in draft_params
         )
         if has_pending_changes:
-            st.caption("● Det finns ändringar som ännu inte har ritats.")
+            st.caption("● Det finns parameterändringar som ännu inte har applicerats.")
 
         apply_column, reset_column = st.columns(2)
         with apply_column:
             apply_clicked = st.button(
-                "Uppdatera figurer", type="primary", width="stretch"
+                "Applicera parametrar", type="primary", width="stretch"
             )
         with reset_column:
             reset_clicked = st.button("Återställ", width="stretch")
@@ -399,9 +453,7 @@ if content_type == "Teori":
 
 st.subheader(problem.name)
 st.write(problem.description)
-
-with st.expander("Fysikalisk idé", expanded=True):
-    st.write(problem.pedagogical_note())
+_render_solution_guidance(problem)
 
 issues = problem.validate_all(params)
 for issue in issues:
@@ -410,6 +462,23 @@ for issue in issues:
     else:
         st.warning(issue.message)
 if any(issue.severity == "error" for issue in issues):
+    st.stop()
+
+st.divider()
+show_visualizations = st.toggle(
+    "Visa visualiseringar och numeriska resultat",
+    value=False,
+    help=(
+        "Öppna detta efter att du har försökt lösa uppgiften. "
+        "Det visar den tidigare resultat- och grafdelen av programmet."
+    ),
+)
+
+if not show_visualizations:
+    st.caption(
+        "Visualiseringarna är dolda. De är tänkta som kontroll och tolkning, "
+        "inte som första steg i lösningen."
+    )
     st.stop()
 
 try:
