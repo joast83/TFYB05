@@ -1,17 +1,16 @@
-"""Webbversion av TFYB05-studiehjälpen.
+"""TFYB05 study interface focused on problem-solving rather than plotting.
 
-Kör lokalt med:
+Run locally with:
     streamlit run streamlit_app.py
 
-Den här versionen lägger lösningsstrategi och progressiva ledtrådar före
-visualiseringarna. De befintliga graferna finns kvar, men är dolda som standard.
+The default "Lös uppgift" mode shows the problem, method choice, progressive help,
+active self-checks and a deliberately gated answer check. Parameter controls and
+visualisations live in the separate "Utforska" mode.
 """
 
 from __future__ import annotations
 
-from io import BytesIO, StringIO
-import csv
-import json
+from io import BytesIO
 import math
 
 import matplotlib
@@ -26,6 +25,16 @@ from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
+from em_visualisering.study_content import (
+    CHAPTER_TITLES,
+    chapter_number,
+    method_key_for_problem,
+    method_label,
+    method_meta_for_problem,
+    method_options_for_problem,
+    problem_id_from_name,
+    statement_for_problem,
+)
 from em_visualisering.theory_pages import THEORY_PAGES, render_theory_page
 from em_visualisering.unit_scaling import (
     display_scale_by_unit,
@@ -42,9 +51,20 @@ st.set_page_config(
     layout="wide",
 )
 
-problem_lookup = {problem.name: problem for problem in PROBLEMS}
+
 problem_class_lookup = {problem.__class__.__name__: problem for problem in PROBLEMS}
 theory_lookup = {page.title: page for page in THEORY_PAGES}
+
+
+def _problems_by_chapter() -> dict[int, list]:
+    grouped: dict[int, list] = {}
+    for problem in PROBLEMS:
+        pid = problem_id_from_name(problem.name)
+        grouped.setdefault(chapter_number(pid), []).append(problem)
+    return grouped
+
+
+PROBLEMS_BY_CHAPTER = _problems_by_chapter()
 
 
 @st.cache_data(show_spinner=False, max_entries=256)
@@ -55,18 +75,17 @@ def _render_matplotlib_png(
     view: str,
     dpi: int,
 ) -> bytes:
-    """Rendera en Matplotlib-vy och cacha PNG-resultatet."""
-
     problem = problem_class_lookup[problem_class_name]
     params = dict(params_items)
+
     if view == "main":
-        fig = Figure(figsize=(7.0, 6.0), dpi=dpi)
+        fig = Figure(figsize=(7.0, 5.6), dpi=dpi)
         problem.plot(fig, params, mode)
     elif view == "geometry":
-        fig = Figure(figsize=(3.8, 6.0), dpi=dpi)
+        fig = Figure(figsize=(4.4, 4.6), dpi=dpi)
         problem.draw_geometry(fig, params)
     elif view == "3d":
-        fig = Figure(figsize=(4.8, 6.0), dpi=dpi)
+        fig = Figure(figsize=(5.0, 5.6), dpi=dpi)
         problem.draw_3d(fig, params, mode)
     else:
         raise ValueError(f"Okänd vy: {view}")
@@ -89,6 +108,20 @@ def _render_plotly_json(
     return figure.to_json()
 
 
+def _default_mode(problem) -> str:
+    options = mode_options_for_problem(problem)
+    requested = options[0][1]
+    return normalize_mode_for_problem(problem, requested)
+
+
+def _default_params(problem) -> dict[str, float]:
+    return {key: float(value) for key, value in problem.defaults().items()}
+
+
+def _params_items(params: dict[str, float]) -> tuple[tuple[str, float], ...]:
+    return tuple(sorted((key, float(value)) for key, value in params.items()))
+
+
 def _state_prefix(problem) -> str:
     return f"parameter-state:{problem.__class__.__name__}"
 
@@ -102,7 +135,7 @@ def _applied_key(problem) -> str:
 
 
 def _initialize_problem_state(problem) -> None:
-    defaults = {key: float(value) for key, value in problem.defaults().items()}
+    defaults = _default_params(problem)
     for key, value in defaults.items():
         st.session_state.setdefault(_draft_key(problem, key), value)
     st.session_state.setdefault(_applied_key(problem), defaults)
@@ -140,8 +173,6 @@ def _unit_scale_for_widget(problem, spec):
 
 
 def _render_parameter_control(problem, spec) -> float:
-    """Rendera en metadata-driven parameterkontroll och returnera SI-värdet."""
-
     draft_key = _draft_key(problem, spec.key)
     draft_si = float(st.session_state[draft_key])
 
@@ -253,8 +284,12 @@ def _render_parameter_control(problem, spec) -> float:
         else:
             number_kwargs = {
                 "label": scale.label,
-                "value": int(round(displayed_value)) if spec.integer else float(displayed_value),
-                "step": max(1, int(round(step_display))) if spec.integer else float(step_display),
+                "value": int(round(displayed_value))
+                if spec.integer
+                else float(displayed_value),
+                "step": max(1, int(round(step_display)))
+                if spec.integer
+                else float(step_display),
                 "key": widget_key,
                 "help": widget_help,
             }
@@ -270,49 +305,120 @@ def _render_parameter_control(problem, spec) -> float:
     return value_si
 
 
-def _configuration_json(problem, mode: str, params: dict[str, float]) -> bytes:
-    payload = {
-        "schema_version": 1,
-        "problem": problem.name,
-        "problem_class": problem.__class__.__name__,
-        "mode": mode,
-        "parameters_si": params,
-        "units": {spec.key: spec.si_unit for spec in problem.parameter_specs()},
-    }
-    return json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+def _render_problem_statement(problem) -> str:
+    statement = statement_for_problem(problem)
+    st.markdown("### Uppgift")
+    st.markdown(statement)
+    return statement
 
 
-def _configuration_csv(problem, params: dict[str, float]) -> bytes:
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["parameter", "label", "value_si", "si_unit"])
-    for spec in problem.parameter_specs():
-        writer.writerow([spec.key, split_label(spec.label)[0], params[spec.key], spec.si_unit])
-    return output.getvalue().encode("utf-8-sig")
+def _render_geometry_if_needed(problem, statement: str) -> None:
+    if "figur" not in statement.lower():
+        return
+
+    with st.expander("Geometriskiss till uppgiften", expanded=True):
+        try:
+            params = _default_params(problem)
+            png = _render_matplotlib_png(
+                problem.__class__.__name__,
+                _params_items(params),
+                _default_mode(problem),
+                "geometry",
+                95,
+            )
+            st.image(png, width="stretch")
+            st.caption(
+                "Skissen är appens rena geometrivisning. Själva uppgiftstexten ovan "
+                "är hämtad från problemsamlingen."
+            )
+        except Exception as exc:
+            st.warning(f"Geometriskissen kunde inte visas: {exc}")
 
 
-def _render_solution_guidance(problem) -> bool:
-    """Visa progressiva ledtrådar. Returnerar True om specifik vägledning finns."""
-
-    guidance = guidance_for_problem(problem)
-    if guidance is None:
-        with st.expander("Fysikalisk idé", expanded=True):
-            st.write(problem.pedagogical_note())
-        st.caption(
-            "Den här uppgiften har ännu inte fått den nya progressiva vägledningen. "
-            "Den äldre fysiknoteringen visas tills vidare."
-        )
-        return False
-
-    st.markdown("### Lösningsstrategi")
-    st.markdown(f"**Mål:** {guidance.learning_goal}")
-    st.caption("Nyckelbegrepp: " + " · ".join(guidance.concepts))
-
-    st.markdown("#### Börja här")
-    st.info(guidance.start_here)
-
+def _render_method_choice(problem, guidance) -> None:
+    st.markdown("### Välj en lösningsväg")
     st.caption(
-        "Försök gå vidare själv efter varje ledtråd. Öppna nästa först när du verkligen har fastnat."
+        "Gör valet innan du öppnar ledtrådarna. Flera metoder kan i princip fungera; "
+        "här tränar vi på att hitta den mest direkta vägen."
+    )
+
+    option_keys = method_options_for_problem(problem)
+    labels = {method_label(key): key for key in option_keys}
+    selected_label = st.selectbox(
+        "Vilken huvudmetod skulle du prova först?",
+        list(labels),
+        index=None,
+        placeholder="Välj metod efter att du har läst uppgiften",
+        key=f"method-choice:{problem.__class__.__name__}",
+    )
+    if selected_label is None:
+        return
+
+    selected_key = labels[selected_label]
+    recommended_key = method_key_for_problem(problem)
+    recommended = method_meta_for_problem(problem)
+
+    if selected_key == recommended_key:
+        st.success(
+            "Bra val. Den metoden passar problemets struktur och leder relativt direkt "
+            "till den storhet som efterfrågas."
+        )
+    else:
+        st.info(
+            f"Den vägen kan innehålla användbara idéer, men en mer direkt start här är "
+            f"**{recommended.label}**. {recommended.rationale}"
+        )
+
+
+def _render_training_focus(problem, guidance) -> None:
+    meta = method_meta_for_problem(problem)
+    st.markdown("### Det här tränar du")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Fysik**")
+        st.write(" · ".join(guidance.concepts))
+        st.caption(guidance.learning_goal)
+    with col2:
+        st.markdown("**Matematisk rörelse**")
+        st.write(meta.math_focus)
+
+
+def _render_targeted_help(problem, guidance) -> None:
+    st.markdown("### Om du sitter fast")
+    stuck = st.selectbox(
+        "Var sitter du fast?",
+        [
+            "Välja metod",
+            "Sätta upp matematiken",
+            "Vektorer / geometri",
+            "Kontrollera om svaret är rimligt",
+        ],
+        index=None,
+        placeholder="Välj bara om du behöver hjälp",
+        key=f"stuck:{problem.__class__.__name__}",
+    )
+    if stuck is None:
+        return
+
+    if stuck == "Välja metod":
+        st.info(guidance.start_here)
+    elif stuck == "Sätta upp matematiken":
+        st.info(guidance.hints[0])
+    elif stuck == "Vektorer / geometri":
+        hint = guidance.hints[1] if len(guidance.hints) > 1 else guidance.hints[0]
+        meta = method_meta_for_problem(problem)
+        st.info(f"{meta.math_focus}\n\n{hint}")
+    else:
+        st.info("Försök formulera ett eget gränsfall, teckentest eller dimensionsprov först.")
+        for check in guidance.self_checks:
+            st.markdown(f"- {check}")
+
+
+def _render_progressive_hints(problem, guidance) -> None:
+    st.markdown("#### Progressiva ledtrådar")
+    st.caption(
+        "Öppna endast nästa nivå när du inte kommer vidare. Målet är att behålla så "
+        "mycket av lösningsarbetet som möjligt hos dig."
     )
     for index, hint in enumerate(guidance.hints, start=1):
         with st.expander(f"Ledtråd {index}", expanded=False):
@@ -322,68 +428,102 @@ def _render_solution_guidance(problem) -> bool:
         with st.expander("Vanlig fallgrop", expanded=False):
             st.warning(guidance.common_pitfall)
 
-    with st.expander("Kontrollera din lösning", expanded=False):
-        for check in guidance.self_checks:
-            st.markdown(f"- {check}")
 
-    if guidance.visualization_note:
-        st.caption("När figuren hjälper: " + guidance.visualization_note)
+def _render_active_checks(problem, guidance) -> None:
+    st.markdown("### Kontrollera din egen lösning")
+    st.caption(
+        "Skriv först vad du själv tror att kontrollen borde ge. Därefter kan du "
+        "öppna kontrollpunkten."
+    )
 
-    return True
-
-
-st.title("EM-studiehjälp")
-st.caption(
-    "Fokus ligger på idéerna som behövs för att lösa uppgifterna. "
-    "Visualiseringarna finns kvar som ett frivilligt stöd efter att du försökt själv."
-)
-
-with st.sidebar:
-    content_type = st.radio("Innehåll", ["Övningsuppgifter", "Teori"], index=0)
-
-    if content_type == "Teori":
-        theory_title = st.selectbox(
-            "Teoriavsnitt",
-            [page.title for page in THEORY_PAGES],
-            index=0,
+    for index, check in enumerate(guidance.self_checks, start=1):
+        response_key = f"self-check-response:{problem.__class__.__name__}:{index}"
+        reveal_key = f"self-check-reveal:{problem.__class__.__name__}:{index}"
+        response = st.text_input(
+            f"Kontrollpunkt {index}: din egen förutsägelse",
+            key=response_key,
+            placeholder="Till exempel: tecken, nollvärde, gränsfall, enhet eller symmetri",
         )
-        theory_page = theory_lookup[theory_title]
-        st.markdown("### Om sidan")
-        st.write(theory_page.short_description)
-    else:
-        problem_name = st.selectbox(
-            "Uppgift",
-            [problem.name for problem in PROBLEMS],
-            index=0,
-        )
-        problem = problem_lookup[problem_name]
-        _initialize_problem_state(problem)
+        if st.button(
+            f"Visa kontrollpunkt {index}",
+            key=f"self-check-button:{problem.__class__.__name__}:{index}",
+            disabled=not bool(response.strip()),
+        ):
+            st.session_state[reveal_key] = True
+        if st.session_state.get(reveal_key, False):
+            st.success(check)
 
-        mode_options = mode_options_for_problem(problem)
-        mode_labels = [label for label, _internal in mode_options]
-        mode_label = st.selectbox("Visningsläge", mode_labels, index=0)
-        requested_mode = dict(mode_options)[mode_label]
-        mode = normalize_mode_for_problem(problem, requested_mode)
 
-        view_mode = st.selectbox(
-            "Vyer",
-            ["Alla", "Huvudgraf", "Geometriskiss", "3-D-vy"],
-            index=0,
-            help="Används endast om du väljer att visa visualiseringarna.",
-        )
-        quality = st.select_slider(
-            "Återgivningskvalitet",
-            options=["Snabb", "Normal", "Hög"],
-            value="Normal",
-            help="Påverkar endast Matplotlib-vyerna.",
-        )
+def _render_answer_check(problem) -> None:
+    st.markdown("### Facit / kontroll")
+    ready_key = f"answer-ready:{problem.__class__.__name__}"
+    reveal_key = f"answer-reveal:{problem.__class__.__name__}"
+    ready = st.checkbox(
+        "Jag har ett färdigt eget försök",
+        key=ready_key,
+        help="Facitdelen är tänkt som kontroll efter ett seriöst lösningsförsök.",
+    )
+    if st.button(
+        "Visa appens kontrollresultat",
+        key=f"answer-button:{problem.__class__.__name__}",
+        disabled=not ready,
+        type="secondary",
+    ):
+        st.session_state[reveal_key] = True
 
-        st.markdown("### Parametrar")
+    if not st.session_state.get(reveal_key, False):
+        return
+
+    params = _default_params(problem)
+    mode = _default_mode(problem)
+    st.warning(
+        "Detta är appens analytiska/numeriska kontroll med uppgiftens standardvärden. "
+        "Den visas separat från Utforska-läget så att grafer inte fungerar som facit."
+    )
+    try:
+        st.info(problem.result_summary(params, mode))
+    except Exception as exc:
+        st.warning(f"Kontrollresultatet kunde inte beräknas: {exc}")
+
+    with st.expander("Visa formel- och gränsfallskontroller", expanded=False):
+        try:
+            st.write(problem.physics_check(params))
+        except Exception as exc:
+            st.warning(f"Den analytiska kontrollen kunde inte utföras: {exc}")
+
+
+def _render_solve_mode(problem) -> None:
+    guidance = guidance_for_problem(problem)
+    st.subheader(problem.name)
+    statement = _render_problem_statement(problem)
+    _render_geometry_if_needed(problem, statement)
+
+    if guidance is None:
+        st.warning("Specifik progressiv vägledning saknas för den här uppgiften.")
+        with st.expander("Fysikalisk idé", expanded=True):
+            st.write(problem.pedagogical_note())
+        return
+
+    _render_method_choice(problem, guidance)
+    _render_training_focus(problem, guidance)
+
+    st.markdown("### Börja här")
+    st.info(guidance.start_here)
+
+    _render_targeted_help(problem, guidance)
+    _render_progressive_hints(problem, guidance)
+    _render_active_checks(problem, guidance)
+    _render_answer_check(problem)
+
+
+def _render_explore_parameters(problem) -> dict[str, float]:
+    _initialize_problem_state(problem)
+
+    with st.expander("Parametrar för utforskning", expanded=False):
         st.caption(
-            "Parametrarna kan användas för att kontrollera gränsfall och figurer. "
-            "Enhetsvalet påverkar endast presentationen; fysikberäkningen använder SI."
+            "Ändra bara parametrar när du vill undersöka ett gränsfall eller en "
+            "fysikalisk trend. De är inte en del av själva lösningssteget."
         )
-
         for spec in problem.parameter_specs():
             value_si = _render_parameter_control(problem, spec)
             st.session_state[_draft_key(problem, spec.key)] = value_si
@@ -400,18 +540,25 @@ with st.sidebar:
             for key in draft_params
         )
         if has_pending_changes:
-            st.caption("● Det finns parameterändringar som ännu inte har applicerats.")
+            st.caption("● Parameterändringar väntar på att appliceras.")
 
-        apply_column, reset_column = st.columns(2)
-        with apply_column:
+        c1, c2 = st.columns(2)
+        with c1:
             apply_clicked = st.button(
-                "Applicera parametrar", type="primary", width="stretch"
+                "Applicera parametrar",
+                type="primary",
+                width="stretch",
+                key=f"apply:{problem.__class__.__name__}",
             )
-        with reset_column:
-            reset_clicked = st.button("Återställ", width="stretch")
+        with c2:
+            reset_clicked = st.button(
+                "Återställ",
+                width="stretch",
+                key=f"reset:{problem.__class__.__name__}",
+            )
 
         if reset_clicked:
-            defaults = {key: float(value) for key, value in problem.defaults().items()}
+            defaults = _default_params(problem)
             _clear_problem_widget_state(problem)
             for key, value in defaults.items():
                 st.session_state[_draft_key(problem, key)] = value
@@ -420,164 +567,192 @@ with st.sidebar:
 
         if apply_clicked:
             draft_issues = problem.validate_all(draft_params)
-            draft_errors = [issue for issue in draft_issues if issue.severity == "error"]
-            if draft_errors:
-                for issue in draft_errors:
+            errors = [issue for issue in draft_issues if issue.severity == "error"]
+            if errors:
+                for issue in errors:
                     st.error(issue.message)
             else:
                 st.session_state[_applied_key(problem)] = dict(draft_params)
                 st.rerun()
 
-        params = dict(st.session_state[_applied_key(problem)])
+    return dict(st.session_state[_applied_key(problem)])
 
-        with st.expander("Exportera aktuell konfiguration"):
-            safe_name = problem.__class__.__name__
-            st.download_button(
-                "Ladda ned JSON",
-                _configuration_json(problem, mode, params),
-                file_name=f"{safe_name}_parameters.json",
-                mime="application/json",
-                width="stretch",
+
+def _render_main_graph(problem, params, mode, dpi) -> None:
+    try:
+        png = _render_matplotlib_png(
+            problem.__class__.__name__, _params_items(params), mode, "main", dpi
+        )
+        st.markdown("#### Huvudvisualisering")
+        st.image(png, width="stretch")
+    except Exception as exc:
+        st.error(f"Huvudvisualiseringen kunde inte visas: {exc}")
+
+
+def _render_geometry(problem, params, mode, dpi) -> None:
+    try:
+        png = _render_matplotlib_png(
+            problem.__class__.__name__, _params_items(params), mode, "geometry", dpi
+        )
+        st.markdown("#### Geometriskiss")
+        st.image(png, width="stretch")
+    except Exception as exc:
+        st.error(f"Geometriskissen kunde inte visas: {exc}")
+
+
+def _render_3d(problem, params, mode) -> None:
+    try:
+        fig = pio.from_json(
+            _render_plotly_json(
+                problem.__class__.__name__, _params_items(params), mode
             )
-            st.download_button(
-                "Ladda ned CSV",
-                _configuration_csv(problem, params),
-                file_name=f"{safe_name}_parameters.csv",
-                mime="text/csv",
-                width="stretch",
-            )
+        )
+        st.plotly_chart(
+            fig,
+            width="stretch",
+            config={"displaylogo": False},
+            key=f"plotly:{problem.__class__.__name__}:{mode}",
+        )
+    except Exception as exc:
+        st.warning(f"3-D-vyn kunde inte visas: {exc}")
 
-if content_type == "Teori":
-    render_theory_page(theory_page)
-    st.stop()
 
-st.subheader(problem.name)
-st.write(problem.description)
-_render_solution_guidance(problem)
+def _render_explore_mode(problem) -> None:
+    guidance = guidance_for_problem(problem)
+    st.subheader(f"Utforska: {problem.name}")
 
-issues = problem.validate_all(params)
-for issue in issues:
-    if issue.severity == "error":
-        st.error(issue.message)
+    with st.expander("Visa uppgiftstext", expanded=False):
+        st.markdown(statement_for_problem(problem))
+
+    options = mode_options_for_problem(problem)
+    labels = [label for label, _internal in options]
+    selected_label = st.selectbox(
+        "Vad vill du visualisera?",
+        labels,
+        index=0,
+        key=f"explore-mode:{problem.__class__.__name__}",
+    )
+    mode = normalize_mode_for_problem(problem, dict(options)[selected_label])
+
+    params = _render_explore_parameters(problem)
+
+    st.markdown("### Förutsäg innan du tittar")
+    if guidance and guidance.visualization_note:
+        st.info("Varför figuren kan hjälpa: " + guidance.visualization_note)
+        recommended = True
     else:
-        st.warning(issue.message)
-if any(issue.severity == "error" for issue in issues):
-    st.stop()
+        st.warning(
+            "Den här uppgiften har ingen rekommenderad visualisering i studieläget. "
+            "För den är lösningsstrategin viktigare än en graf."
+        )
+        recommended = False
 
-st.divider()
-show_visualizations = st.toggle(
-    "Visa visualiseringar och numeriska resultat",
-    value=False,
-    help=(
-        "Öppna detta efter att du har försökt lösa uppgiften. "
-        "Det visar den tidigare resultat- och grafdelen av programmet."
-    ),
+    prediction = st.text_area(
+        "Skriv vad du tror att figuren kommer att visa",
+        key=f"prediction:{problem.__class__.__name__}",
+        placeholder=(
+            "Förutsäg till exempel ett nollställe, ett tecken, ett gränsfall, "
+            "en symmetri eller hur resultatet ändras när en parameter ändras."
+        ),
+    )
+
+    override = False
+    if not recommended:
+        override = st.checkbox(
+            "Visa den äldre visualiseringen ändå",
+            key=f"override-visualization:{problem.__class__.__name__}",
+        )
+
+    can_reveal = bool(prediction.strip()) and (recommended or override)
+    reveal_key = f"visualization-revealed:{problem.__class__.__name__}:{mode}"
+    if st.button(
+        "Lås in min förutsägelse och visa",
+        key=f"reveal-visualization:{problem.__class__.__name__}:{mode}",
+        disabled=not can_reveal,
+        type="primary",
+    ):
+        st.session_state[reveal_key] = True
+
+    if not st.session_state.get(reveal_key, False):
+        return
+
+    quality = st.select_slider(
+        "Återgivningskvalitet",
+        options=["Snabb", "Normal", "Hög"],
+        value="Normal",
+        key=f"quality:{problem.__class__.__name__}",
+    )
+    dpi = {"Snabb": 82, "Normal": 110, "Hög": 145}[quality]
+
+    col1, col2 = st.columns([3, 2])
+    with col1:
+        _render_main_graph(problem, params, mode, dpi)
+    with col2:
+        _render_geometry(problem, params, mode, dpi)
+
+    st.markdown("### Jämför med din förutsägelse")
+    st.text_area(
+        "Vad stämde, och vad behöver du ompröva?",
+        key=f"reflection:{problem.__class__.__name__}:{mode}",
+        placeholder="Skriv en kort slutsats innan du går vidare.",
+    )
+
+    with st.expander("Avancerat: visa äldre 3-D-vy", expanded=False):
+        st.caption(
+            "3-D-vyn är inte en standarddel av studiegången. Öppna den bara om den "
+            "hjälper dig att tolka geometrin eller fältstrukturen."
+        )
+        if st.checkbox(
+            "Rendera 3-D-vy",
+            key=f"render-3d:{problem.__class__.__name__}:{mode}",
+        ):
+            _render_3d(problem, params, mode)
+
+
+st.title("EM-studiehjälp")
+st.caption(
+    "Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan. "
+    "Utforska med figurer först när du har gjort en egen förutsägelse."
 )
 
-if not show_visualizations:
-    st.caption(
-        "Visualiseringarna är dolda. De är tänkta som kontroll och tolkning, "
-        "inte som första steg i lösningen."
+
+with st.sidebar:
+    work_mode = st.radio(
+        "Arbetssätt",
+        ["Lös uppgift", "Utforska", "Teori"],
+        index=0,
     )
-    st.stop()
 
-try:
-    st.info(problem.result_summary(params, mode))
-except Exception as exc:
-    st.warning(f"Kunde inte beräkna sammanfattning: {exc}")
-
-quality_dpi = {"Snabb": 82, "Normal": 110, "Hög": 145}[quality]
-params_items = tuple(sorted((key, float(value)) for key, value in params.items()))
-problem_class_name = problem.__class__.__name__
-
-
-def render_main_graph(container):
-    try:
-        png = _render_matplotlib_png(
-            problem_class_name, params_items, mode, "main", quality_dpi
+    if work_mode == "Teori":
+        theory_title = st.selectbox(
+            "Teoriavsnitt",
+            [page.title for page in THEORY_PAGES],
+            index=0,
         )
-        with container:
-            st.markdown("#### Huvudgraf")
-            st.image(png, width="stretch")
-            st.download_button(
-                "Ladda ned huvudgraf (PNG)",
-                png,
-                file_name=f"{problem_class_name}_{mode}_main.png",
-                mime="image/png",
-                key=f"download:main:{problem_class_name}:{mode}:{quality_dpi}",
-            )
-    except Exception as exc:
-        with container:
-            st.error(f"Fel i huvudgraf: {exc}")
-
-
-def render_geometry(container):
-    try:
-        png = _render_matplotlib_png(
-            problem_class_name, params_items, mode, "geometry", quality_dpi
+        theory_page = theory_lookup[theory_title]
+        st.caption(theory_page.short_description)
+    else:
+        chapters = sorted(PROBLEMS_BY_CHAPTER)
+        selected_chapter = st.selectbox(
+            "Kapitel",
+            chapters,
+            format_func=lambda ch: f"Kapitel {ch} – {CHAPTER_TITLES.get(ch, '')}",
+            key="selected-chapter",
         )
-        with container:
-            st.markdown("#### Geometriskiss")
-            st.image(png, width="stretch")
-            st.download_button(
-                "Ladda ned geometriskiss (PNG)",
-                png,
-                file_name=f"{problem_class_name}_geometry.png",
-                mime="image/png",
-                key=f"download:geometry:{problem_class_name}:{quality_dpi}",
-            )
-    except Exception as exc:
-        with container:
-            st.error(f"Fel i geometriskiss: {exc}")
-
-
-def render_3d(container):
-    try:
-        view3d_fig = pio.from_json(
-            _render_plotly_json(problem_class_name, params_items, mode)
+        chapter_problems = PROBLEMS_BY_CHAPTER[selected_chapter]
+        selected_problem_name = st.selectbox(
+            "Uppgift",
+            [problem.name for problem in chapter_problems],
+            key="selected-problem",
         )
-        with container:
-            st.markdown("#### 3-D-vy")
-            st.caption("Rotera, zooma och panorera direkt i webbläsaren.")
-            st.plotly_chart(
-                view3d_fig,
-                width="stretch",
-                config={"displaylogo": False},
-                key=f"plotly:{problem_class_name}:{mode}",
-            )
-            st.download_button(
-                "Ladda ned 3-D-vy (HTML)",
-                view3d_fig.to_html(include_plotlyjs="cdn"),
-                file_name=f"{problem_class_name}_{mode}_3d.html",
-                mime="text/html",
-                key=f"download:3d:{problem_class_name}:{mode}",
-            )
-    except Exception as exc:
-        with container:
-            st.error(f"Fel i interaktiv 3-D-vy: {exc}")
-            st.info(
-                "Reservvisning med Matplotlib visas eftersom Plotly-renderingen misslyckades."
-            )
-            png = _render_matplotlib_png(
-                problem_class_name, params_items, mode, "3d", quality_dpi
-            )
-            st.image(png, width="stretch")
+        problem = next(
+            p for p in chapter_problems if p.name == selected_problem_name
+        )
 
 
-if view_mode == "Alla":
-    col1, col2, col3 = st.columns([5, 3, 4])
-    render_main_graph(col1)
-    render_geometry(col2)
-    render_3d(col3)
-elif view_mode == "Huvudgraf":
-    render_main_graph(st.container())
-elif view_mode == "Geometriskiss":
-    render_geometry(st.container())
+if work_mode == "Teori":
+    render_theory_page(theory_page)
+elif work_mode == "Utforska":
+    _render_explore_mode(problem)
 else:
-    render_3d(st.container())
-
-with st.expander("Kontrollera formel/gränsfall"):
-    try:
-        st.write(problem.physics_check(params))
-    except Exception as exc:
-        st.error(f"Kontrollen misslyckades: {exc}")
+    _render_solve_mode(problem)
