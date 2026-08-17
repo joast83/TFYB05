@@ -409,9 +409,11 @@ def _render_targeted_help(problem, guidance) -> None:
         meta = method_meta_for_problem(problem)
         st.info(f"{meta.math_focus}\n\n{hint}")
     else:
-        st.info("Försök formulera ett eget gränsfall, teckentest eller dimensionsprov först.")
-        for check in guidance.self_checks:
-            st.markdown(f"- {check}")
+        st.info(
+            "Använd kontrollpunkterna längre ned på sidan. Försök först själv tänka på "
+            "symmetri, tecken, enheter eller ett enkelt gränsfall och öppna sedan en "
+            "kontroll i taget."
+        )
 
 
 def _render_progressive_hints(problem, guidance) -> None:
@@ -429,29 +431,16 @@ def _render_progressive_hints(problem, guidance) -> None:
             st.warning(guidance.common_pitfall)
 
 
-def _render_active_checks(problem, guidance) -> None:
-    st.markdown("### Kontrollera din egen lösning")
+def _render_solution_checks(problem, guidance) -> None:
+    st.markdown("### Kontrollera ditt resultat")
     st.caption(
-        "Skriv först vad du själv tror att kontrollen borde ge. Därefter kan du "
-        "öppna kontrollpunkten."
+        "Det här är extra ledtrådar för att testa din färdiga eller nästan färdiga "
+        "lösning. Försök själv tänka igenom kontrollen innan du öppnar den."
     )
 
     for index, check in enumerate(guidance.self_checks, start=1):
-        response_key = f"self-check-response:{problem.__class__.__name__}:{index}"
-        reveal_key = f"self-check-reveal:{problem.__class__.__name__}:{index}"
-        response = st.text_input(
-            f"Kontrollpunkt {index}: din egen förutsägelse",
-            key=response_key,
-            placeholder="Till exempel: tecken, nollvärde, gränsfall, enhet eller symmetri",
-        )
-        if st.button(
-            f"Visa kontrollpunkt {index}",
-            key=f"self-check-button:{problem.__class__.__name__}:{index}",
-            disabled=not bool(response.strip()),
-        ):
-            st.session_state[reveal_key] = True
-        if st.session_state.get(reveal_key, False):
-            st.success(check)
+        with st.expander(f"Kontroll {index}", expanded=False):
+            st.write(check)
 
 
 def _render_answer_check(problem) -> None:
@@ -512,7 +501,7 @@ def _render_solve_mode(problem) -> None:
 
     _render_targeted_help(problem, guidance)
     _render_progressive_hints(problem, guidance)
-    _render_active_checks(problem, guidance)
+    _render_solution_checks(problem, guidance)
     _render_answer_check(problem)
 
 
@@ -637,8 +626,13 @@ def _render_explore_mode(problem) -> None:
     params = _render_explore_parameters(problem)
 
     st.markdown("### Förutsäg innan du tittar")
+    st.info(
+        "Gör en snabb mental förutsägelse innan du visar figuren: tänk till exempel "
+        "på tecken, nollställen, symmetri, gränsfall eller hur en parameter bör påverka "
+        "resultatet. Du behöver inte skriva ned svaret."
+    )
     if guidance and guidance.visualization_note:
-        st.info("Varför figuren kan hjälpa: " + guidance.visualization_note)
+        st.caption("Varför figuren kan hjälpa: " + guidance.visualization_note)
         recommended = True
     else:
         st.warning(
@@ -647,15 +641,6 @@ def _render_explore_mode(problem) -> None:
         )
         recommended = False
 
-    prediction = st.text_area(
-        "Skriv vad du tror att figuren kommer att visa",
-        key=f"prediction:{problem.__class__.__name__}",
-        placeholder=(
-            "Förutsäg till exempel ett nollställe, ett tecken, ett gränsfall, "
-            "en symmetri eller hur resultatet ändras när en parameter ändras."
-        ),
-    )
-
     override = False
     if not recommended:
         override = st.checkbox(
@@ -663,10 +648,10 @@ def _render_explore_mode(problem) -> None:
             key=f"override-visualization:{problem.__class__.__name__}",
         )
 
-    can_reveal = bool(prediction.strip()) and (recommended or override)
+    can_reveal = recommended or override
     reveal_key = f"visualization-revealed:{problem.__class__.__name__}:{mode}"
     if st.button(
-        "Lås in min förutsägelse och visa",
+        "Visa figur",
         key=f"reveal-visualization:{problem.__class__.__name__}:{mode}",
         disabled=not can_reveal,
         type="primary",
@@ -690,11 +675,9 @@ def _render_explore_mode(problem) -> None:
     with col2:
         _render_geometry(problem, params, mode, dpi)
 
-    st.markdown("### Jämför med din förutsägelse")
-    st.text_area(
-        "Vad stämde, och vad behöver du ompröva?",
-        key=f"reflection:{problem.__class__.__name__}:{mode}",
-        placeholder="Skriv en kort slutsats innan du går vidare.",
+    st.caption(
+        "Jämför nu figuren med din förutsägelse: stämde tecken, symmetri, nollställen "
+        "och gränsfall med det du väntade dig?"
     )
 
     with st.expander("Avancerat: visa äldre 3-D-vy", expanded=False):
@@ -712,7 +695,7 @@ def _render_explore_mode(problem) -> None:
 st.title("EM-studiehjälp")
 st.caption(
     "Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan. "
-    "Utforska med figurer först när du har gjort en egen förutsägelse."
+    "Utforska med figurer först efter att du själv har försökt förutsäga vad de bör visa."
 )
 
 

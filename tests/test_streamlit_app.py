@@ -23,12 +23,25 @@ def test_default_page_is_clean_solve_mode():
     assert not any(selectbox.label.startswith("Enhet för") for selectbox in app.selectbox)
 
 
-def test_explore_mode_exposes_parameter_controls_without_showing_graph_immediately():
+def test_self_checks_are_optional_expanders_not_fake_text_inputs():
+    app = _run_app()
+    assert any(expander.label == "Kontroll 1" for expander in app.expander)
+    assert not any(
+        widget.label.startswith("Kontrollpunkt")
+        for widget in app.text_input
+    )
+
+
+def test_explore_mode_exposes_parameters_without_requiring_written_prediction():
     app = _run_app()
     _radio(app, "Arbetssätt").set_value("Utforska").run()
     assert not app.exception, [exception.value for exception in app.exception]
     assert any(expander.label == "Parametrar för utforskning" for expander in app.expander)
-    assert any(area.label == "Skriv vad du tror att figuren kommer att visa" for area in app.text_area)
+    assert not any(
+        area.label == "Skriv vad du tror att figuren kommer att visa"
+        for area in app.text_area
+    )
+    assert any(button.label == "Visa figur" for button in app.button)
 
 
 def test_theory_page_runs_without_streamlit_exception():

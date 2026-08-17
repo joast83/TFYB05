@@ -26,3 +26,13 @@ Notes:
 - The problem statements come from the supplied 2024 problem collection. Figure-heavy exercises use the app's geometry sketch as a clean companion diagram.
 - The answer section currently uses the repository's existing `result_summary()` and `physics_check()` functions. It is deliberately described as the app's control result rather than pretending to reproduce the printed facit verbatim.
 - Existing plotting/problem implementation files are not changed by this package.
+
+
+## v2.1: enklare självkontroll och förutsägelse
+
+De obligatoriska fritextfälten har tagits bort.
+
+- **Kontrollera ditt resultat** består nu av separata, stängda kontrollpunkter. Studenten kan tänka själv och sedan öppna dem som extra ledtrådar.
+- **Utforska** uppmanar fortfarande studenten att göra en mental förutsägelse före figuren, men kräver inte att något skrivs in.
+- Den obligatoriska reflektionsrutan efter figuren är borttagen. I stället visas en kort uppmaning att jämföra figuren med den egna förutsägelsen.
+- Principen är: be studenten tänka, men kräv inte textinmatning om programmet inte faktiskt kan tolka eller ge meningsfull återkoppling på texten.
