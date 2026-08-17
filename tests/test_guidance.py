@@ -4,15 +4,18 @@ from em_visualisering.guidance import GUIDANCE_BY_CLASS
 from em_visualisering.registry import PROBLEMS
 
 
-EXPECTED_CHAPTER_2_AND_3_CLASSES = {
-    problem.__class__.__name__
-    for problem in PROBLEMS
-    if problem.name.split(maxsplit=1)[0].split(".", 1)[0] in {"2", "3"}
-}
+EXPECTED_REGISTERED_CLASSES = {problem.__class__.__name__ for problem in PROBLEMS}
 
 
-def test_all_registered_chapter_2_and_3_problems_have_guidance():
-    assert EXPECTED_CHAPTER_2_AND_3_CLASSES <= set(GUIDANCE_BY_CLASS)
+def test_all_registered_problems_have_guidance():
+    assert EXPECTED_REGISTERED_CLASSES == set(GUIDANCE_BY_CLASS)
+
+
+def test_guidance_problem_ids_match_registered_problem_numbers():
+    by_class = {problem.__class__.__name__: problem for problem in PROBLEMS}
+    for class_name, guidance in GUIDANCE_BY_CLASS.items():
+        registered_id = by_class[class_name].name.split(maxsplit=1)[0]
+        assert guidance.problem_id == registered_id, class_name
 
 
 def test_guidance_entries_have_progressive_structure():

@@ -2,8 +2,7 @@
 
 Målet är att hjälpa studenten att välja rätt fysikalisk idé och matematisk
 representation utan att omedelbart visa en fullständig lösning. Ledtrådarna är
-ordnade från konceptuell startpunkt till den avgörande uppställningen. De första
-posterna täcker de uppgifter från kapitel 2 och 3 som redan finns registrerade i
+ordnade från konceptuell startpunkt till den avgörande uppställningen. Katalogen täcker alla uppgifter från kapitel 2–10 som för närvarande är registrerade i
 programmet.
 """
 
@@ -484,6 +483,661 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
             "Ingen z-komponent ska uppstå eftersom planet är parallellt med z-axeln.",
         ),
         common_pitfall="Att använda vektorn (a,b,0) som normal. För planet x/a+y/b=1 är normalen proportionell mot (1/a,1/b,0), inte mot skärningspunkterna själva.",
+    ),
+    # ------------------------------------------------------------------
+    # Kapitel 4 – Energi, kraft och spegelladdning
+    # ------------------------------------------------------------------
+    "SphericalShellChargingEnergy": G(
+        problem_id="4.1",
+        learning_goal="Förstå uppladdningsarbete som en successiv process där potentialen ändras medan laddningen byggs upp.",
+        concepts=("elektrostatisk energi", "potential", "uppladdningsarbete"),
+        start_here=(
+            "Tänk inte på skalet som att det får hela laddningen Q på en gång. Betrakta i stället ett mellanläge där skalet redan har laddningen q och du för in ytterligare dq."
+        ),
+        hints=(
+            "Potentialen hos ett tunt ledande sfäriskt skal med aktuell laddning q är samma som potentialen från en punktladdning q på avståndet a.",
+            "Det lilla arbete som krävs för nästa laddningsbidrag är dW = V(q)dq. Det viktiga är att V inte är konstant under uppladdningen.",
+            "Integrera från q=0 till q=Q. Jämför gärna resultatet med formen W=(1/2)QV för en färdiguppladdad kondensatorliknande geometri.",
+        ),
+        self_checks=(
+            "Energin ska vara proportionell mot Q²; byte av tecken på Q får inte ändra energin.",
+            "Vid given Q ska ett större skal kräva mindre uppladdningsarbete eftersom potentialen blir lägre.",
+        ),
+        common_pitfall="Att använda slutpotentialen V(Q) för hela laddningen och skriva W=QV; då missar man att potentialen växer från noll under processen.",
+    ),
+    "ParallelPlateForceDistance": G(
+        problem_id="4.2",
+        learning_goal="Koppla den elektriska fältenergin eller det elektriska trycket till den mekaniska kraften mellan kondensatorplattor.",
+        concepts=("elektriskt tryck", "plattkondensator", "kraft"),
+        start_here="Bestäm först fältet mellan plattorna i termer av V och d. Därefter behöver du en relation mellan fältstyrka och kraft per area.",
+        hints=(
+            "För en stor plan luftkondensator utan randeffekter är E≈V/d.",
+            "Det attraktiva elektriska trycket på en ledaryta kan skrivas p=(1/2)ε0E². Multiplicera med plattarean A för att få kraftens belopp.",
+            "Sätt den givna kraften lika med detta uttryck och lös därefter efter avståndet d. Kontrollera vilken storhet som ligger under en kvadratrot.",
+        ),
+        self_checks=(
+            "Vid samma spänning ska kraften öka kraftigt när plattavståndet minskar.",
+            "Det sökta avståndet ska få längdenhet efter dimensionskontroll.",
+        ),
+        common_pitfall="Att använda F=QE med hela plattans laddning och hela fältet; en platta ska inte räknas som påverkad av sitt eget fält.",
+    ),
+    "CopperFoilLevitationEbonite": G(
+        problem_id="4.3",
+        learning_goal="Använd randvillkor mellan luft och dielektrikum för att koppla elektriskt tryck till tyngdkraft.",
+        concepts=("dielektrikum", "elektriskt tryck", "kraftjämvikt"),
+        start_here=(
+            "Börja med kraftjämvikten på kopparblecket per area. Dess tyngd per area är ρCu t g. Vilket elektriskt tryck måste balansera detta?"
+        ),
+        hints=(
+            "Det infinitesimala luftgapet är viktigt för kraften på kopparblecket: använd p=(1/2)ε0 E_luft² i gapet.",
+            "Det finns ingen fri ytladdning i gränsen luft–ebonit, så den normala D-komponenten är densamma. Därför är E_luft=εr E_ebonit.",
+            "Spänningsfallet över det infinitesimala luftgapet kan försummas. Skriv därför U≈E_ebonit d och kombinera detta med kraftjämvikten.",
+        ),
+        self_checks=(
+            "E_luft ska vara större än E-fältet inne i eboniten när εr>1.",
+            "Ett tjockare eller tätare kopparbleck ska kräva högre spänning för att sväva.",
+        ),
+        common_pitfall="Att använda E=U/d direkt som fältet i luftgapet; U/d beskriver i denna approximation främst fältet i eboniten.",
+    ),
+    "ThundercloudEnergyEstimate": G(
+        problem_id="4.5",
+        learning_goal="Göra en ordningsstorleksmodell av ett åskmoln som en plattkondensator och koppla genomslagsfält till laddning och energi.",
+        concepts=("plattkondensator", "genomslagsfält", "fältenergi"),
+        start_here="Modellera molnundersidan och marken som två stora motsatt laddade plattor. Börja med sambandet mellan ytladdningstäthet och fältet mellan plattorna.",
+        hints=(
+            "För två stora motsatt laddade plattor blir fältet mellan dem E=σs/ε0. Sätt E till det givna genomslagsfältet för uppskattningen.",
+            "När σs är känd fås den totala laddningen från Q=σsA. Konvertera arean och fältstyrkan till SI innan du sätter in talen.",
+            "Energin kan beräknas antingen som (1/2)QU med U=Eh eller från energitätheten (1/2)ε0E² multiplicerad med volymen Ah.",
+        ),
+        self_checks=(
+            "De två energiberäkningarna ska ge samma resultat.",
+            "Resultatet bör bli mycket stort jämfört med laboratoriekondensatorer; modellen omfattar en area på en kvadratkilometer.",
+        ),
+        common_pitfall="Att använda fältet från en ensam laddad platta, σs/(2ε0), trots att modellen innehåller två motsatt laddade ledarytor.",
+    ),
+    "CylindricalCapacitorDielectricPullIn": G(
+        problem_id="4.6",
+        learning_goal="Beräkna en dielektrisk indragningskraft genom hur kapacitansen ändras med inskjutningslängden.",
+        concepts=("energimetod", "kapacitans", "dielektrisk kraft"),
+        start_here=(
+            "Inför en inskjutningslängd x. Fråga hur den totala kapacitansen ändras när en liten extra längd dx går från vakuum/luft till dielektrikum."
+        ),
+        hints=(
+            "En koaxial kondensator har en kapacitans per längdenhet. Den redan fyllda delen och den ofyllda delen ligger elektriskt parallellt eftersom de har samma spänning mellan samma två ledare.",
+            "Skriv C(x) som summan av bidraget från längden x med εr och resten med εr=1. Då blir dC/dx konstant.",
+            "Spänningskällan är fortfarande ansluten, alltså är V0 konstant. Använd kraftrelationen F=(1/2)V0² dC/dx för rörelse i riktning mot ökande kapacitans.",
+        ),
+        self_checks=(
+            "Kraften ska dra dielektrikumet längre in eftersom det ökar kapacitansen.",
+            "I den idealiserade modellen blir kraften oberoende av hur långt cylindern redan är inskjuten, så länge ändeffekter försummas.",
+        ),
+        common_pitfall="Att använda energin (1/2)CV² och direkt derivera den som mekanisk potentiell energi utan att ta hänsyn till att spänningskällan utbyter energi med kondensatorn.",
+    ),
+    "PointChargeConductingPlane": G(
+        problem_id="4.7",
+        learning_goal="Använd spegelladdningsmetoden både för inducerad ytladdning och för kraften på en punktladdning.",
+        concepts=("spegelladdning", "ledarvillkor", "inducerad ytladdning"),
+        start_here=(
+            "Ersätt först det jordade/utbredda ledande planet med den spegelladdning som ger V=0 i planet. Därefter kan samma konstruktion användas på två olika sätt i deluppgifterna."
+        ),
+        hints=(
+            "Placera spegelladdningen −q på samma avstånd a på andra sidan planet. Fältet ovanför planet blir då identiskt med det verkliga fältet.",
+            "För den inducerade ytladdningen: bestäm E_n precis ovanför planet och använd ρs=ε0E_n. Integrera sedan över en cirkelskiva med radie b i planet.",
+            "För kraften på den verkliga kulan räcker det att beräkna Coulombkraften från spegelladdningen. Avståndet mellan q och −q är 2a.",
+        ),
+        self_checks=(
+            "När b→∞ ska den integrerade inducerade laddningen gå mot −q.",
+            "Kraften måste vara attraktiv och riktad mot planet oavsett tecknet på q.",
+        ),
+        common_pitfall="Att multiplicera kraften från spegelladdningen med två; spegelladdningen är redan konstruerad så att dess fält vid den verkliga laddningen ger rätt kraft.",
+        visualization_note="Här kan en geometrisk bild av verklig laddning, spegelladdning och fältlinjer vara mer pedagogisk än en generell fältkarta.",
+    ),
+
+    # ------------------------------------------------------------------
+    # Kapitel 5 – Strömmar och strömtäthet
+    # ------------------------------------------------------------------
+    "ConductiveCoaxialElectrodes": G(
+        problem_id="5.1",
+        learning_goal="Översätta det välkända koaxiala E-fältet till stationär ström genom ett ledande medium.",
+        concepts=("Ohms lag i punktform", "koaxial geometri", "ström"),
+        start_here="I stationärt tillstånd har problemet samma potentialgeometri som en koaxial kondensator. Sök därför först E(R) från den givna potentialskillnaden.",
+        hints=(
+            "Cylindersymmetrin ger E_R=C/R. Bestäm konstanten genom att integrera E från a till b och sätta potentialskillnaden till U.",
+            "Använd därefter J=σE. Strömtätheten varierar alltså också som 1/R.",
+            "Den totala strömmen fås genom en cylindrisk yta med radie R och längd ℓ: I=∫J·dS. R ska försvinna ur resultatet.",
+        ),
+        self_checks=(
+            "Samma totalström måste passera varje koaxial cylinderyta i steady state.",
+            "Om σ fördubblas vid samma U ska strömmen fördubblas.",
+        ),
+        common_pitfall="Att använda I=J gånger ett konstant tvärsnitt; den relevanta strömytan har arean 2πRℓ och J beror samtidigt på R.",
+    ),
+    "CoaxialCableLeakage": G(
+        problem_id="5.2",
+        learning_goal="Beräkna läckström och effektförlust genom ett resistivt koaxialt isolationsskikt.",
+        concepts=("resistivitet", "koaxial resistans", "Joulevärme"),
+        start_here="Behandla isolationen som ett koaxialt motstånd mellan innerledare och skärm, inte som en resistor med konstant tvärsnittsarea.",
+        hints=(
+            "För en tunn cylindrisk skiva med radie R och tjocklek dR går strömmen radiellt genom arean 2πRℓ. Skriv dR_el=ρ dR/(2πRℓ).",
+            "Integrera från inner- till ytterradien. Om de givna storheterna är diametrar ändras båda med samma faktor 2, så kvoten b/a i logaritmen blir densamma.",
+            "När den totala resistansen är känd används I=V/R och därefter P=VI eller V²/R.",
+        ),
+        self_checks=(
+            "Längre kabel ska ge större läckström eftersom den erbjuder större ledande yta parallellt.",
+            "Effekten måste vara positiv och uppfylla P=VI.",
+        ),
+        common_pitfall="Att använda R=ρℓ/A med kabelns längd som strömriktning; läckströmmen går radiellt genom isolationen.",
+    ),
+    "VariableSigmaCoaxialElectrolyte": G(
+        problem_id="5.7",
+        learning_goal="Hantera stationär ström när konduktiviteten varierar i rummet och koppla fältets divergens till fri rymdladdning.",
+        concepts=("kontinuitet", "variabel konduktivitet", "Gauss lag"),
+        start_here="Börja med strömkonservering, inte med J=σE. I steady state måste samma totala ström passera varje koaxial cylinderyta.",
+        hints=(
+            "Sätt J_R(R)=I/(2πRℓ). När σ(R)=k/R² används E_R=J_R/σ(R), vilket ger ett annat R-beroende än i ett homogent medium.",
+            "Integrera E_R från a till b för att koppla I till den givna potentialskillnaden U och därmed få resistansen.",
+            "Den fria rymdladdningen fås från ρ=∇·D=ε0εr∇·E. Använd divergensen av ett radiellt cylindriskt fält: ∇·(E_R R̂)=(1/R)d(RE_R)/dR.",
+        ),
+        self_checks=(
+            "Trots att σ varierar ska ∇·J=0 i hela elektrolyten i steady state.",
+            "Den resulterande laddningstätheten behöver inte vara noll; den behövs för att forma E så att J kan vara kontinuerlig.",
+        ),
+        common_pitfall="Att anta ρ=0 bara för att strömmen är stationär. Kontinuitet kräver ∇·J=0, inte nödvändigtvis ∇·E=0 när σ varierar.",
+    ),
+    "SemicylindricalRingResistor": G(
+        problem_id="5.10",
+        learning_goal="Beräkna resistans i en geometri där strömvägens längd beror på radien och olika radiala skikt ligger parallellt.",
+        concepts=("cylindriska koordinater", "strömfördelning", "parallella strömvägar"),
+        start_here="Betrakta en tunn remsa mellan R och R+dR. Den går från A till B längs en halvcirkel och kan ses som en egen resistor parallellt med alla andra remsor.",
+        hints=(
+            "Strömvägens längd för remsan är πR och dess tvärsnittsarea är h dR. Skriv remsans konduktans hellre än dess resistans.",
+            "Alla remsor har samma potentialskillnad mellan ytorna A och B, så deras konduktanser ska adderas/integreras från a till b.",
+            "Alternativt: potentialen ändras med vinkeln φ, så E_φ=U/(πR), J_φ=σE_φ och totalströmmen fås genom att integrera J över en radial snittyta.",
+        ),
+        self_checks=(
+            "Större höjd h eller större konduktivitet σ ska minska resistansen.",
+            "Radialintegralen ska ge en logaritm ln(b/a).",
+        ),
+        common_pitfall="Att behandla hela halvringen som en enda ledare med medelradie; strömmen delar sig mellan många parallella banor med olika längd.",
+        visualization_note="En enkel tvärsnittsskiss med flera parallella halvcirkelformade strömvägar är mer informativ än en färgkarta över J.",
+    ),
+    "SteadyCurrentInterfaceCharge": G(
+        problem_id="5.15",
+        learning_goal="Kombinera stationär strömkontinuitet med elektrostatikens randvillkor för att hitta fri ytladdning i ett materialgränsskikt.",
+        concepts=("randvillkor", "J=σE", "ytladdning"),
+        start_here="Översätt först den givna J1 till E1 med J=σE. Därefter behöver normal- och tangentialkomponenterna behandlas med olika randvillkor.",
+        hints=(
+            "I steady state kan ingen laddning byggas upp obegränsat vid gränsen, så den normala strömkomponenten är kontinuerlig: J2n=J1n.",
+            "Det stationära E-fältet är konservativt, därför är den tangentiella E-komponenten kontinuerlig: E2t=E1t. Detta bestämmer E2.",
+            "Använd till sist ρs=D2n−D1n=ε0(ε2E2n−ε1E1n). Lägg märke till att den tangentiella komponenten inte kommer in i ρs.",
+        ),
+        self_checks=(
+            "Om ε1/σ1 = ε2/σ2 ska den fria ytladdningen försvinna.",
+            "β-komponenten i den givna J1 ska inte påverka den slutliga normala ytladdningen.",
+        ),
+        common_pitfall="Att sätta E_n kontinuerlig. I ett ledande steady-state-gränsskikt är det J_n som är kontinuerlig, medan E_n kan hoppa och skapa ytladdning.",
+    ),
+
+    # ------------------------------------------------------------------
+    # Kapitel 6 – Biot–Savarts lag
+    # ------------------------------------------------------------------
+    "FiniteWireBiotSavart": G(
+        problem_id="6.1",
+        learning_goal="Härleda fältet från en ändlig rak ledare och se hur Biot–Savart, vektorpotential och Ampères lag hänger ihop.",
+        concepts=("Biot–Savarts lag", "vektorpotential", "Ampères lag"),
+        start_here="Använd cylindersymmetrin för riktningen redan innan du integrerar: vilket håll måste B ha runt en rak z-riktad ström?",
+        hints=(
+            "Parametrisera källan med z′ från −L till L. I Biot–Savart är dℓ′=dz′ ẑ och vektorn till fältpunkten har både radiell och z-komponent; korsprodukten lämnar bara φ̂.",
+            "För del (b) har A bara en z-komponent för den raka ledaren. Integrera A_z först och ta sedan B=∇×A; vid z=0 blir derivatorna betydligt enklare.",
+            "I gränsen L→∞ får du full cylindersymmetri. Då kan en cirkulär Ampereslinga användas direkt och ska ge samma gränsvärde som Biot–Savart.",
+        ),
+        self_checks=(
+            "För en oändlig ledare ska |B| skala som 1/R.",
+            "Riktningen ska följa högerhandsregeln runt strömmen och resultatet ska vara oberoende av φ.",
+        ),
+        common_pitfall="Att använda Ampères lag för den ändliga ledaren som om fältet vore konstant runt en cirkel; den fulla symmetrin finns först i det oändliga gränsfallet.",
+    ),
+    "SquareLoopOnAxis": G(
+        problem_id="6.2",
+        learning_goal="Summera magnetfält från flera räta ledarsegment och utnyttja symmetri för att eliminera tvärkomponenter.",
+        concepts=("superposition", "ändlig rak ledare", "symmetri"),
+        start_here="Ta en av kvadratens fyra sidor först. Bestäm dess B-bidrag i en punkt på z-axeln och fråga sedan vad rotation med 90° gör med komponenterna.",
+        hints=(
+            "Varje sida kan behandlas med Biot–Savart eller resultatet för en ändlig rak ledare. Avståndet från fältpunkten till varje sida är samma.",
+            "När de fyra sidornas bidrag summeras tar komponenterna parallella med xy-planet ut varandra. Endast axelkomponenten återstår.",
+            "Sätt z=0 först efter att det allmänna axelfältet är framtaget för del (b). Använd högerhandsregeln separat för att bestämma tecknet längs z-axeln.",
+        ),
+        self_checks=(
+            "På mycket stort |z| ska slingan börja bete sig som en magnetisk dipol och fältet avta ungefär som 1/|z|³.",
+            "I centrum ska alla fyra sidor bidra lika mycket till axelkomponenten.",
+        ),
+        common_pitfall="Att multiplicera fältvektorn från en sida med fyra utan att först projicera den på z-riktningen; tvärkomponenterna roteras och tar ut varandra.",
+    ),
+    "RightAngleWireCorner": G(
+        problem_id="6.3",
+        learning_goal="Superponera fält från två halv-oändliga räta ledare med olika riktningar.",
+        concepts=("Biot–Savart", "superposition", "vektorriktning"),
+        start_here="Dela den böjda ledaren i två räta halv-oändliga segment. Behandla deras fält i punkten 5 cm ovanför böjen var för sig.",
+        hints=(
+            "För varje segment kan du använda den ändliga-raka-ledarens formel med en ändpunkt i böjen och den andra på oändligt avstånd.",
+            "De två bidragen har samma belopp av symmetriskäl, men de pekar inte i samma riktning. Bestäm båda riktningarna med dℓ×r eller högerhandsregeln.",
+            "Summera vektorerna geometriskt. Eftersom bidragen är lika stora kommer resultatet att ligga längs en bisektris i det horisontella planet.",
+        ),
+        self_checks=(
+            "Byter strömmen riktning ska hela B-vektorn byta riktning.",
+            "Resultatet ska minska proportionellt mot 1/höjden om hela geometrin skalas endast i höjdled långt från böjens storleksskala.",
+        ),
+        common_pitfall="Att anta att de två fältbidragen pekar åt samma håll bara för att strömmen är densamma i den sammanhängande ledaren.",
+    ),
+    "ThinCurrentStripField": G(
+        problem_id="6.5",
+        learning_goal="Ersätta ett brett strömförande band med en kontinuerlig samling parallella linjeströmmar.",
+        concepts=("superposition", "ytström", "oändlig rak ledare"),
+        start_here="Skär bandet i infinitesimala parallella trådar över bredden. Vilken ström dI bär en remsa med bredd dx′ om totalströmmen är jämnt fördelad?",
+        hints=(
+            "Använd dI=(I/2a)dx′ och det kända fältet från en oändligt lång rak ledare för varje remsa.",
+            "I del (a) ligger observationspunkten i bandets plan. Alla bidrag får samma normalriktning, så integralen reduceras till en skalär 1/avstånd-integral.",
+            "I del (b) måste varje tråds cirkulära B-fält projiceras. Symmetrin gör att en komponent tar ut sig mellan remsorna x′ och −x′ medan den andra adderas.",
+        ),
+        self_checks=(
+            "När bandbredden blir mycket liten vid fast I ska resultatet närma sig fältet från en linjeström.",
+            "I den symmetriska punkten ovanför mittlinjen ska den tvärkomponent som är udda i x′ försvinna.",
+        ),
+        common_pitfall="Att använda samma avstånd och samma fältriktning för alla remsor; i del (b) ändras både avståndet och riktningen över bandets bredd.",
+    ),
+    "CircularArcOnAxis": G(
+        problem_id="6.8",
+        learning_goal="Genomföra Biot–Savart-integralen för en cirkelbåge där symmetrin inte räcker för att eliminera alla komponenter.",
+        concepts=("cirkelbåge", "Biot–Savart", "vektorintegral"),
+        start_here="Parametrisera kvartscirkeln med vinkeln φ och skriv både dℓ och vektorn från bågelementet till punkten z ẑ innan du tar korsprodukten.",
+        hints=(
+            "Alla bågelement ligger på samma avstånd √(a²+z²) från en punkt på z-axeln, så nämnaren kan tas ut ur integralens vinkelberoende del.",
+            "Beräkna dℓ×R-vektorn komponentvis. För en kvartsbåge överlever normalt både tvärkomponenter och z-komponenten eftersom full rotationssymmetri saknas.",
+            "För den hela cirkeln kan du antingen integrera 0→2π eller använda symmetri: alla tvärkomponenter tar ut varandra och bara z-komponenten återstår.",
+        ),
+        self_checks=(
+            "I centrum z=0 ska kvartscirkeln ge ett B-bidrag vinkelrätt mot slingans plan från z-komponenten, medan vissa tvärtermer förenklas.",
+            "För en hel cirkel ska resultatet stämma med det välkända axelfältet från en strömslinga.",
+        ),
+        common_pitfall="Att använda helcirkelns symmetri redan i del (a) och därför kasta bort x- och y-komponenter som faktiskt finns för en kvartsbåge.",
+    ),
+    "RotatingChargedDisk": G(
+        problem_id="6.13",
+        learning_goal="Omvandla en roterande ytladdning till en kontinuerlig fördelning av cirkulära strömslingor.",
+        concepts=("ytladdning", "konvektionsström", "strömslinga"),
+        start_here="Dela skivan i tunna ringar med radie R och bredd dR. Bestäm först laddningen på en sådan ring och hur stor ström dess rotation motsvarar.",
+        hints=(
+            "Ringens laddning är dq=ρs 2πR dR. Ett varv tar tiden 2π/ω, så den motsvarande ringströmmen blir dI=dq·ω/(2π).",
+            "Använd axelfältet från en cirkulär strömslinga med radie R för varje dI. Fältbidragen pekar alla längs rotationsaxeln.",
+            "Integrera R från 0 till a. Var noga med |z| eller motsvarande teckenhantering om uttrycket ska gälla på båda sidor om skivan.",
+        ),
+        self_checks=(
+            "B ska vara proportionellt mot både ρs och ω och byta riktning om någon av dem byter tecken/riktning.",
+            "Långt från skivan ska fältet avta som ett dipolfält, ungefär 1/|z|³.",
+        ),
+        common_pitfall="Att använda hela skivans laddning som om den gick i en enda ring med radie a; olika radier har olika strömbidrag och olika axelfält.",
+    ),
+
+    # ------------------------------------------------------------------
+    # Kapitel 7 – Kraft, moment och magnetiskt flöde
+    # ------------------------------------------------------------------
+    "ElectronOrbitDipoleMoment": G(
+        problem_id="7.1",
+        learning_goal="Koppla en laddnings periodiska rörelse till en ekvivalent ström och ett magnetiskt dipolmoment.",
+        concepts=("magnetiskt moment", "ekvivalent ström", "elektronladdning"),
+        start_here="Betrakta först den cirkulerande laddningen som en ström: hur mycket laddning passerar en given punkt per omloppstid?",
+        hints=(
+            "Omloppstiden är T=2πa/v. Den konventionella strömmen är I=q/T, där q för en elektron är negativt.",
+            "Magnetiska dipolmomentet för en plan strömslinga är m=I A n̂ med A=πa².",
+            "Bestäm n̂ från den positiva omloppsriktningen med högerhandsregeln och låt elektronens negativa laddning vända momentets riktning relativt partikelns rörelse.",
+        ),
+        self_checks=(
+            "Beloppet ska vara proportionellt mot e·v·a.",
+            "En positiv laddning med samma rörelse skulle ge motsatt riktning på m jämfört med elektronen.",
+        ),
+        common_pitfall="Att sätta strömriktningen lika med elektronens rörelseriktning; konventionell ström går motsatt en negativ laddnings rörelse.",
+    ),
+    "CircularLoopTorqueUniformField": G(
+        problem_id="7.2",
+        learning_goal="Se hur det lokala kraftbidraget på en strömslinga summeras till det globala momentet m×B.",
+        concepts=("Lorentzkraft på ledare", "kraftmoment", "magnetiskt moment"),
+        start_here="För del (a), parametrisera ett litet strömelement på cirkeln och skriv först dF=I dℓ×B. Ta därefter momentet dT=r×dF kring centrum.",
+        hints=(
+            "Med r=a(cosφ x̂+sinφ ŷ) och dℓ=a(−sinφ x̂+cosφ ŷ)dφ kan både dF och dT skrivas explicit i φ.",
+            "Integrera dT runt 0→2π. Termer som är udda/sinus- eller cosinusmedelvärden försvinner, medan en komponent summeras till ett nettomoment.",
+            "I del (b) använder du m=Iπa² ẑ och jämför direkt med T=m×B. Del (c) kontrolleras med magnetnålsbilden: m vill vrida sig mot B.",
+        ),
+        self_checks=(
+            "Nettokraften på den slutna slingan i ett homogent B-fält ska vara noll även om nettomomentet inte är noll.",
+            "Momentets belopp ska vara mB sinθ och här är vinkeln mellan m och B 90°.",
+        ),
+        common_pitfall="Att blanda ihop nettokraft och kraftmoment; motsatta delar av slingan kan ge krafter som tar ut varandra men ändå bildar ett kraftpar.",
+    ),
+    "DipoleDipoleTorque": G(
+        problem_id="7.3",
+        learning_goal="Beräkna momentet på en magnetisk dipol i det icke-homogena fältet från en annan dipol.",
+        concepts=("dipolfält", "magnetiskt moment", "vektorgeometri"),
+        start_here="Beräkna först B-fältet från den ena dipolen i den andra dipolens position. Använd vinkeln θ mellan r̂ och ẑ för att skriva fältets riktning.",
+        hints=(
+            "Dipolfältet kan skrivas B=(μ0/4πr³)[3(m·r̂)r̂−m]. Här är m=m ẑ och m·r̂=m cosθ.",
+            "Momentet på den andra spolen är T=m×B. Den del av B som ligger parallellt med ẑ bidrar inte till korsprodukten.",
+            "Efter att ha tagit beloppet uppstår en produkt sinθ cosθ; den kan skrivas med sin(2θ) om du vill förenkla numeriken.",
+        ),
+        self_checks=(
+            "Momentet ska vara noll för θ=0° och θ=90° i denna konfiguration.",
+            "Beloppet ska skala som m²/r³.",
+        ),
+        common_pitfall="Att använda B på dipolaxeln eller ekvatorialplanet som specialfall trots att θ=45° ligger mellan dessa riktningar.",
+    ),
+    "LoopDipoleApproximationError": G(
+        problem_id="7.5",
+        learning_goal="Kvantifiera när fjärrfältsapproximationen av en strömslinga som magnetisk dipol faktiskt är tillräckligt noggrann.",
+        concepts=("dipolapproximation", "relativt fel", "gränsfall"),
+        start_here="Skriv både det exakta axelfältet från en cirkulär slinga och dipolens axelfält med samma magnetiska moment m=Iπa².",
+        hints=(
+            "Inför den dimensionslösa variabeln x=z/a. Då kan både det exakta och approximativa fältet skrivas som samma prefaktor gånger en ren funktion av x.",
+            "Bildar du kvoten B_dip/B_exact försvinner μ0, I och a. Det gör 1%-villkoret till en enkel dimensionslös olikhet.",
+            "Använd |B_dip−B_exact|/|B_exact|<0,01 och lös efter x. Det sökta avståndet är därefter z=xa.",
+        ),
+        self_checks=(
+            "Felet ska gå mot noll när z/a→∞.",
+            "Resultatet ska vara ett rent tal gånger a; inga andra dimensionsbärande parametrar kan finnas kvar.",
+        ),
+        common_pitfall="Att jämföra med ett dipolmoment m=Ia i stället för m=Iπa², eller att använda absolut fel i tesla i stället för det efterfrågade relativa felet.",
+        visualization_note="En graf över relativfelet mot z/a kan här faktiskt hjälpa studenten att se var dipolapproximationen blir användbar.",
+    ),
+    "AntarcticIceFlux": G(
+        problem_id="7.6",
+        learning_goal="Använd ∇·B=0 för att byta en besvärlig flödesyta mot en enklare sfärisk yta.",
+        concepts=("magnetiskt flöde", "Gauss lag för B", "jordens dipolfält"),
+        start_here=(
+            "Försök inte direkt integrera över hela is–luft-gränsen. Slut i stället isvolymen till en sluten yta och använd att det totala magnetiska flödet genom varje sluten yta är noll."
+        ),
+        hints=(
+            "Det totala flödet som lämnar isen till luften måste vara motsatt flödet genom isens botten mot jorden. Därför räcker det att integrera B·dS över den sfäriska polarkalotten vid jordradien.",
+            "Använd jordens dipolfälts radiella komponent B_r på r=rJ. Sätt polvinkeln θ=0 vid sydpolen och integrera till θmax=20°.",
+            "Ytelementet på sfären är dS=rJ² sinθ dθ dφ. φ-integralen ger 2π och θ-integralen innehåller cosθ sinθ.",
+        ),
+        self_checks=(
+            "Om polarområdet krymper mot θmax→0 ska flödet gå mot noll.",
+            "Svaret ska ha enheten weber och vara proportionellt mot jordens magnetiska moment m.",
+        ),
+        common_pitfall="Att använda ∇·B som om det fanns en magnetisk laddning inuti jorden; den fundamentala poängen är just att nettomagnetflödet genom en sluten yta är noll.",
+    ),
+    "CopperWireMagneticLevitation": G(
+        problem_id="7.7",
+        learning_goal="Jämföra magnetisk krafttäthet J×B med tyngdkraft per volym.",
+        concepts=("krafttäthet", "J×B", "kraftjämvikt"),
+        start_here="Arbeta per volym i stället för att införa trådens okända tvärsnittsarea. Vilken magnetisk krafttäthet får en strömtäthet J i ett homogent B-fält?",
+        hints=(
+            "Den magnetiska kraften per volym är f=J×B. Med J längs +x och B längs +y pekar kraften i +z.",
+            "Tyngdkraften per volym är ρCu g i −z-riktningen. Sätt beloppen lika för svävning.",
+            "Lös efter B och konvertera J från A/mm² till A/m² innan numerisk insättning.",
+        ),
+        self_checks=(
+            "Trådens radie ska inte behövas; både magnetisk kraft och tyngd är proportionella mot volymen.",
+            "Om J fördubblas ska det nödvändiga B-fältet halveras.",
+        ),
+        common_pitfall="Att använda densiteten ρCu direkt i g/cm³ tillsammans med SI-enheter för J och B.",
+    ),
+    "InfiniteWireRectangularLoopFlux": G(
+        problem_id="7.10",
+        learning_goal="Beräkna magnetiskt flöde genom en plan yta när B både varierar i belopp och lutar relativt ytans normal.",
+        concepts=("magnetiskt flöde", "fält från rak ledare", "projektion"),
+        start_here="Bestäm B-vektorn från den oändliga x-riktade ledaren i en godtycklig punkt (x,y,c) på rektangelns yta. Flödet använder B·n, inte |B|.",
+        hints=(
+            "Avståndet till x-axeln är R=√(y²+c²). B går azimutalt runt x-axeln och kan delas i y- och z-komponenter.",
+            "För ytan z=c är normalen ±ẑ. Bestäm därför B_z; den innehåller en faktor y/(y²+c²).",
+            "B är oberoende av x, så x-integralen ger bara faktorn a. Integrera sedan y från 0 till b; integralen av y/(y²+c²) ger en logaritm.",
+        ),
+        self_checks=(
+            "Om b→0 ska flödet gå mot noll.",
+            "Det är endast B-komponenten normal mot slingan som bidrar; den tangentiella komponenten får inte finnas i fluxresultatet.",
+        ),
+        common_pitfall="Att använda B=μ0I/(2πR) direkt i flödesintegralen utan projektion på ẑ.",
+    ),
+
+    # ------------------------------------------------------------------
+    # Kapitel 8 – Magnetiska material och magnetiska kretsar
+    # ------------------------------------------------------------------
+    "PermanentMagnetAirGapBHCurve": G(
+        problem_id="8.1",
+        learning_goal="Bestäm arbetspunkten för en permanentmagnet genom skärningen mellan materialets B–H-kurva och magnetkretsens lastlinje.",
+        concepts=("B–H-kurva", "magnetisk krets", "luftgap"),
+        start_here="Läckage försummas och tvärsnittet är samma, så samma B går genom magneten och luftgapet. Skriv sedan cirkulationslagen för H runt hela magnetkretsen.",
+        hints=(
+            "I luftgapet gäller H_g=B/μ0. I permanentmagneten måste H_m hämtas från den givna tabellen och kan vara negativt.",
+            "Utan spolen gäller ungefär H_m ℓ_m + H_g d = 0. Detta är en rät lastlinje i B–H-diagrammet; hitta dess skärning med tabellkurvan genom interpolation.",
+            "Med N varv och ström I ändras cirkulationslagen till H_m ℓ_m + H_g d = NI med tecken enligt lindningens riktning. Arbetspunkten förskjuts längs samma materialkurva.",
+        ),
+        self_checks=(
+            "B i luftgapet och magneten ska vara samma när läckage och areaförändring försummas.",
+            "I del (a) måste permanentmagnetens H ligga i det negativa området av den givna tabellen för att balansera luftgapets positiva H.",
+        ),
+        common_pitfall="Att sätta H_m=B/(μ0μr) med en konstant μr; uppgiften ger uttryckligen ett icke-linjärt permanentmagnetmaterial via tabellen.",
+        visualization_note="Just här är en B–H-graf med lastlinje pedagogiskt relevant eftersom lösningen bokstavligen är deras skärningspunkt.",
+    ),
+    "NonlinearIronMagneticCircuit": G(
+        problem_id="8.2",
+        learning_goal="Lösa en magnetisk krets där järnets materiallag är icke-linjär men flödet är gemensamt med luftgapet.",
+        concepts=("icke-linjär B–H-lag", "Ampères lag", "luftgap"),
+        start_here="Eftersom tvärsnittet är samma och läckage försummas kan du använda ett enda okänt B för både järn och luftgap.",
+        hints=(
+            "I luftgapet är H_g=B/μ0. I järnet måste materiallagen B=aH/(b+H) inverteras så att H_järn uttrycks som funktion av B.",
+            "Sätt in båda H-bidragen i magnetomotoriska balansvillkoret H_järn·ℓ_järn + H_g d = NI.",
+            "Ekvationen blir icke-linjär i B. När du löser den, kontrollera materiallagens villkor H>0 och att B ligger under mättnadsvärdet a; en matematisk rot kan vara fysikaliskt otillåten.",
+        ),
+        self_checks=(
+            "Samma B ska gå genom järn och luftgap i den idealiserade serienkretsen.",
+            "Luftgapet bör stå för en betydande del av den magnetomotoriska spänningen eftersom μ0 är mycket mindre än järnets effektiva permeabilitet.",
+        ),
+        common_pitfall="Att ersätta den givna icke-linjära materiallagen med en konstant relativ permeabilitet.",
+    ),
+    "MagneticBridgeCircuit": G(
+        problem_id="8.4",
+        learning_goal="Översätta en förgrenad järngeometri till ett nätverk av magnetiska reluktanser och hitta flödet i en bestämd gren.",
+        concepts=("reluktans", "magnetisk krets", "flödesdelning"),
+        start_here="Identifiera först magnetkretsens topologi: flödet går genom den vänstra ringhalvan och delar sig därefter mellan bryggan och den högra ringhalvan innan grenarna återförenas.",
+        hints=(
+            "För varje del används reluktansen ℜ=ℓ/(μ0μrS). Ringhalvorna har samma area men bryggan har en annan area och en annan medelväglängd.",
+            "Rita ett magnetiskt motsvarighetsschema: en seriereluktans följd av två parallella reluktanser. Spolens magnetomotoriska spänning NI driver kretsen.",
+            "Bestäm först totalflödet genom seriedelen och därefter hur det delar sig mellan de parallella grenarna. Det efterfrågade flödet är just bryggans grenflöde.",
+        ),
+        self_checks=(
+            "Flödet i vänstra seriedelen ska vara summan av flödena genom bryggan och den högra ringhalvan.",
+            "En gren med större reluktans ska bära mindre magnetiskt flöde vid samma magnetomotoriska potentialskillnad.",
+        ),
+        common_pitfall="Att lägga alla järndelar i serie; bryggan skapar en verklig parallell väg för det magnetiska flödet.",
+        visualization_note="Ett reluktansnät bredvid den geometriska skissen är sannolikt mer lärorikt än en 3-D-fältbild för denna uppgift.",
+    ),
+    "CurrentCarryingMagneticTube": G(
+        problem_id="8.5",
+        learning_goal="Hålla isär H, B och M när ett fritt strömförande material kan vara magnetiskt.",
+        concepts=("Ampères lag för H", "magnetisering", "styckvis fält"),
+        start_here="Bestäm H först. Ampères lag för H beror på den fria strömmen, så samma H-lösning används i både kopparfallet och järnfallet.",
+        hints=(
+            "Dela upp R<a, a<R<b och R>b. I rörets material är den fria strömmen jämnt fördelad över annulusarean π(b²−a²), så den omslutna strömmen beror på R.",
+            "Cirkulationslagen ∮H·dℓ=I_fri,innesluten ger H_φ i varje område. För R<a omsluts ingen fri ström.",
+            "När H är känt: i omagnetiskt material är M=0 och B=μ0H. I linjärt järn gäller M=(μr−1)H och B=μ0μrH inne i materialet, men vakuumrelationen gäller utanför.",
+        ),
+        self_checks=(
+            "H-fältet ska vara identiskt i del (a) och (b) eftersom den fria strömfördelningen är densamma.",
+            "Utanför röret ska H motsvara fältet från hela strömmen I och avta som 1/R.",
+        ),
+        common_pitfall="Att sätta μr direkt in i Ampères lag för H och därmed ändra H när materialet byts; μr påverkar B och M, inte den fria strömkällan till H.",
+    ),
+    "HorseshoeMagnetAnchorForce": G(
+        problem_id="8.6",
+        learning_goal="Beräkna attraktionskraft från uppmätt magnetiskt flöde med hjälp av magnetiskt tryck i luftgap.",
+        concepts=("magnetiskt tryck", "magnetiskt flöde", "kraft"),
+        start_here="Materialegenskaperna behövs inte när flödet redan är känt. Börja med att omvandla Φ0 till B i luftgapens polytor.",
+        hints=(
+            "När läckage försummas är B≈Φ0/S vid vardera polytan.",
+            "Magnetiskt tryck i ett litet luftgap är p=B²/(2μ0). Kraften från en pol är pS.",
+            "Hästskoformen har två polytor som drar i ankaret. Summera därför båda lika stora kraftbidragen.",
+        ),
+        self_checks=(
+            "Kraften ska vara proportionell mot Φ0².",
+            "Glömmer du en av de två polytorna blir resultatet exakt en faktor två för litet i den idealiserade modellen.",
+        ),
+        common_pitfall="Att försöka bestämma H eller permanentmagnetens B–H-kurva trots att det uppmätta flödet redan räcker för kraftberäkningen.",
+    ),
+    "PermanentlyMagnetizedCylinderAxis": G(
+        problem_id="8.12",
+        learning_goal="Ersätta en homogen magnetisering med bundna magnetiseringsströmmar och därefter skilja mellan B och H.",
+        concepts=("magnetisering", "magnetiseringsström", "B och H"),
+        start_here="Beräkna de bundna magnetiseringsströmmarna från M. För konstant M är volymströmmen ∇×M noll; fråga i stället vilken yta som får K_m=M×n.",
+        hints=(
+            "På cylinderns mantel är n=R̂, så K_m går azimutalt och har konstant belopp M. Magneten är därmed ekvivalent med en ändlig solenoid med ytströmstäthet M.",
+            "B längs axeln kan därför byggas som fältet från en ändlig solenoid eller genom att summera cirkulära strömslingor från z′=0 till h.",
+            "När B är känt används H=B/μ0−M inne i magneten och H=B/μ0 utanför. Undersök sedan gränsen a≫h separat; den kan vara överraskande för B.",
+        ),
+        self_checks=(
+            "På axeln måste B vara parallellt med ẑ av rotationssymmetri.",
+            "I gränsen a≫h ger facitmodellen B→0 lokalt medan H→−M inne i magneten; kontrollera att dina uttryck tillåter detta.",
+        ),
+        common_pitfall="Att anta B=μ0M inne i en permanentmagnet. Magnetiseringens eget avmagnetiserande H-fält kan göra att B blir mycket mindre, till och med noll i ett gränsfall.",
+    ),
+    "MagnetizationCurrentsCylinder": G(
+        problem_id="8.13",
+        learning_goal="Härleda både volym- och ytmagnetiseringsströmmar från ett linjärt magnetiserat strömförande material och visa att deras nettoström tar ut sig.",
+        concepts=("magnetiseringsström", "M=(μr−1)H", "cylindriska koordinater"),
+        start_here="Bestäm först H inne i ledaren från den fria, jämnt fördelade strömmen I. Därifrån följer M direkt för ett linjärt material.",
+        hints=(
+            "För R<a är H_φ proportionellt mot R. Sätt M_φ=(μr−1)H_φ.",
+            "Volymens magnetiseringsströmtäthet är J_m=∇×M. För ett rent φ-fält som beror på R behöver du z-komponenten (1/R)d(RM_φ)/dR.",
+            "På ytan R=a används K_m=M×n med n=R̂. Beräkna sedan total volymström genom tvärsnittet och total ytström längs manteln; de ska ha motsatta tecken.",
+        ),
+        self_checks=(
+            "Volym- och ytmagnetiseringsströmmarna ska tillsammans ge noll nettomagnetiseringsström i z-riktningen.",
+            "När μr→1 ska både J_m och K_m gå mot noll.",
+        ),
+        common_pitfall="Att använda J_m=∇×H i stället för ∇×M; H bestäms av fri ström medan magnetiseringsströmmarna kommer från M.",
+    ),
+
+    # ------------------------------------------------------------------
+    # Kapitel 9 – Induktans, induktion och elektromotorisk spänning
+    # ------------------------------------------------------------------
+    "MutualInductanceParallelWiresSquare": G(
+        problem_id="9.2",
+        learning_goal="Beräkna ömsesidig induktans genom att integrera magnetiskt flöde från två motriktade oändliga ledare genom en snedställd kvadrat.",
+        concepts=("ömsesidig induktans", "magnetiskt flöde", "geometri"),
+        start_here="Välj strömmen I1 i slinga 1 som källa och beräkna B mellan de två oändliga ledarna. Därefter är M=Φ21/I1.",
+        hints=(
+            "Mellan ledarna pekar de två B-bidragen åt samma håll genom kvadratens plan. Om x mäts från vänstra ledaren blir B(x) summan av två 1/avstånd-termer.",
+            "Den snedställda kvadraten har inte konstant höjd i integrationsriktningen. För 0<x<d/2 är dess vertikala bredd proportionell mot x; använd symmetri för den andra halvan.",
+            "Skriv dS = [kvadratens lokala bredd] dx och integrera B(x)dS. I kvoten Φ/I1 ska I1 försvinna och resultatet få induktansenheten henry.",
+        ),
+        self_checks=(
+            "M ska vara proportionell mot μ0 och mot längdskalan d.",
+            "De två halvorna av kvadraten ska ge samma flödesbidrag av spegelsymmetri.",
+        ),
+        common_pitfall="Att använda kvadratens hela area gånger B i centrum; B varierar kraftigt och blir singulärt nära de tangerande ledarna, även om integralen är ändlig.",
+        visualization_note="En skiss som visar den lokala kvadratbredden som funktion av x gör integraluppställningen betydligt lättare att förstå.",
+    ),
+    "MutualInductanceCoaxialLoops": G(
+        problem_id="9.4",
+        learning_goal="Se reciprociteten i ömsesidig induktans genom två olika approximativa flödesberäkningar.",
+        concepts=("ömsesidig induktans", "dipolapproximation", "reciprocitet"),
+        start_here="Bestäm först vilken ström som är källa och vilket flöde som ska beräknas. Gör sedan del (a) och (b) som två oberoende vägar till samma M.",
+        hints=(
+            "I del (a): ersätt den lilla slingan med dipolmomentet m=I_liten πa². Använd dipolfältets z-komponent över den stora cirkelskivans yta och integrera 2πR dR.",
+            "I del (b): använd det exakta axelfältet från den stora cirkulära slingan i den lilla slingans centrum. Eftersom a≪b,d kan detta B antas konstant över den lilla arean πa².",
+            "Dividera respektive flöde med den ström som skapade fältet. De två uttrycken ska sammanfalla, vilket illustrerar M12=M21.",
+        ),
+        self_checks=(
+            "M ska vara symmetrisk under byte av vilken slinga som betraktas som källa och mottagare inom approximationerna.",
+            "När d blir mycket stort ska M avta ungefär som 1/d³.",
+        ),
+        common_pitfall="Att anta att dipolfältet från den lilla slingan är konstant över den stora slingan i del (a); den approximationen är inte motiverad när den mottagande slingan är stor.",
+    ),
+    "OpenSecondaryTransformerVoltage": G(
+        problem_id="9.6",
+        learning_goal="Koppla en tidsvarierande primärström till sekundärspänning via järnkärnans flöde och Faradays lag.",
+        concepts=("Faradays lag", "transformator", "flödeskoppling"),
+        start_here="Sekundärlindningen är öppen, så du behöver inte lösa någon sekundärström. Bestäm i stället flödet i järnkärnan som funktion av primärströmmen.",
+        hints=(
+            "Med samma approximation som för en lång magnetisk krets fås H≈N1 i1(t)/ℓ och B=μ0μrH.",
+            "Flödet genom kärnan är Φ(t)=B(t)S. Sekundärens flödeskoppling är N2Φ(t).",
+            "Använd ε2=−d[N2Φ(t)]/dt. Derivatan av cos(ωt) ger en faktor ω och en sinus med tecken enligt vald polaritet.",
+        ),
+        self_checks=(
+            "Spänningsamplituden ska vara proportionell mot N1N2, μr, S, I0 och ω.",
+            "Om ω→0 ska den inducerade spänningen gå mot noll även om primärströmmen är stor.",
+        ),
+        common_pitfall="Att använda transformatorns spänningsförhållande U2/U1=N2/N1 utan att någon primärspänning ens är given; här ska spänningen härledas från di1/dt.",
+    ),
+    "MovingLoopFieldWork": G(
+        problem_id="9.13",
+        learning_goal="Koppla mekaniskt arbete vid rörelse genom ett magnetfält till inducerad ström och resistiv värme.",
+        concepts=("rörelse-emk", "Lenz lag", "energibalans"),
+        start_here="Dela rörelsen i tre faser: slingan går in i fältområdet, är helt inne, och går ut. I vilken fas ändras magnetflödet?",
+        hints=(
+            "Under in- och utpassage ändras överlappningsarean med hastigheten dA/dt=a v, så |ε|=Bav. När slingan är helt inne är flödet konstant och ε=0.",
+            "Den inducerade strömmen är I=ε/RΩ. Lenz lag säger att den magnetiska kraften motverkar rörelsen under de två övergångarna.",
+            "Det mekaniska arbetet vid konstant hastighet kan enklast fås som den resistiva energin ∫I²RΩ dt. Varje övergång varar tiden a/v och det finns två lika stora bidrag.",
+        ),
+        self_checks=(
+            "Inget arbete mot magnetisk broms behövs i idealmodellen när hela slingan ligger i ett helt homogent fält.",
+            "Det totala arbetet ska öka med v eftersom snabbare rörelse ger större inducerad ström och större momentan bromskraft.",
+        ),
+        common_pitfall="Att räkna hela sträckan genom område B som en period med inducerad emk; endast när flödet genom slingan förändras uppstår emk.",
+        visualization_note="En enkel animation av överlappningsarean A(t) kan vara mycket pedagogisk här, eftersom den direkt visar när dΦ/dt är noll respektive icke-noll.",
+    ),
+    "MovingLoopDipoleEmf": G(
+        problem_id="9.14",
+        learning_goal="Visa att tidsvarierande flöde i ett medföljande system och rörelse-emk i ett fast system beskriver samma inducerade spänning.",
+        concepts=("Faradays lag", "rörelse-emk", "dipolfält"),
+        start_here="Utnyttja a≪z. Då kan slingan behandlas som liten och dipolfältet utvecklas nära z-axeln. Gör först del (a), där flödesmetoden är kortast.",
+        hints=(
+            "I det medföljande systemet är slingan stilla och Φ≈B_z(z)πa². Sätt dz/dt=v och använd ε=−dΦ/dt.",
+            "Dipolens axelfält avtar som z⁻³. Därför ger tidsderivatan en extra faktor proportionell mot v/z och slutresultatet skalar som z⁻⁴.",
+            "I det fasta systemet används ε=∮(v×B)·dℓ. Den relevanta termen är dipolfältets lilla radiella komponent vid slingans radie; v ẑ kors B_R R̂ ger en tangentiell kraft runt hela slingan.",
+        ),
+        self_checks=(
+            "Båda metoderna måste ge samma belopp på emk.",
+            "När v=0 eller z→∞ ska emk gå mot noll.",
+        ),
+        common_pitfall="Att i del (b) använda enbart B_z. För rörelse-emk runt en cirkel ger v×B_z=0; den lilla radiella fältkomponenten är avgörande.",
+    ),
+
+    # ------------------------------------------------------------------
+    # Kapitel 10 – Förskjutningsströmmar
+    # ------------------------------------------------------------------
+    "DisplacementCurrentCapacitor": G(
+        problem_id="10.2",
+        learning_goal="Se varför en tidsvarierande kondensatorström motsvaras av samma förskjutningsström genom gapet.",
+        concepts=("förskjutningsström", "D-fält", "laddningskontinuitet"),
+        start_here="Koppla den tillförda strömmen till hur snabbt plattladdningen Q(t) ändras. Därefter kan D-fältet mellan stora plattor skrivas direkt från Q(t).",
+        hints=(
+            "Strömmen till en platta är i(t)=dQ/dt med tecken enligt vald riktning.",
+            "När randeffekter försummas är D=Q/A normalt mot plattorna och ungefär homogent över arean.",
+            "Derivera D med avseende på tiden: J_F=∂D/∂t. Lägg märke till att plattavståndet d inte behövs för just denna storhet.",
+        ),
+        self_checks=(
+            "Integralen av J_F över plattarean ska exakt ge den ledningsström i(t) som kommer fram i ledaren.",
+            "J_F ska ha samma sinusform och fas som den givna strömmen i(t), inte som plattspänningen i allmänhet.",
+        ),
+        common_pitfall="Att först integrera strömmen till Q(t) och sedan tappa bort att tidsderivatan i J_F tar tillbaka den ursprungliga strömfunktionen.",
+    ),
+    "RadialChargeExpansionMaxwellTest": G(
+        problem_id="10.3",
+        learning_goal="Använd sfärisk symmetri och kontinuitet för att förstå hur ledningsström och förskjutningsström kan ta ut varandra i Ampère–Maxwells lag.",
+        concepts=("sfärisk symmetri", "kontinuitetsekvationen", "Ampère–Maxwells lag"),
+        start_here=(
+            "Del (a) är i första hand en symmetriuppgift. En sfäriskt symmetrisk B-vektor skulle behöva vara radiell, men kombinera det med ∇·B=0 och kravet på ett reguljärt fält utan magnetiska monopoler."
+        ),
+        hints=(
+            "För del (b), använd kontinuitetsekvationen i sfärisk symmetri: ∂ρ/∂t + (1/r²)∂(r²J_r)/∂r=0. Integrera från centrum till r och använd regularitet vid r=0 för att få J_r.",
+            "Gauss lag ger D_r(r,t) från den inneslutna laddningen: 4πr²D_r = ∫_0^r ρ(r′,t)4πr′²dr′.",
+            "Derivera D_r med avseende på tiden och jämför J_F=∂D/∂t med J. Om deras summa försvinner blir högerledet i ∇×B=μ0(J+J_F) noll, vilket gör B=0 konsistent med alla ekvationer.",
+        ),
+        self_checks=(
+            "Trots att de verkliga laddningarna rör sig kan B=0 vara en lösning eftersom förskjutningsströmmen exakt kompenserar den radiella ledningsströmmen i Ampère–Maxwells lag.",
+            "Resultatet får inte bryta sfärisk symmetri genom att välja någon särskild axel eller azimutal riktning.",
+        ),
+        common_pitfall="Att resonera 'rörliga laddningar ger alltid B≠0' utan att först kontrollera vad full sfärisk symmetri och Maxwells förskjutningsström tillåter.",
+        visualization_note="Det mest värdefulla här är ett konceptdiagram som visar J och J_F som lika stora och motriktade radiella fält, snarare än en vanlig B-fältgraf.",
     ),
 }
 

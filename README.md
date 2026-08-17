@@ -1,81 +1,17 @@
-# TFYB05 – interaktiva EM-visualiseringar
+# TFYB05 guidance update — all registered problems
 
-En Streamlit- och Tkinter-applikation för visualisering av elektrostatik,
-magnetostatik och relaterad teori. Alla fysikberäkningar använder SI-enheter,
-medan gränssnitten kan visa praktiska enheter som nC, µC, mm och cm.
+If you already installed the first hint-first prototype, copy this folder's contents into the root of the repository and replace the two existing files when prompted.
 
-## Funktioner
+This update replaces:
 
-- 65 registrerade övningsproblem med 2-D-graf, geometriskiss och 3-D-vy.
-- Interaktiv Plotly/WebGL-vy i Streamlit.
-- Enhetsväljare med korrekt konvertering till och från SI.
-- Metadataanpassade talfält, linjära reglage, logaritmiska reglage och valfält.
-- Separata utkast och applicerade parametrar så att figurer inte räknas om vid varje ändring.
-- Export av parametrar till JSON/CSV samt figurer till PNG/HTML.
-- Gemensam validering, renderingskontroller och automatiska tester.
-- Teorisidor för Gauss flödessats och Stokes/Ampères lag.
+- `em_visualisering/guidance.py`
+- `tests/test_guidance.py`
 
-## Kör webbappen lokalt
+It keeps the chapter 2–3 guidance from the first version and adds progressive guidance for every remaining currently registered exercise in chapters 4–10. The catalogue now contains all 65 registered exercises.
+
+Run:
 
 ```bash
-python -m venv .venv
-```
-
-Aktivera miljön:
-
-```bash
-# Linux/macOS
-source .venv/bin/activate
-
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-```
-
-Installera och starta:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pytest -q tests/test_guidance.py
 streamlit run streamlit_app.py
-```
-
-## Streamlit Community Cloud
-
-1. Ladda upp innehållet i denna mapp till roten av GitHub-repot.
-2. Skapa en ny app i Streamlit Community Cloud.
-3. Ange `streamlit_app.py` som appens huvudfil.
-4. Starta deploymenten.
-
-`requirements.txt` och `pyproject.toml` använder samma versionsintervall för att
-förhindra att en för gammal Streamlit-version installeras.
-
-## Desktopversion
-
-```bash
-python -m em_visualisering
-```
-
-Desktopversionen kräver ett grafiskt skrivbord med Tk-stöd.
-
-## Tester
-
-```bash
-python -m pip install -e ".[dev]"
-python -m pytest -q
-```
-
-GitHub Actions kompilerar koden och kör testsviten på Python 3.10, 3.11 och 3.12.
-
-## Projektstruktur
-
-```text
-streamlit_app.py                 Webapp
-em_visualisering/app.py          Tkinter-app
-em_visualisering/core.py         Basmodell och ritverktyg
-em_visualisering/parameters.py   Parameter- och valideringsmetadata
-em_visualisering/parameter_catalog.py
-em_visualisering/unit_scaling.py
-em_visualisering/problems/       Övningsproblem per kapitel
-em_visualisering/theory_pages.py Interaktiva teorisidor
-tests/                           Automatiska tester
 ```
