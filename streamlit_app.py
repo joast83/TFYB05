@@ -3,9 +3,10 @@
 Run locally with:
     streamlit run streamlit_app.py
 
-The default "Lös uppgift" mode shows the problem, method choice, progressive help,
-active self-checks and a deliberately gated answer check. Parameter controls and
-visualisations live in the separate "Utforska" mode.
+The default "Lös uppgift" mode shows the problem, learning focus, progressive help,
+result checks and the printed facit. Method selection is available only as optional
+help when the student is stuck. Parameter controls and visualisations live in the
+separate "Utforska" mode.
 """
 
 from __future__ import annotations
@@ -29,10 +30,7 @@ from em_visualisering.registry import PROBLEMS
 from em_visualisering.study_content import (
     CHAPTER_TITLES,
     chapter_number,
-    method_key_for_problem,
-    method_label,
     method_meta_for_problem,
-    method_options_for_problem,
     problem_id_from_name,
     statement_for_problem,
 )
@@ -336,41 +334,6 @@ def _render_geometry_if_needed(problem, statement: str) -> None:
             st.warning(f"Geometriskissen kunde inte visas: {exc}")
 
 
-def _render_method_choice(problem, guidance) -> None:
-    st.markdown("### Välj en lösningsväg")
-    st.caption(
-        "Gör valet innan du öppnar ledtrådarna. Flera metoder kan i princip fungera; "
-        "här tränar vi på att hitta den mest direkta vägen."
-    )
-
-    option_keys = method_options_for_problem(problem)
-    labels = {method_label(key): key for key in option_keys}
-    selected_label = st.selectbox(
-        "Vilken huvudmetod skulle du prova först?",
-        list(labels),
-        index=None,
-        placeholder="Välj metod efter att du har läst uppgiften",
-        key=f"method-choice:{problem.__class__.__name__}",
-    )
-    if selected_label is None:
-        return
-
-    selected_key = labels[selected_label]
-    recommended_key = method_key_for_problem(problem)
-    recommended = method_meta_for_problem(problem)
-
-    if selected_key == recommended_key:
-        st.success(
-            "Bra val. Den metoden passar problemets struktur och leder relativt direkt "
-            "till den storhet som efterfrågas."
-        )
-    else:
-        st.info(
-            f"Den vägen kan innehålla användbara idéer, men en mer direkt start här är "
-            f"**{recommended.label}**. {recommended.rationale}"
-        )
-
-
 def _render_training_focus(problem, guidance) -> None:
     meta = method_meta_for_problem(problem)
     st.markdown("### Det här tränar du")
@@ -386,13 +349,17 @@ def _render_training_focus(problem, guidance) -> None:
 
 def _render_targeted_help(problem, guidance) -> None:
     st.markdown("### Om du sitter fast")
+    st.caption(
+        "Välj bara den typ av hjälp du behöver. Du behöver inte klassificera uppgiften "
+        "eller välja en metod innan du börjar."
+    )
     stuck = st.selectbox(
-        "Var sitter du fast?",
+        "Vad behöver du hjälp med?",
         [
-            "Välja metod",
-            "Sätta upp matematiken",
-            "Vektorer / geometri",
-            "Kontrollera om svaret är rimligt",
+            "Jag vet inte vilken metod som passar",
+            "Jag vet vilken idé jag vill använda men får inte upp matematiken",
+            "Jag fastnar på vektorer eller geometri",
+            "Jag vill kontrollera om mitt svar verkar rimligt",
         ],
         index=None,
         placeholder="Välj bara om du behöver hjälp",
@@ -401,14 +368,26 @@ def _render_targeted_help(problem, guidance) -> None:
     if stuck is None:
         return
 
-    if stuck == "Välja metod":
-        st.info(guidance.start_here)
-    elif stuck == "Sätta upp matematiken":
-        st.info(guidance.hints[0])
-    elif stuck == "Vektorer / geometri":
+    meta = method_meta_for_problem(problem)
+
+    if stuck == "Jag vet inte vilken metod som passar":
+        st.info(
+            f"**En naturlig huvudmetod här är {meta.label}.**\n\n"
+            f"{meta.rationale}\n\n"
+            f"Försök sedan använda frågan under **Börja här** för att sätta igång "
+            "lösningen utan att läsa nästa ledtråd direkt."
+        )
+    elif stuck == "Jag vet vilken idé jag vill använda men får inte upp matematiken":
+        st.info(
+            f"**Matematisk rörelse:** {meta.math_focus}\n\n"
+            f"{guidance.hints[0]}"
+        )
+    elif stuck == "Jag fastnar på vektorer eller geometri":
         hint = guidance.hints[1] if len(guidance.hints) > 1 else guidance.hints[0]
-        meta = method_meta_for_problem(problem)
-        st.info(f"{meta.math_focus}\n\n{hint}")
+        st.info(
+            f"**Fokusera på representationen:** {meta.math_focus}\n\n"
+            f"{hint}"
+        )
     else:
         st.info(
             "Använd kontrollpunkterna längre ned på sidan. Försök först själv tänka på "
@@ -470,7 +449,6 @@ def _render_solve_mode(problem) -> None:
             st.write(problem.pedagogical_note())
         return
 
-    _render_method_choice(problem, guidance)
     _render_training_focus(problem, guidance)
 
     st.markdown("### Börja här")

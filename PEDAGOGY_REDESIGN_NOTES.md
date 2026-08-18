@@ -46,3 +46,25 @@ De obligatoriska fritextfälten har tagits bort.
 - Facit är avsiktligt kort: det ger slutresultatet men inte en fullständig lösningsgång.
 - Appens numeriska/analytiska kontroll finns kvar enbart under **Utforska → Avancerat**, där den tydligt märks som appens egen beräkning och inte kursfacit.
 - De pedagogiska **Kontroll 1/2**-punkterna behålls separat som extra ledtrådar för symmetri, tecken, dimensioner och gränsfall.
+
+
+## v2.3: lösningsväg är inte längre ett obligatoriskt moment
+
+Den tidigare sektionen **Välj en lösningsväg** är borttagen från den normala
+lösningssidan.
+
+Skälet är pedagogiskt: en flervalsliknande metodklassificering före varje uppgift
+blev lätt ett extra UI-steg snarare än träning i faktisk problemlösning. Den kunde
+också ge studenten känslan att varje uppgift har exakt en "rätt" etikett innan
+lösningen ens har börjat.
+
+Metodinformationen finns kvar, men används nu bara när studenten själv väljer
+**Jag vet inte vilken metod som passar** under **Om du sitter fast**. Då får studenten
+en rekommenderad huvudmetod och en kort motivering till varför den passar problemets
+struktur. På så sätt fungerar metodvalet som stöd när det behövs, inte som ett
+obligatoriskt quiz.
+
+Den normala ordningen är nu:
+
+**Uppgift → Det här tränar du → Börja här → frivillig hjälp → ledtrådar →
+kontrollpunkter → facit.**

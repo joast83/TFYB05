@@ -23,6 +23,18 @@ def test_default_page_is_clean_solve_mode():
     assert not any(selectbox.label.startswith("Enhet för") for selectbox in app.selectbox)
 
 
+def test_solve_mode_has_no_required_solution_path_quiz():
+    app = _run_app()
+    assert not any(
+        selectbox.label == "Vilken huvudmetod skulle du prova först?"
+        for selectbox in app.selectbox
+    )
+    assert not any(
+        markdown.value == "### Välj en lösningsväg"
+        for markdown in app.markdown
+    )
+
+
 def test_self_checks_are_optional_expanders_not_fake_text_inputs():
     app = _run_app()
     assert any(expander.label == "Kontroll 1" for expander in app.expander)
