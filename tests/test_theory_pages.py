@@ -94,6 +94,7 @@ def test_gauss_grid_selection_parsing_and_coordinate_mapping():
     from em_visualisering.theory_pages import (
         _gauss_grid_index_from_selection,
         _gauss_grid_position,
+        _toggle_gauss_charge,
         _selection_points,
     )
 
@@ -112,6 +113,11 @@ def test_gauss_grid_selection_parsing_and_coordinate_mapping():
     assert _gauss_grid_position(220) == (0.0, 0.0)
     assert _gauss_grid_position(0) == (-2.5, -2.5)
     assert _gauss_grid_position(440) == (2.5, 2.5)
+    charges = {(0.0, 0.0): 5.0}
+    charges = _toggle_gauss_charge(charges, (0.25, 0.0), -3.0)
+    assert charges == {(0.0, 0.0): 5.0, (0.25, 0.0): -3.0}
+    charges = _toggle_gauss_charge(charges, (0.25, 0.0), 5.0)
+    assert charges == {(0.0, 0.0): 5.0}
 
 
 def test_gauss_detects_point_charge_on_surface_as_singular():
