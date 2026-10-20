@@ -72,6 +72,15 @@ def _apply_plot_theme(*figures: go.Figure) -> None:
             font={"family": "Arial, sans-serif", "size": 14, "color": "#24313b"},
             paper_bgcolor="#ffffff",
             plot_bgcolor="#ffffff",
+            legend={
+                "orientation": "h",
+                "x": 0.5,
+                "xanchor": "center",
+                "y": -0.08,
+                "yanchor": "top",
+                "bgcolor": "rgba(255,255,255,0.88)",
+            },
+            margin={"b": 90},
             hoverlabel={
                 "bgcolor": "#ffffff",
                 "bordercolor": "#b8c4ce",
