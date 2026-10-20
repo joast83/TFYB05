@@ -157,6 +157,8 @@ def test_default_theory_figures_are_legible_on_fixed_references():
     ampere = _ampere_figure(1.0, 0.0, 0.15, 1, 2.0)
     assert list(ampere.layout.xaxis.range) == [-2.4, 2.4]
     assert list(ampere.layout.yaxis.range) == [-2.4, 2.4]
+    assert ampere.layout.legend.orientation == "h"
+    assert ampere.layout.legend.y == -0.08
 
     _, contributions, profile = _biot_savart_figures(3.0, 0.75, 0.5)
     assert list(contributions.layout.yaxis.range) == [-0.5, 0.5]
