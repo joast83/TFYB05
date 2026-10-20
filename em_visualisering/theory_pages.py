@@ -92,8 +92,7 @@ def _render_gauss_page() -> None:
     )
     st.write(
         "Gauss sats gäller för varje sluten yta. Symmetri behövs inte för själva "
-        "satsen, men stark symmetri behövs ofta för att kunna lösa ut fältstyrkan "
-        "direkt ur flödesintegralen."
+        "satsen, men den hjälper ofta när man vill beräkna fältet direkt."
     )
 
     section = st.radio(
@@ -102,212 +101,364 @@ def _render_gauss_page() -> None:
         horizontal=True,
         key="gauss_section",
     )
+    example_charges = {(-0.5, 0.0): 5.0, (0.5, 0.0): -5.0}
 
     if section == "Intuition":
         left, right = st.columns(2)
         with left:
             st.markdown(
                 "### Kärnidé\n"
-                "En sluten yta fungerar som en kontrollvolym. Fältlinjer från en "
-                "yttre laddning går både in genom och ut genom ytan, så nettobidraget "
-                "till flödet tar ut sig. En laddning inuti ger däremot ett nettoflöde."
+                "En sluten yta fungerar som en kontrollvolym. Fält från yttre "
+                "laddningar kan gå in och ut, medan nettoladdningen inuti avgör "
+                "det totala flödet."
             )
         with right:
             st.info(
-                "Ytans form ändrar den lokala fördelningen av flöde, men inte "
-                "totalflödet så länge samma nettoladdning omsluts."
+                "Ytans form ändrar det lokala flödet. Den inneslutna laddningen "
+                "avgör ändå totalflödet: Φₑ = Q_in/ε₀."
             )
             st.warning(
                 "Gauss sats innebär inte automatiskt att E är konstant på ytan. "
-                "Det följer endast av lämplig symmetri."
+                "Det kräver lämplig symmetri."
             )
         st.plotly_chart(
-            _gauss_cross_section_figure(1.0, 0.35, True, 1.0),
+            _gauss_cross_section_figure(1.0, "Sfär", example_charges, True),
             use_container_width=True,
             config={"displaylogo": False},
+            key="gauss_intuition_figure",
+        )
+        st.caption(
+            "Exempel på dipol. I testlabbet kan du byta yta och klicka på rutnätet "
+            "för att lägga till eller ta bort laddningar."
         )
         return
 
     if section == "Beräkningsrecept":
         st.markdown(
             "### Arbetsgång\n"
-            "1. Välj en **sluten** Gaussyta.\n"
+            "1. Välj en sluten Gaussyta.\n"
             "2. Summera nettoladdningen innanför ytan.\n"
-            "3. Bestäm riktningen för ytans utåtriktade normal.\n"
-            "4. Utnyttja symmetri när den gör E konstant eller vinkelrät mot ytan.\n"
-            "5. Kontrollera enheter och gränsfall."
+            "3. Bestäm ytans utåtriktade normal.\n"
+            "4. Utnyttja symmetri om den förenklar flödesintegralen.\n"
+            "5. Kontrollera tecken, enheter och gränsfall."
         )
         st.latex(r"[\Phi_E]=\mathrm{N\,m^2/C}=\mathrm{V\,m}")
         st.plotly_chart(
-            _gauss_cross_section_figure(1.0, 0.35, True, 1.0),
+            _gauss_cross_section_figure(1.0, "Sfär", example_charges, True),
             use_container_width=True,
             config={"displaylogo": False},
+            key="gauss_recipe_figure",
         )
         return
 
-    st.markdown("### Flytta en punktladdning genom en sfär")
-    st.info("Förutsäg först: blir det lokala flödet lika stort över hela ytan när laddningen flyttas?")
+    st.markdown("### Bygg en laddningsfördelning")
+    st.info(
+        "Välj värdet för en ny laddning och klicka sedan på en rutnätspunkt. "
+        "Klicka på en befintlig laddning för att ta bort den."
+    )
+    if "gauss_charges" not in st.session_state:
+        st.session_state.gauss_charges = example_charges.copy()
+    if "gauss_chart_version" not in st.session_state:
+        st.session_state.gauss_chart_version = 0
+
     c1, c2 = st.columns(2)
     with c1:
-        q_nc = st.slider("Laddning q [nC]", -10.0, 10.0, 5.0, 0.5)
-        radius = st.slider("Sfärens radie R [m]", 0.5, 2.0, 1.0, 0.1)
+        radius = st.slider("Ytans radie R [m]", 0.5, 2.0, 1.0, 0.25, key="gauss_radius")
+        surface = st.selectbox(
+            "Gaussyta",
+            ["Sfär", "Cylinder", "Kub"],
+            help=(
+                "Bilden visar ett snitt genom den slutna ytan. För cylindern går "
+                "axeln längs y-led."
+            ),
+            key="gauss_surface",
+        )
     with c2:
-        position_ratio = st.slider(
-            "Laddningens position x/R",
-            -1.5,
-            1.5,
-            0.2,
-            0.05,
-            help="|x/R| < 1 betyder att laddningen ligger innanför sfären.",
+        charge_to_add = st.slider(
+            "Ny laddning q [nC]", -10.0, 10.0, 5.0, 0.5,
+            help="Tecknet och beloppet gäller laddningen som läggs till vid nästa klick.",
+            key="gauss_new_charge",
         )
-        show_vectors = st.checkbox("Visa ytans normalpilar", value=True)
+        show_normals = st.checkbox("Visa ytans normaler", value=True, key="gauss_normals")
 
-    figure = _gauss_cross_section_figure(radius, position_ratio, show_vectors, q_nc)
-    st.plotly_chart(figure, use_container_width=True, config={"displaylogo": False})
-    st.caption(
-        "2D-snitt av det tredimensionella fältet. Markörerna visar tecken och "
-        "relativ storlek på E·n lokalt; totalflödet bestäms av innesluten laddning."
+    clear_col, reset_col, _ = st.columns([1, 1, 2])
+    with clear_col:
+        if st.button("Ta bort alla laddningar", key="gauss_clear_charges"):
+            st.session_state.gauss_charges = {}
+            st.session_state.gauss_chart_version += 1
+            st.rerun()
+    with reset_col:
+        if st.button("Återställ dipolexempel", key="gauss_reset_charges"):
+            st.session_state.gauss_charges = example_charges.copy()
+            st.session_state.gauss_chart_version += 1
+            st.rerun()
+
+    charges = st.session_state.gauss_charges
+    figure = _gauss_cross_section_figure(radius, surface, charges, show_normals, show_grid=True)
+    chart_key = f"gauss_charge_grid_{st.session_state.gauss_chart_version}"
+    selection = st.plotly_chart(
+        figure,
+        use_container_width=True,
+        config={"displaylogo": False},
+        key=chart_key,
+        on_select="rerun",
+        selection_mode="points",
     )
+    selected = selection.selection.points
+    grid_point = next(
+        (point for point in selected if point.get("curve_number") == 0),
+        None,
+    )
+    if grid_point is not None:
+        grid_index = int(grid_point.get("customdata", grid_point.get("point_index", 0)))
+        grid_x = np.arange(-2.5, 2.5001, 0.25)
+        grid_y = np.repeat(grid_x, len(grid_x))
+        grid_x_repeated = np.tile(grid_x, len(grid_x))
+        charge_position = (round(float(grid_x_repeated[grid_index]), 2), round(float(grid_y[grid_index]), 2))
+        if charge_position in charges:
+            del charges[charge_position]
+        elif charge_to_add != 0:
+            charges[charge_position] = float(charge_to_add)
+        st.session_state.gauss_charges = charges
+        st.session_state.gauss_chart_version += 1
+        st.rerun()
 
-    q = q_nc * 1e-9
-    boundary_tolerance = 1e-9
-    if abs(abs(position_ratio) - 1.0) <= boundary_tolerance:
-        enclosed = math.nan
-        flux_text = "singulärt gränsfall"
-        st.warning(
-            "Laddningen ligger på ytan. Punktladdningsfältet är då singulärt på "
-            "integrationsytan och standardformen kan inte användas direkt."
-        )
-    elif abs(position_ratio) < 1.0:
-        enclosed = q
-        flux_text = f"{q / EPS0:.5g} V·m"
-        st.success("Laddningen är innesluten: totalflödet är q/ε₀.")
-    else:
-        enclosed = 0.0
-        flux_text = "0 V·m"
-        st.info("Laddningen ligger utanför: nettoflödet genom den slutna ytan är noll.")
-
+    st.caption(
+        "Koordinataxlar och färgskala är fasta när du ändrar inställningar. "
+        "Pilarna ändrar riktning och längd med E, och färgen visar E·n på ytan. "
+        "Rutnätet har 0,25 m mellan punkterna."
+    )
+    enclosed, on_surface = _gauss_enclosed_charge(surface, radius, charges)
+    total_charge = sum(charges.values())
     m1, m2, m3 = st.columns(3)
-    m1.metric("Läge", "innanför" if abs(position_ratio) < 1 else "utanför/på ytan")
+    m1.metric("Punktladdningar", str(len(charges)))
     m2.metric(
         "Q innesluten",
-        "ej definierat" if math.isnan(enclosed) else f"{enclosed * 1e9:.4g} nC",
+        "singulärt gränsfall" if on_surface else f"{enclosed:.4g} nC",
     )
-    m3.metric("Gauss förutsägelse", flux_text)
-
-
-def _gauss_sphere_figure(radius: float, position_ratio: float, show_vectors: bool) -> go.Figure:
-    theta = np.linspace(0.0, 2.0 * np.pi, 64)
-    phi = np.linspace(0.0, np.pi, 32)
-    theta_grid, phi_grid = np.meshgrid(theta, phi)
-    x = radius * np.sin(phi_grid) * np.cos(theta_grid)
-    y = radius * np.sin(phi_grid) * np.sin(theta_grid)
-    z = radius * np.cos(phi_grid)
-
-    figure = go.Figure()
-    figure.add_trace(
-        go.Surface(
-            x=x,
-            y=y,
-            z=z,
-            opacity=0.28,
-            showscale=False,
-            colorscale="Blues",
-            hoverinfo="skip",
-            name="Gaussyta",
+    m3.metric(
+        "Gauss förutsägelse Φₑ",
+        "ej definierad" if on_surface else f"{enclosed * 1e-9 / EPS0:.4g} V·m",
+    )
+    if on_surface:
+        st.warning(
+            "En punktladdning ligger på Gaussytan. Fältet är singulärt där, så "
+            "flödet genom ytan är inte definierat i denna idealisering. Flytta "
+            "laddningen till en annan rutnätspunkt."
         )
-    )
-    charge_x = position_ratio * radius
-    figure.add_trace(
-        go.Scatter3d(
-            x=[charge_x],
-            y=[0.0],
-            z=[0.0],
-            mode="markers+text",
-            marker={"size": 8},
-            text=["q"],
-            textposition="top center",
-            name="Punktladdning",
+    else:
+        st.info(
+            f"Summan av alla placerade laddningar är {total_charge:.4g} nC. "
+            "Endast laddningarna innanför den valda slutna ytan bidrar till nettoflödet."
         )
-    )
 
-    if show_vectors:
-        sample_theta = np.linspace(0.0, 2.0 * np.pi, 12, endpoint=False)
-        sample_phi = np.linspace(0.25, np.pi - 0.25, 6)
-        tt, pp = np.meshgrid(sample_theta, sample_phi)
-        sx = radius * np.sin(pp) * np.cos(tt)
-        sy = radius * np.sin(pp) * np.sin(tt)
-        sz = radius * np.cos(pp)
-        figure.add_trace(
-            go.Cone(
-                x=sx.ravel(),
-                y=sy.ravel(),
-                z=sz.ravel(),
-                u=(sx / radius).ravel(),
-                v=(sy / radius).ravel(),
-                w=(sz / radius).ravel(),
-                sizemode="absolute",
-                sizeref=0.12 * radius,
-                showscale=False,
-                name="Ytnormal",
+
+def _gauss_enclosed_charge(
+    surface: str, radius: float, charges: dict[tuple[float, float], float]
+) -> tuple[float, bool]:
+    """Return enclosed charge in nC and whether any point charge is on the surface."""
+    tolerance = 1e-9
+    enclosed = 0.0
+    on_surface = False
+    for (x, y), charge in charges.items():
+        if surface == "Sfär":
+            distance = math.hypot(x, y)
+            on_surface |= math.isclose(distance, radius, rel_tol=0.0, abs_tol=tolerance)
+            inside = distance < radius - tolerance
+        elif surface == "Cylinder":
+            half_length = 1.2 * radius
+            on_surface |= (
+                math.isclose(abs(x), radius, rel_tol=0.0, abs_tol=tolerance)
+                or math.isclose(abs(y), half_length, rel_tol=0.0, abs_tol=tolerance)
             )
-        )
+            inside = abs(x) < radius - tolerance and abs(y) < half_length - tolerance
+        else:  # Cube
+            on_surface |= (
+                math.isclose(abs(x), radius, rel_tol=0.0, abs_tol=tolerance)
+                or math.isclose(abs(y), radius, rel_tol=0.0, abs_tol=tolerance)
+            )
+            inside = abs(x) < radius - tolerance and abs(y) < radius - tolerance
+        if inside:
+            enclosed += charge
+    return enclosed, on_surface
 
-    extent = 1.65 * radius
-    figure.update_layout(
-        height=520,
-        margin={"l": 0, "r": 0, "t": 35, "b": 0},
-        scene={
-            "aspectmode": "cube",
-            "xaxis": {"range": [-extent, extent], "title": "x [m]"},
-            "yaxis": {"range": [-extent, extent], "title": "y [m]"},
-            "zaxis": {"range": [-extent, extent], "title": "z [m]"},
+
+def _electric_field_at(
+    x: float, y: float, charges: dict[tuple[float, float], float]
+) -> tuple[float, float]:
+    k = 1.0 / (4.0 * math.pi * EPS0)
+    ex = ey = 0.0
+    for (charge_x, charge_y), charge_nc in charges.items():
+        dx, dy = x - charge_x, y - charge_y
+        r2 = dx * dx + dy * dy
+        if r2 < 1e-12:
+            continue
+        scale = k * charge_nc * 1e-9 / (r2 * math.sqrt(r2))
+        ex += scale * dx
+        ey += scale * dy
+    return ex, ey
+
+
+def _gauss_cross_section_figure(
+    radius: float,
+    surface: str,
+    charges: dict[tuple[float, float], float],
+    show_normals: bool,
+    show_grid: bool = False,
+) -> go.Figure:
+    """Show E directions and E·n on a selectable closed Gaussian surface slice."""
+    fig = go.Figure()
+    grid_values = np.arange(-2.5, 2.5001, 0.25)
+    grid_x, grid_y = np.meshgrid(grid_values, grid_values)
+    flat_x, flat_y = grid_x.ravel(), grid_y.ravel()
+    if show_grid:
+        grid_charge_values = [
+            charges.get((round(float(x), 2), round(float(y), 2)))
+            for x, y in zip(flat_x, flat_y)
+        ]
+        fig.add_trace(go.Scatter(
+            x=flat_x, y=flat_y, mode="markers+text",
+            text=["" if q is None else f"{q:+g} nC" for q in grid_charge_values],
+            textposition="top center", customdata=np.arange(len(flat_x)),
+            marker={
+                "size": [5 if q is None else 15 for q in grid_charge_values],
+                "color": [
+                    "#75808a" if q is None else "#c0392b" if q > 0 else "#245b9e"
+                    for q in grid_charge_values
+                ],
+                "symbol": [
+                    "circle" if q is None or q > 0 else "circle-open"
+                    for q in grid_charge_values
+                ],
+                "opacity": [0.35 if q is None else 1.0 for q in grid_charge_values],
+                "line": {"width": 2},
+            },
+            hovertemplate=("(%{x:.2f}, %{y:.2f}) m<br>"
+                           "Klicka för att lägga till/ta bort en laddning<extra></extra>"),
+            showlegend=False, name="Laddningsrutnät",
+        ))
+    else:
+        # Keep the grid trace first so that chart trace indices are consistent.
+        fig.add_trace(go.Scatter(x=[], y=[], mode="markers", showlegend=False, name="Rutnät"))
+
+    # Fixed axes and color limits keep the reference scale stable as the model changes.
+    field_reference = 1500.0  # N/C, fixed reference for arrow lengths and E·n colors.
+    arrow_x = np.arange(-2.25, 2.251, 0.5)
+    arrow_y = np.arange(-2.0, 2.001, 0.5)
+    arrow_length_max = 0.34
+    for x in arrow_x:
+        for y in arrow_y:
+            ex, ey = _electric_field_at(float(x), float(y), charges)
+            magnitude = math.hypot(ex, ey)
+            if magnitude < 1e-9:
+                continue
+            length = min(arrow_length_max, arrow_length_max * magnitude / field_reference)
+            length = max(0.025, length)
+            fig.add_annotation(
+                x=x + length * ex / magnitude,
+                y=y + length * ey / magnitude,
+                ax=x, ay=y, xref="x", yref="y", axref="x", ayref="y",
+                showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=1.3,
+                arrowcolor="rgba(30,65,92,0.72)",
+            )
+
+    if surface == "Sfär":
+        angle = np.linspace(0, 2 * np.pi, 240)
+        boundary_x, boundary_y = radius * np.cos(angle), radius * np.sin(angle)
+        fig.add_trace(go.Scatter(
+            x=boundary_x, y=boundary_y, mode="lines", fill="toself",
+            fillcolor="rgba(80,150,210,0.10)",
+            line={"color": "#1f4e79", "width": 3}, name="Sfär (snitt)",
+        ))
+        sample_angle = np.linspace(0, 2 * np.pi, 40, endpoint=False)
+        normal_x, normal_y = np.cos(sample_angle), np.sin(sample_angle)
+        surface_x, surface_y = radius * normal_x, radius * normal_y
+    else:
+        half_height = 1.2 * radius if surface == "Cylinder" else radius
+        side_x = np.full(25, radius)
+        side_y = np.linspace(-half_height, half_height, 25)
+        cap_x = np.linspace(-radius, radius, 25)
+        boundary_x = np.concatenate((side_x, cap_x, -side_x, cap_x[::-1], [side_x[0]]))
+        boundary_y = np.concatenate((side_y, np.full(25, half_height), side_y[::-1],
+                                     np.full(25, -half_height), [side_y[0]]))
+        surface_label = "Cylinder (längdsnitt)" if surface == "Cylinder" else "Kub (snitt)"
+        fig.add_trace(go.Scatter(
+            x=boundary_x, y=boundary_y, mode="lines", fill="toself",
+            fillcolor="rgba(80,150,210,0.10)",
+            line={"color": "#1f4e79", "width": 3}, name=surface_label,
+        ))
+        side_samples = np.linspace(-half_height + 0.05 * radius,
+                                   half_height - 0.05 * radius, 14)
+        cap_samples = np.linspace(-radius + 0.05 * radius, radius - 0.05 * radius, 14)
+        surface_x = np.concatenate((np.full_like(side_samples, radius), cap_samples,
+                                    np.full_like(side_samples, -radius), cap_samples[::-1]))
+        surface_y = np.concatenate((side_samples, np.full_like(cap_samples, half_height),
+                                    side_samples[::-1], np.full_like(cap_samples, -half_height)))
+        normal_x = np.concatenate((np.ones_like(side_samples), np.zeros_like(cap_samples),
+                                   -np.ones_like(side_samples), np.zeros_like(cap_samples)))
+        normal_y = np.concatenate((np.zeros_like(side_samples), np.ones_like(cap_samples),
+                                   np.zeros_like(side_samples), -np.ones_like(cap_samples)))
+
+    normal_field = []
+    for x, y, nx, ny in zip(surface_x, surface_y, normal_x, normal_y):
+        ex, ey = _electric_field_at(float(x), float(y), charges)
+        normal_field.append(ex * nx + ey * ny)
+    fig.add_trace(go.Scatter(
+        x=surface_x, y=surface_y, mode="markers",
+        marker={
+            "size": 9, "color": normal_field, "colorscale": "RdBu",
+            "cmin": -field_reference, "cmax": field_reference, "cauto": False,
+            "showscale": True,
+            "colorbar": {
+                "title": "E·n [N/C]", "tickvals": [-field_reference, 0, field_reference],
+                "ticktext": ["−1500", "0", "+1500"], "thickness": 14,
+            },
         },
-        title="Sluten Gaussyta och punktladdning",
-    )
-    return figure
-
-
-
-
-def _gauss_cross_section_figure(radius: float, position_ratio: float, show_normals: bool, charge_nc: float = 1.0) -> go.Figure:
-    """Qualitative 2D slice: field direction and relative local E dot n."""
-    qsign=float(np.sign(charge_nc)); qx=position_ratio*radius; fig=go.Figure()
-    if qsign:
-        for x in np.linspace(-1.45*radius,1.45*radius,9):
-            for y in np.linspace(-1.45*radius,1.45*radius,9):
-                dx,dy=x-qx,y; r=math.hypot(dx,dy)
-                if r<.16*radius: continue
-                length=.095*radius
-                fig.add_annotation(x=x+length*qsign*dx/r,y=y+length*qsign*dy/r,ax=x,ay=y,
-                    xref="x",yref="y",axref="x",ayref="y",showarrow=True,arrowhead=2,
-                    arrowsize=1,arrowwidth=1.2,arrowcolor="rgba(35,87,125,0.55)")
-    a=np.linspace(0,2*np.pi,240)
-    fig.add_trace(go.Scatter(x=radius*np.cos(a),y=radius*np.sin(a),mode="lines",
-        line={"color":"#1f4e79","width":3},name="Gaussyta (snitt)"))
-    a=np.linspace(0,2*np.pi,32,endpoint=False)
-    px,py=radius*np.cos(a),radius*np.sin(a); dx,dy=px-qx,py; r2=dx*dx+dy*dy
-    en=np.full_like(r2,np.nan,dtype=float); ok=r2>1e-14*radius*radius
-    en[ok]=qsign*(dx[ok]*np.cos(a[ok])+dy[ok]*np.sin(a[ok]))/(r2[ok]**1.5)
-    fig.add_trace(go.Scatter(x=px,y=py,mode="markers",
-        marker={"size":9,"color":en,"colorscale":"RdBu","cmid":0,"showscale":True,
-                "colorbar":{"title":"E·n<br>(relativt)","thickness":12}},
-        customdata=en,hovertemplate="E·n (relativt) = %{customdata:.3g}<extra></extra>",
-        name="Lokalt E·n på ytan"))
+        customdata=normal_field,
+        hovertemplate="E·n = %{customdata:.3g} N/C<extra></extra>",
+        name="Lokalt flöde E·n",
+    ))
     if show_normals:
-        for t in np.linspace(0,2*np.pi,12,endpoint=False):
-            x0,y0=radius*np.cos(t),radius*np.sin(t); length=.18*radius
-            fig.add_annotation(x=x0+length*np.cos(t),y=y0+length*np.sin(t),ax=x0,ay=y0,
-                xref="x",yref="y",axref="x",ayref="y",showarrow=True,arrowhead=3,
-                arrowsize=1,arrowwidth=1.4,arrowcolor="#c66a17")
-    fig.add_trace(go.Scatter(x=[qx],y=[0],mode="markers+text",
-        marker={"size":13,"color":"#b22222"},text=["q"],textposition="top center",
-        name="Punktladdning"))
-    e=1.65*radius
-    fig.update_layout(height=540,margin={"l":25,"r":25,"t":45,"b":25},
-        title="Elektriskt fält och Gaussyta: 2D-snitt",
-        xaxis={"range":[-e,e],"title":"x [m]","scaleanchor":"y"},
-        yaxis={"range":[-e,e],"title":"y [m]"},legend={"orientation":"h","y":-0.15})
+        normal_length = 0.20
+        for x, y, nx, ny in zip(surface_x[::3], surface_y[::3], normal_x[::3], normal_y[::3]):
+            fig.add_annotation(
+                x=x + normal_length * nx, y=y + normal_length * ny,
+                ax=x, ay=y, xref="x", yref="y", axref="x", ayref="y",
+                showarrow=True, arrowhead=3, arrowsize=1, arrowwidth=1.2,
+                arrowcolor="#c66a17",
+            )
+
+    if charges and not show_grid:
+        charge_positions = list(charges)
+        charge_values = [charges[pos] for pos in charge_positions]
+        fig.add_trace(go.Scatter(
+            x=[pos[0] for pos in charge_positions], y=[pos[1] for pos in charge_positions],
+            mode="markers+text",
+            marker={
+                "size": 15,
+                "color": ["#c0392b" if q > 0 else "#245b9e" if q < 0 else "#808080"
+                          for q in charge_values],
+                "symbol": ["circle" if q > 0 else "circle-open" if q < 0 else "x"
+                           for q in charge_values],
+                "line": {"width": 2},
+            },
+            text=[f"{q:+g} nC" for q in charge_values], textposition="top center",
+            customdata=charge_values,
+            hovertemplate="q = %{customdata:+.3g} nC<extra></extra>",
+            name="Punktladdningar",
+        ))
+    fig.update_layout(
+        height=620,
+        title="E-fält och lokalt flöde genom Gaussytan",
+        xaxis={"range": [-3, 3], "tick0": -3, "dtick": 1, "title": "x [m]",
+               "scaleanchor": "y", "constrain": "domain"},
+        yaxis={"range": [-3, 3], "tick0": -3, "dtick": 1, "title": "y [m]"},
+        margin={"l": 25, "r": 25, "t": 55, "b": 30},
+        legend={"orientation": "h", "y": 1.02},
+        clickmode="event+select",
+        dragmode="select" if show_grid else False,
+        uirevision="gauss-fixed-axes",
+    )
     return fig
 
 
