@@ -76,11 +76,12 @@ def _apply_plot_theme(*figures: go.Figure) -> None:
                 "orientation": "h",
                 "x": 0.5,
                 "xanchor": "center",
-                "y": -0.08,
+                "y": -0.22,
                 "yanchor": "top",
                 "bgcolor": "rgba(255,255,255,0.88)",
             },
-            margin={"b": 90},
+            margin={"l": 40, "r": 40, "b": 105, "t": 20},
+            height=400,
             hoverlabel={
                 "bgcolor": "#ffffff",
                 "bordercolor": "#b8c4ce",
@@ -89,6 +90,44 @@ def _apply_plot_theme(*figures: go.Figure) -> None:
             title_x=0.02,
             title_xanchor="left",
         )
+        figure.update_xaxes(fixedrange=True, automargin=True, constrain="domain", tickangle=0)
+        figure.update_yaxes(fixedrange=True, automargin=True, constrain="domain")
+        if figure.layout.showlegend is False:
+            figure.update_layout(margin={"b": 45})
+            if figure.layout.xaxis.visible is False:
+                figure.update_layout(height=300, margin={"l": 15, "r": 15})
+        for trace in figure.data:
+            colorbar = None
+            if trace.type == "contour":
+                colorbar = trace.colorbar
+            elif trace.type == "scatter" and trace.marker.showscale:
+                colorbar = trace.marker.colorbar
+            if colorbar is not None:
+                colorbar.update(orientation="h", x=0.5, xanchor="center",
+                                y=1.02, yanchor="bottom", len=0.85,
+                                thickness=10, title_side="top")
+                figure.update_layout(margin={"t": 90})
+
+
+def _render_plot(figure: go.Figure, **kwargs):
+    """Render a responsive chart without shrinking text to fit a phone.
+
+    Streamlit wraps the heading; Plotly retains fixed physical ranges. Disable
+    2D drag gestures so a finger scrolls the page, while preserving point taps.
+    """
+    import streamlit as st
+
+    figure = go.Figure(figure)  # Presentation must not mutate the model figure.
+    if figure.layout.title.text:
+        st.caption(figure.layout.title.text)
+    figure.update_layout(title=None)
+    kwargs.setdefault("use_container_width", True)
+    return st.plotly_chart(
+        figure, theme=None,
+        config={"displayModeBar": False, "displaylogo": False,
+                "scrollZoom": False, "responsive": True},
+        **kwargs,
+    )
 
 
 def _render_problem_guide(instructions: str) -> None:
@@ -159,10 +198,8 @@ def _render_gauss_page() -> None:
                 "Gauss sats innebär inte automatiskt att E är konstant på ytan. "
                 "Det kräver lämplig symmetri."
             )
-        st.plotly_chart(
+        _render_plot(
             _gauss_cross_section_figure(1.0, example_charges, True),
-            use_container_width=True,
-            config={"displaylogo": False},
             key="gauss_intuition_figure",
         )
         st.caption(
@@ -181,10 +218,8 @@ def _render_gauss_page() -> None:
             "5. Kontrollera tecken, enheter och gränsfall."
         )
         st.latex(r"[\Phi_E]=\mathrm{N\,m^2/C}=\mathrm{V\,m}")
-        st.plotly_chart(
+        _render_plot(
             _gauss_cross_section_figure(1.0, example_charges, True),
-            use_container_width=True,
-            config={"displaylogo": False},
             key="gauss_recipe_figure",
         )
         return
@@ -193,7 +228,7 @@ def _render_gauss_page() -> None:
     st.info(
         "Startläget är +5 nC i origo. Välj värdet för en ny laddning och klicka "
         "på en rutnätspunkt för att lägga till den. Klicka på en befintlig "
-        "laddning för att ta bort den."
+        "laddning för att ta bort den. På pekskärm använder du koordinatkontrollerna nedan."
     )
     # Reset the old dipole default once for people with an existing Streamlit session.
     if st.session_state.get("gauss_model_version", 0) < 2:
@@ -213,9 +248,9 @@ def _render_gauss_page() -> None:
         )
         show_normals = st.checkbox("Visa ytans normaler", value=False, key="gauss_normals")
 
-    clear_col, reset_col, _ = st.columns([1, 1, 2])
+    clear_col, reset_col = st.columns(2)
     with clear_col:
-        if st.button("Ta bort alla laddningar", key="gauss_clear_charges"):
+        if st.button("Töm rutnätet", key="gauss_clear_charges"):
             st.session_state.gauss_charges = {}
             st.session_state.gauss_chart_version += 1
             st.rerun()
@@ -225,13 +260,27 @@ def _render_gauss_page() -> None:
             st.session_state.gauss_chart_version += 1
             st.rerun()
 
+    with st.expander("Placera med koordinater (mobil / tangentbord)", expanded=True):
+        st.caption("Välj x och y i meter. Samma knapp tar bort en befintlig laddning.")
+        x_col, y_col = st.columns(2)
+        x = x_col.number_input("x [m]", -2.5, 2.5, 0.0, 0.25, key="gauss_x")
+        y = y_col.number_input("y [m]", -2.5, 2.5, 0.0, 0.25, key="gauss_y")
+        position = (round(x * 4) / 4, round(y * 4) / 4)
+        occupied = position in st.session_state.gauss_charges
+        label = "Ta bort laddning" if occupied else "Lägg till laddning"
+        st.caption(f"Rutnätspunkt: ({position[0]:g}, {position[1]:g}) m")
+        if st.button(label, key="gauss_coordinate_toggle", disabled=not occupied and charge_to_add == 0):
+            st.session_state.gauss_charges = _toggle_gauss_charge(
+                st.session_state.gauss_charges, position, charge_to_add
+            )
+            st.session_state.gauss_chart_version += 1
+            st.rerun()
+
     charges = st.session_state.gauss_charges
     figure = _gauss_cross_section_figure(radius, charges, show_normals, show_grid=True)
     chart_key = f"gauss_charge_grid_{st.session_state.gauss_chart_version}"
-    selection = st.plotly_chart(
+    selection = _render_plot(
         figure,
-        use_container_width=True,
-        config={"displaylogo": False},
         key=chart_key,
         on_select="rerun",
         selection_mode="points",
@@ -247,7 +296,8 @@ def _render_gauss_page() -> None:
         st.rerun()
 
     st.caption(
-        "Klicka på en rutnätspunkt för att lägga till eller ta bort en laddning. "
+        "Med mus: klicka på en rutnätspunkt för att lägga till eller ta bort en laddning. "
+        "På pekskärm: använd koordinaterna ovan; tryck i figuren visar punktinformation. "
         "Axlarna och färgskalan (±120 N/C) är fasta; färgen klipps utanför intervallet. "
         "Pilarna visar fältets riktning "
         "med komprimerad längdskala; färgen visar E·n på ytan. "
@@ -399,7 +449,7 @@ def _gauss_cross_section_figure(
                 continue
             # A compressed scale keeps weak far-field arrows visible while
             # preserving clear differences near the charges.
-            length = 0.07 + 0.27 * min(magnitude / 220.0, 1.0)
+            length = 0.20 + 0.14 * min(magnitude / 220.0, 1.0)
             length = min(arrow_length_max, length)
             fig.add_annotation(
                 x=x + length * ex / magnitude,
@@ -431,7 +481,7 @@ def _gauss_cross_section_figure(
     fig.add_trace(go.Scatter(
         x=surface_x, y=surface_y, mode="markers",
         marker={
-            "size": 10, "color": normal_field, "colorscale": "RdBu_r",
+            "size": 6, "color": normal_field, "colorscale": "RdBu_r",
             "cmin": -field_color_reference, "cmax": field_color_reference, "cauto": False,
             "showscale": True,
             "colorbar": {
@@ -486,7 +536,7 @@ def _gauss_cross_section_figure(
             text=["" if q is None else f"{q:+g} nC" for q in grid_charge_values],
             textposition="top center", customdata=np.arange(len(flat_x)),
             marker={
-                "size": [10 if q is None else 16 for q in grid_charge_values],
+                "size": [4 if q is None else 16 for q in grid_charge_values],
                 "color": [
                     "#75808a" if q is None else "#c0392b" if q > 0 else "#245b9e"
                     for q in grid_charge_values
@@ -495,7 +545,7 @@ def _gauss_cross_section_figure(
                     "circle" if q is None or q > 0 else "circle-open"
                     for q in grid_charge_values
                 ],
-                "opacity": [0.55 if q is None else 1.0 for q in grid_charge_values],
+                "opacity": [0.3 if q is None else 1.0 for q in grid_charge_values],
                 "line": {"width": 2},
             },
             hovertemplate=("(%{x:.2f}, %{y:.2f}) m<br>"
@@ -549,8 +599,7 @@ def _render_stokes_page() -> None:
             "tidsvarierande elektriska fält måste Maxwells förskjutningsström tas med."
         )
         st.markdown("### Randens riktning bestämmer tecknet")
-        st.plotly_chart(_ampere_figure(1.0, 0.0, 0.16, 1, 1.0),
-            use_container_width=True, config={"displaylogo": False})
+        _render_plot(_ampere_figure(1.0, 0.0, 0.16, 1, 1.0))
         return
 
     if section == "Beräkningsrecept":
@@ -564,31 +613,31 @@ def _render_stokes_page() -> None:
         )
         st.latex(r"B=\mu_0 H\quad\text{i vakuum}")
         st.caption("Kontrollera att randens orientering och ytans normal följer högerhandsregeln.")
-        st.plotly_chart(_ampere_figure(1.0, 0.0, 0.16, 1, 1.0),
-            use_container_width=True, config={"displaylogo": False})
+        _render_plot(_ampere_figure(1.0, 0.0, 0.16, 1, 1.0))
         return
 
     st.markdown("### Ström genom en cirkulär ampereslinga")
     st.info("Förutsäg först tecknet på ∮H·dl när du vänder integrationsriktningen.")
-    c1, c2 = st.columns(2)
-    with c1:
-        current = st.slider("Fri ström I [A]", -5.0, 5.0, 2.0, 0.25)
-        loop_radius = st.slider("Slingradie R [m]", 0.5, 1.25, 1.0, 0.05)
-    with c2:
-        offset_ratio = st.slider(
-            "Ledningens centrum x/R",
-            -1.4,
-            1.4,
-            0.0,
-            0.05,
-            help="|x/R| < 1 placerar ledningen innanför integrationsytan.",
-        )
-        conductor_radius = st.slider("Ledningsradie a/R", 0.05, 0.35, 0.15, 0.01)
-        orientation_label = st.radio("Orientering av C enligt högerhandsregeln",
-            ["Moturs (+z-normal)", "Medurs (−z-normal)"], horizontal=True)
+    with st.expander("Inställningar", expanded=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            current = st.slider("Fri ström I [A]", -5.0, 5.0, 2.0, 0.25)
+            loop_radius = st.slider("Slingradie R [m]", 0.5, 1.25, 1.0, 0.05)
+        with c2:
+            offset_ratio = st.slider(
+                "Ledningens centrum x/R",
+                -1.4,
+                1.4,
+                0.0,
+                0.05,
+                help="|x/R| < 1 placerar ledningen innanför integrationsytan.",
+            )
+            conductor_radius = st.slider("Ledningsradie a/R", 0.05, 0.35, 0.15, 0.01)
+            orientation_label = st.radio("Orientering av C enligt högerhandsregeln",
+                ["Moturs (+z-normal)", "Medurs (−z-normal)"], horizontal=True)
     orientation = 1 if orientation_label.startswith("Moturs") else -1
     figure = _ampere_figure(loop_radius, offset_ratio, conductor_radius, orientation, current)
-    st.plotly_chart(figure, use_container_width=True, config={"displaylogo": False})
+    _render_plot(figure)
     st.caption(
         "Axlarna har fast skala. Slingradie och ledarens läge visas i meter; "
         "symbolen anger strömriktning och textstorleken följer |I|."
@@ -756,22 +805,24 @@ def _render_potential_page() -> None:
         "4. Kontrollera riktningen med pilarna och laddningarnas tecken."
     )
     st.caption("Prova att vända tecknet på en laddning och följ hur fältet och potentialen ändras.")
-    c1, c2 = st.columns(2)
-    with c1:
-        q1 = st.slider("Vänster laddning q₁ [nC]", -5.0, 5.0, 2.0, 0.5)
-        q2 = st.slider("Höger laddning q₂ [nC]", -5.0, 5.0, -2.0, 0.5)
-    with c2:
-        separation = st.slider("Laddningsavstånd d [m]", 0.4, 2.0, 1.0, 0.1)
+    with st.expander("Inställningar", expanded=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            q1 = st.slider("Vänster laddning q₁ [nC]", -5.0, 5.0, 2.0, 0.5)
+            q2 = st.slider("Höger laddning q₂ [nC]", -5.0, 5.0, -2.0, 0.5)
+        with c2:
+            separation = st.slider("Laddningsavstånd d [m]", 0.4, 2.0, 1.0, 0.1)
     field_figure, profile_figure = _potential_figures(q1, q2, separation)
     field_tab, profile_tab = st.tabs(["Fältkarta", "Profil längs x"])
     with field_tab:
-        st.plotly_chart(field_figure, use_container_width=True, config={"displaylogo": False})
+        _render_plot(field_figure)
         st.caption(
-            "Ekvipotentialernas färgskala och axlar är fasta. Pilarna visar "
+            "Färgskalan är fast (±50 V); värden utanför intervallet mättas. "
+            "Axlarna är fasta. Pilarna visar "
             "E = −∇V med komprimerad längdskala, så även svagare fält syns."
         )
     with profile_tab:
-        st.plotly_chart(profile_figure, use_container_width=True, config={"displaylogo": False})
+        _render_plot(profile_figure)
         st.caption("V och Eₓ har varsin fast skala; använd lutningen på V-kurvan för att kontrollera Eₓ.")
 
 
@@ -784,6 +835,8 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
     xx, yy = np.meshgrid(x, y)
     potential = np.zeros_like(xx)
     for charge, x0 in zip(charges, positions):
+        if charge == 0:
+            continue
         dx, dy = xx - x0, yy
         r2 = dx * dx + dy * dy
         safe = np.maximum(r2, 0.08**2)
@@ -793,11 +846,11 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
 
     field = go.Figure()
     field.add_trace(go.Contour(
-        x=x, y=y, z=potential, colorscale="RdBu", zmin=-1000, zmax=1000,
+        x=x, y=y, z=potential, colorscale="RdBu_r", zmin=-50, zmax=50,
         autocontour=False,
-        contours={"start": -1000, "end": 1000, "size": 100,
-                  "coloring": "lines", "showlabels": True},
-        colorbar={"title": "V [V]", "tickvals": [-1000, -500, 0, 500, 1000]},
+        contours={"start": -50, "end": 50, "size": 5,
+                  "coloring": "heatmap", "showlabels": False},
+        colorbar={"title": "V [V]", "tickvals": [-50, 0, 50]},
         name="Ekvipotentialer",
     ))
     for gx in np.linspace(-2.5, 2.5, 9):
@@ -805,6 +858,8 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
             field_x = field_y = 0.0
             near_charge = False
             for charge, x0 in zip(charges, positions):
+                if charge == 0:
+                    continue
                 dx, dy = gx - x0, gy
                 r2 = dx * dx + dy * dy
                 if r2 < 0.08**2:
@@ -816,7 +871,7 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
             magnitude = math.hypot(field_x, field_y)
             if near_charge or magnitude == 0:
                 continue
-            length = 0.05 + 0.29 * min(magnitude / 300.0, 1.0)
+            length = 0.18 + 0.16 * min(magnitude / 300.0, 1.0)
             field.add_annotation(
                 x=gx + length * field_x / magnitude,
                 y=gy + length * field_y / magnitude,
@@ -846,11 +901,15 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
     line_v = np.zeros_like(line_x)
     line_ex = np.zeros_like(line_x)
     for charge, x0 in zip(charges, positions):
+        if charge == 0:
+            continue
         dx = line_x - x0
         r = np.maximum(np.abs(dx), 0.08)
         line_v += k * charge / r
         line_ex += k * charge * dx / (r**3)
-    for x0 in positions:
+    for charge, x0 in zip(charges, positions):
+        if charge == 0:
+            continue
         line_v[np.abs(line_x - x0) < 0.08] = np.nan
         line_ex[np.abs(line_x - x0) < 0.08] = np.nan
     profile = go.Figure()
@@ -861,7 +920,7 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
     ))
     profile.update_layout(
         height=370, title="Potentialens lutning längs x-axeln",
-        xaxis={"range": [-3, 3], "dtick": 1, "title": "x [m]"},
+        xaxis={"range": [-3, 3], "dtick": 2, "title": "x [m]"},
         yaxis={"range": [-1000, 1000], "title": "V [V]"},
         yaxis2={"range": [-10000, 10000], "title": "Eₓ [V/m]", "overlaying": "y", "side": "right"},
         legend={"orientation": "h", "y": 1.12}, margin={"l": 20, "r": 45, "t": 60, "b": 30},
@@ -887,26 +946,27 @@ def _render_dielectric_page() -> None:
         "4. Kombinera komponenterna för E₂. Om σf = 0 är D:s normalkomponent kontinuerlig."
     )
     st.caption("Ändra ett värde i taget och följ hur E₂:s normal- och tangentialdel reagerar.")
-    c1, c2 = st.columns(2)
-    with c1:
-        eps1 = st.slider("Relativ permittivitet εᵣ₁", 1.0, 12.0, 2.0, 0.5)
-        eps2 = st.slider("Relativ permittivitet εᵣ₂", 1.0, 12.0, 5.0, 0.5)
-        e1_kvm = st.slider("Fält E₁ [kV/m]", 0.5, 10.0, 4.0, 0.5)
-    with c2:
-        angle_deg = st.slider("E₁-vinkel från normalen [°]", -75, 75, 35, 1)
-        sigma_nc_m2 = st.slider("Fri ytladdning σf [nC/m²]", -50.0, 50.0, 0.0, 2.0)
+    with st.expander("Inställningar", expanded=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            eps1 = st.slider("Relativ permittivitet εᵣ₁", 1.0, 12.0, 2.0, 0.5)
+            eps2 = st.slider("Relativ permittivitet εᵣ₂", 1.0, 12.0, 5.0, 0.5)
+            e1_kvm = st.slider("Fält E₁ [kV/m]", 0.5, 10.0, 4.0, 0.5)
+        with c2:
+            angle_deg = st.slider("E₁-vinkel från normalen [°]", -75, 75, 35, 1)
+            sigma_nc_m2 = st.slider("Fri ytladdning σf [nC/m²]", -50.0, 50.0, 0.0, 2.0)
     e1n, e1t, e2n, e2t = _dielectric_boundary_fields(
         eps1, eps2, e1_kvm, angle_deg, sigma_nc_m2
     )
-    st.plotly_chart(_dielectric_figure(e1n, e1t, e2n, e2t, eps1, eps2),
-        use_container_width=True, config={"displaylogo": False})
+    _render_plot(_dielectric_figure(e1n, e1t, e2n, e2t, eps1, eps2))
     m1, m2, m3 = st.columns(3)
     m1.metric("E₁t", f"{e1t:.3g} kV/m")
     m2.metric("E₂t", f"{e2t:.3g} kV/m")
     m3.metric("E₂n", f"{e2n:.3g} kV/m")
     st.caption(
-        "Normalen pekar från material 1 till 2. Pilarna använder en gemensam "
-        "fast skala upp till 25 kV/m; starkare fält kapas för att rymmas i figuren."
+        "Normalen pekar från material 1 till 2. Pilarna visar riktningen med "
+        "komprimerade, begränsade längder; läs fältstyrkan i siffrorna. "
+        "Jämför E₁t och E₂t för kontinuitet och använd ε₀εᵣEₙ för D:s språng."
     )
 
 
@@ -926,20 +986,18 @@ def _dielectric_figure(e1n: float, e1t: float, e2n: float, e2t: float,
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=[0, 0], y=[-1.4, 1.4], mode="lines",
         line={"color": "#444", "width": 3}, name="Gränsyta"))
-    for x0, en, et, color, label in [(-0.7, e1n, e1t, "#1f77b4", "E₁"),
-                                      (0.7, e2n, e2t, "#d95f02", "E₂")]:
+    for x0, en, et, color, label in [(-0.8, e1n, e1t, "#1f77b4", "E₁"),
+                                      (0.8, e2n, e2t, "#d95f02", "E₂")]:
         magnitude = math.hypot(en, et)
-        if magnitude == 0.0:
-            continue
-        length = min(0.95, 0.08 + 0.045 * magnitude)
-        dx, dy = length * en / magnitude, length * et / magnitude
+        length = min(0.65, 0.08 + 0.045 * magnitude) if magnitude else 0.0
+        dx, dy = (length * en / magnitude, length * et / magnitude) if magnitude else (0.0, 0.0)
         fig.add_annotation(x=x0+dx, y=dy, ax=x0, ay=0, xref="x", yref="y",
             axref="x", ayref="y", showarrow=True, arrowhead=3, arrowsize=1,
             arrowwidth=3, arrowcolor=color)
-        fig.add_annotation(x=x0+dx, y=dy+0.12, text=label, showarrow=False,
+        fig.add_annotation(x=x0, y=-0.65, text=f"{label}<br>{magnitude:.2g} kV/m", showarrow=False,
             font={"size": 16, "color": color})
-    fig.add_annotation(x=-1.25, y=1.05, text=f"Material 1<br>εᵣ₁={eps1:g}", showarrow=False)
-    fig.add_annotation(x=1.25, y=1.05, text=f"Material 2<br>εᵣ₂={eps2:g}", showarrow=False)
+    fig.add_annotation(x=-0.85, y=1.05, text=f"Material 1<br>εᵣ₁={eps1:g}", showarrow=False)
+    fig.add_annotation(x=0.85, y=1.05, text=f"Material 2<br>εᵣ₂={eps2:g}", showarrow=False)
     fig.add_annotation(x=0.08, y=-1.15, text="n →", showarrow=False)
     fig.update_layout(height=420, title="Fältkomponenter vid en plan gränsyta",
         xaxis={"range": [-1.7, 1.7], "visible": False, "scaleanchor": "y"},
@@ -965,33 +1023,62 @@ def _render_biot_savart_page() -> None:
         "Modellen visar en tunn cirkulär ledare i vakuum; formeln gäller på axeln."
     )
     st.caption("Vänd strömmens tecken för att se hur alla bidrag och Bᶻ byter riktning.")
-    c1, c2 = st.columns(2)
-    with c1:
-        current = st.slider("Ström I [A]", -5.0, 5.0, 3.0, 0.25)
-        radius = st.slider("Loopradie a [m]", 0.5, 1.0, 0.75, 0.05)
-    with c2:
-        z = st.slider("Observationspunkt z [m]", -1.5, 1.5, 0.5, 0.05)
+    with st.expander("Inställningar", expanded=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            current = st.slider("Ström I [A]", -5.0, 5.0, 3.0, 0.25)
+            radius = st.slider("Loopradie a [m]", 0.5, 1.0, 0.75, 0.05)
+        with c2:
+            z = st.slider("Observationspunkt z [m]", -1.5, 1.5, 0.5, 0.05)
     geometry, contributions, profile = _biot_savart_figures(current, radius, z)
     m1, m2, m3 = st.columns(3)
     m1.metric("Bᶻ vid vald punkt", f"{_loop_axis_field(current, radius, z) * 1e6:.3g} µT")
     m2.metric("Bidrag från ett segment", f"{_loop_axis_field(current, radius, z) * 1e6 / 16:.3g} µT")
     m3.metric("Segment", "16")
-    geometry_tab, contributions_tab, profile_tab = st.tabs(
-        ["Geometri och riktning", "Segmentbidrag", "Fält längs axeln"]
+    section_tab, geometry_tab, contributions_tab, profile_tab = st.tabs(
+        ["Snitt", "3D", "Bidrag", "Axelfält"]
     )
+    with section_tab:
+        _render_plot(_biot_savart_section(current, radius, z))
+        st.caption("Snitt genom xz-planet. ⊙ är ström ut ur skärmen (−y); ⊗ är ström in (+y). "
+                   "B-pilen visar riktningen; läs storleken i mätvärdet ovan. "
+                   "Krök högerhandens fingrar med strömmen: tummen visar B på axeln.")
     with geometry_tab:
-        st.plotly_chart(geometry, use_container_width=True, config={"displaylogo": False})
+        _render_plot(geometry)
         st.caption("Axlarna är fasta i meter. Följ den blå strömpilen och orange B-pil med högerhandsregeln.")
     with contributions_tab:
-        st.plotly_chart(contributions, use_container_width=True, config={"displaylogo": False})
+        _render_plot(contributions)
         st.caption("På loopens axel är alla 16 axialkomponenter lika stora; summan visas ovanför staplarna.")
     with profile_tab:
-        st.plotly_chart(profile, use_container_width=True, config={"displaylogo": False})
+        _render_plot(profile)
         st.caption("Den orange markören är den valda punkten på den blå Bᶻ(z)-kurvan.")
 
 
 def _loop_axis_field(current: float, radius: float, z: float) -> float:
     return MU0 * current * radius**2 / (2.0 * (radius**2 + z**2) ** 1.5)
+
+
+def _biot_savart_section(current: float, radius: float, z: float) -> go.Figure:
+    """Touch-friendly xz cross-section; +y points into the screen."""
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[-radius, radius], y=[0, 0], mode="markers+text",
+        marker={"size": 18, "color": "#1f77b4"},
+        text=["⊙" if current > 0 else "⊗" if current < 0 else "0",
+              "⊗" if current > 0 else "⊙" if current < 0 else "0"],
+        textfont={"color": "white", "size": 16}, textposition="middle center",
+        name="Ledare", hovertemplate="Ledaren: x=%{x:.2f} m<extra></extra>"))
+    fig.add_trace(go.Scatter(x=[0], y=[z], mode="markers+text",
+        marker={"size": 10, "color": "#d95f02"}, text=["P"],
+        textposition="middle right", name="Fältpunkt"))
+    if current:
+        fig.add_annotation(x=0, y=z + math.copysign(0.28, current), ax=0, ay=z,
+            xref="x", yref="y", axref="x", ayref="y", showarrow=True,
+            arrowhead=3, arrowwidth=3, arrowcolor="#d95f02")
+    fig.update_layout(title="Slingans snitt och B-riktning", showlegend=False,
+        xaxis={"range": [-1.3, 1.3], "title": "x [m]", "scaleanchor": "y", "dtick": 0.5},
+        yaxis={"range": [-1.9, 1.9], "title": "z [m]", "dtick": 1})
+    _apply_plot_theme(fig)
+    return fig
 
 
 def _biot_savart_figures(current: float, radius: float, z: float) -> tuple[go.Figure, go.Figure, go.Figure]:
@@ -1019,7 +1106,7 @@ def _biot_savart_figures(current: float, radius: float, z: float) -> tuple[go.Fi
         margin={"l":0,"r":0,"t":45,"b":0},uirevision="biot-geometry-fixed-reference")
 
     dphi=2.0*np.pi/n
-    dBz=np.full(n,1e-7*current*radius**2*dphi/(radius**2+z**2)**1.5)*1e6
+    dBz=np.full(n,(MU0 / (4 * np.pi))*current*radius**2*dphi/(radius**2+z**2)**1.5)*1e6
     bars=go.Figure(go.Bar(x=np.arange(1,n+1),y=dBz,marker_color="#4c78a8",name="dBz"))
     bars.add_annotation(
         x=0.98, y=0.98, xref="paper", yref="paper", xanchor="right", yanchor="top",
@@ -1057,34 +1144,35 @@ def _render_faraday_page() -> None:
         "2. Beräkna emk = −N dΦ/dt.\n"
         "3. Emk-tecknet anger riktningen relativt spolens normal n.\n"
         "4. Lenz lag säger att det inducerade fältet motverkar **förändringen** "
-        "av flödet: emot B när B ökar, med B när B minskar."
+        "av det signerade flödet: om dΦ/dt är positiv pekar det längs −n, "
+        "vid negativ derivata längs +n och vid noll ingen inducerad emk. Detta gäller en sluten resistiv krets när självinduktion försummas."
     )
     st.caption("Här varierar B sinusformigt. När θ = 0 pekar spolens normal n längs +z.")
-    c1,c2=st.columns(2)
-    with c1:
-        b0_mt=st.slider("Fältamplitud B₀ [mT]",0.1,20.0,20.0,0.1)
-        frequency=st.slider("Frekvens f [Hz]",0.1,5.0,4.5,0.1)
-    with c2:
-        turns=st.slider("Varvtal N",1,500,450,1)
-        area_cm2=st.slider("Spolarea A [cm²]",1.0,500.0,450.0,1.0)
-        angle_deg=st.slider("Vinkel θ mellan B och spolnormal [°]",0,180,0,1)
+    with st.expander("Inställningar", expanded=False):
+        c1,c2=st.columns(2)
+        with c1:
+            b0_mt=st.slider("Fältamplitud B₀ [mT]",0.1,20.0,20.0,0.1)
+            frequency=st.slider("Frekvens f [Hz]",0.1,5.0,4.5,0.1)
+        with c2:
+            turns=st.slider("Varvtal N",1,500,450,1)
+            area_cm2=st.slider("Spolarea A [cm²]",1.0,500.0,450.0,1.0)
+            angle_deg=st.slider("Vinkel θ mellan B och spolnormal [°]",0,180,0,1)
     phase=st.slider("Tidpunkt t/T",0.0,1.0,0.1,0.005)
     b0=b0_mt*1e-3
     area=area_cm2*1e-4
-    omega=2*np.pi*frequency
     time=phase/frequency
     b, flux, emf = _faraday_state(b0, frequency, turns, area, time, angle_deg)
     graph,schematic=_faraday_figures(b0,frequency,turns,area,phase,angle_deg,emf)
-    waveform_tab, direction_tab = st.tabs(["Fält och emk över tid", "Inducerat fält"])
+    waveform_tab, direction_tab = st.tabs(["Tidskurvor", "Riktning"])
     with waveform_tab:
-        st.plotly_chart(graph,use_container_width=True,config={"displaylogo":False})
+        _render_plot(graph)
         st.caption("Den streckade linjen visar vald tidpunkt; jämför B med emk och dess tecken.")
     m1,m2,m3=st.columns(3)
     m1.metric("Bext(t)",f"{b*1e3:.4g} mT")
     m2.metric("Flödeskoppling NΦ",f"{turns*flux:.4g} Wb-turn")
     m3.metric("Inducerad emk",f"{emf:.4g} V")
     with direction_tab:
-        st.plotly_chart(schematic,use_container_width=True,config={"displaylogo":False})
+        _render_plot(schematic)
         st.caption(f"Vald tid är t = {time:.4g} s. Emk-tecknet anger inducerat fält längs +n eller −n.")
     st.caption(
         "Fasta axlar: B mellan −22 och +22 mT, emk mellan −17 och +17 V. "
@@ -1116,7 +1204,7 @@ def _faraday_figures(b0: float, frequency: float, turns: int, area: float,
     graph.add_trace(go.Scatter(x=phase,y=b*1e3,mode="lines",name="Bext [mT]",line={"color":"#1f77b4"}))
     graph.add_trace(go.Scatter(x=phase,y=emf,mode="lines",name="Inducerad emk [V]",yaxis="y2",line={"color":"#d95f02"}))
     graph.add_vline(x=selected_phase,line_dash="dash",line_color="#333")
-    graph.update_layout(height=470,title="Yttre fält och inducerad emk",xaxis={"title":"Tid t/T","range":[0,2],"dtick":0.25},
+    graph.update_layout(height=470,title="Yttre fält och inducerad emk",xaxis={"title":"Tid t/T","range":[0,2],"dtick":0.5,"tickangle":0},
         yaxis={"title":"Bext [mT]","range":[-22,22]},
         yaxis2={"title":"emk [V]","range":[-17,17],"overlaying":"y","side":"right"},
         legend={"orientation":"h","y":1.12},margin={"l":45,"r":55,"t":60,"b":40},
@@ -1129,7 +1217,7 @@ def _faraday_figures(b0: float, frequency: float, turns: int, area: float,
         induced_sign=np.sign(induced_emf)
         symbol="⊙" if induced_sign>0 else "⊗"
         label="Bind längs +n" if induced_sign>0 else "Bind längs −n"
-        font_size=14+round(12*min(abs(induced_emf)/16.0,1.0))
+        font_size=16
         schematic.add_annotation(x=0,y=0,text=f"{symbol}<br>{label}<br>|emk|={abs(induced_emf):.3g} V",
             showarrow=False,font={"size":font_size})
     else:
