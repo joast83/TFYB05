@@ -63,3 +63,30 @@ def test_faraday_state_obeys_lenz_sign_and_zero_crossings():
     assert math.isclose(b_peak, b0, rel_tol=1e-12)
     assert math.isclose(flux_peak, b0 * area, rel_tol=1e-12)
     assert abs(emf_peak) < 1e-12
+
+
+def test_gauss_surface_choice_changes_which_charges_are_enclosed():
+    from em_visualisering.theory_pages import _gauss_enclosed_charge
+
+    charges = {(0.75, 0.75): 2.0}
+    assert _gauss_enclosed_charge("Sfär", 1.0, charges) == (0.0, False)
+    assert _gauss_enclosed_charge("Cylinder", 1.0, charges) == (2.0, False)
+    assert _gauss_enclosed_charge("Kub", 1.0, charges) == (2.0, False)
+
+
+def test_gauss_detects_point_charge_on_surface_as_singular():
+    from em_visualisering.theory_pages import _gauss_enclosed_charge
+
+    enclosed, on_surface = _gauss_enclosed_charge("Sfär", 1.0, {(1.0, 0.0): 3.0})
+    assert enclosed == 0.0
+    assert on_surface
+
+
+def test_electric_field_changes_with_charge_magnitude_and_sign():
+    from em_visualisering.theory_pages import _electric_field_at
+
+    positive = _electric_field_at(1.0, 0.0, {(0.0, 0.0): 2.0})
+    doubled = _electric_field_at(1.0, 0.0, {(0.0, 0.0): 4.0})
+    negative = _electric_field_at(1.0, 0.0, {(0.0, 0.0): -2.0})
+    assert math.isclose(doubled[0], 2.0 * positive[0], rel_tol=1e-12)
+    assert positive[0] > 0 and negative[0] < 0
