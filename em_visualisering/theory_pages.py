@@ -205,11 +205,9 @@ def _render_gauss_page() -> None:
     grid_index = _gauss_grid_index_from_selection(selected, len(figure.data) - 1)
     if grid_index is not None:
         charge_position = _gauss_grid_position(grid_index)
-        if charge_position in charges:
-            del charges[charge_position]
-        elif charge_to_add != 0:
-            charges[charge_position] = float(charge_to_add)
-        st.session_state.gauss_charges = charges
+        st.session_state.gauss_charges = _toggle_gauss_charge(
+            charges, charge_position, charge_to_add
+        )
         st.session_state.gauss_chart_version += 1
         st.rerun()
 
@@ -293,6 +291,20 @@ def _gauss_grid_position(index: int) -> tuple[float, float]:
         raise ValueError("Gauss grid index must be between 0 and 440")
     values = np.arange(-2.5, 2.5001, 0.25)
     return round(float(values[index % 21]), 2), round(float(values[index // 21]), 2)
+
+
+def _toggle_gauss_charge(
+    charges: dict[tuple[float, float], float],
+    position: tuple[float, float],
+    charge_to_add: float,
+) -> dict[tuple[float, float], float]:
+    """Remove an occupied grid point or add the selected charge at an empty one."""
+    updated = charges.copy()
+    if position in updated:
+        del updated[position]
+    elif charge_to_add != 0:
+        updated[position] = float(charge_to_add)
+    return updated
 
 
 def _gauss_enclosed_charge(
