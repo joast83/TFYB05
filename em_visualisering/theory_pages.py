@@ -853,8 +853,8 @@ def _render_dielectric_page() -> None:
     m2.metric("E₂t", f"{e2t:.3g} kV/m")
     m3.metric("E₂n", f"{e2n:.3g} kV/m")
     st.caption(
-        "Normalen pekar från material 1 till 2. Pilarna använder samma fast "
-        "kV/m-skala, så deras längder jämför fältens storlek."
+        "Normalen pekar från material 1 till 2. Pilarna använder en gemensam "
+        "fast skala upp till 25 kV/m; starkare fält kapas för att rymmas i figuren."
     )
 
 
