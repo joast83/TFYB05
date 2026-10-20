@@ -312,10 +312,28 @@ def _gauss_cross_section_figure(
     grid_x, grid_y = np.meshgrid(grid_values, grid_values)
     flat_x, flat_y = grid_x.ravel(), grid_y.ravel()
     if show_grid:
+        grid_charge_values = [
+            charges.get((round(float(x), 2), round(float(y), 2)))
+            for x, y in zip(flat_x, flat_y)
+        ]
         fig.add_trace(go.Scatter(
-            x=flat_x, y=flat_y, mode="markers", customdata=np.arange(len(flat_x)),
-            marker={"size": 5, "color": "#75808a", "opacity": 0.35},
-            hovertemplate=("Gridpunkt (%{x:.2f}, %{y:.2f}) m<br>"
+            x=flat_x, y=flat_y, mode="markers+text",
+            text=["" if q is None else f"{q:+g} nC" for q in grid_charge_values],
+            textposition="top center", customdata=np.arange(len(flat_x)),
+            marker={
+                "size": [5 if q is None else 15 for q in grid_charge_values],
+                "color": [
+                    "#75808a" if q is None else "#c0392b" if q > 0 else "#245b9e"
+                    for q in grid_charge_values
+                ],
+                "symbol": [
+                    "circle" if q is None or q > 0 else "circle-open"
+                    for q in grid_charge_values
+                ],
+                "opacity": [0.35 if q is None else 1.0 for q in grid_charge_values],
+                "line": {"width": 2},
+            },
+            hovertemplate=("(%{x:.2f}, %{y:.2f}) m<br>"
                            "Klicka för att lägga till/ta bort en laddning<extra></extra>"),
             showlegend=False, name="Laddningsrutnät",
         ))
@@ -410,7 +428,7 @@ def _gauss_cross_section_figure(
                 arrowcolor="#c66a17",
             )
 
-    if charges:
+    if charges and not show_grid:
         charge_positions = list(charges)
         charge_values = [charges[pos] for pos in charge_positions]
         fig.add_trace(go.Scatter(
