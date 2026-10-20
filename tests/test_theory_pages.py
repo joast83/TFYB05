@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from em_visualisering.theory_pages import _circle_overlap_fraction
 
@@ -92,7 +93,9 @@ def test_gauss_sphere_encloses_center_and_flags_boundary_charge():
 
 def test_gauss_grid_selection_parsing_and_coordinate_mapping():
     from em_visualisering.theory_pages import (
+        GAUSS_DEFAULT_CHARGES,
         _gauss_grid_index_from_selection,
+        _gauss_cross_section_figure,
         _gauss_grid_position,
         _toggle_gauss_charge,
         _selection_points,
@@ -113,6 +116,12 @@ def test_gauss_grid_selection_parsing_and_coordinate_mapping():
     assert _gauss_grid_position(220) == (0.0, 0.0)
     assert _gauss_grid_position(0) == (-2.5, -2.5)
     assert _gauss_grid_position(440) == (2.5, 2.5)
+    figure = _gauss_cross_section_figure(1.0, GAUSS_DEFAULT_CHARGES, False, show_grid=True)
+    grid_trace_index = len(figure.data) - 1
+    assert figure.data[grid_trace_index].name == "Laddningsrutnät"
+    assert _gauss_grid_index_from_selection(
+        [{"curve_number": grid_trace_index, "customdata": [220]}], grid_trace_index
+    ) == 220
     charges = {(0.0, 0.0): 5.0}
     charges = _toggle_gauss_charge(charges, (0.25, 0.0), -3.0)
     assert charges == {(0.0, 0.0): 5.0, (0.25, 0.0): -3.0}
@@ -136,3 +145,37 @@ def test_electric_field_changes_with_charge_magnitude_and_sign():
     negative = _electric_field_at(1.0, 0.0, {(0.0, 0.0): -2.0})
     assert math.isclose(doubled[0], 2.0 * positive[0], rel_tol=1e-12)
     assert positive[0] > 0 and negative[0] < 0
+
+
+def test_default_theory_figures_are_legible_on_fixed_references():
+    from em_visualisering.theory_pages import (
+        _ampere_figure,
+        _biot_savart_figures,
+        _faraday_figures,
+    )
+
+    ampere = _ampere_figure(1.0, 0.0, 0.15, 1, 2.0)
+    assert list(ampere.layout.xaxis.range) == [-2.4, 2.4]
+    assert list(ampere.layout.yaxis.range) == [-2.4, 2.4]
+    assert ampere.layout.legend.orientation == "h"
+    assert ampere.layout.legend.y == -0.08
+
+    _, contributions, profile = _biot_savart_figures(3.0, 0.75, 0.5)
+    assert list(contributions.layout.yaxis.range) == [-0.5, 0.5]
+    assert list(profile.layout.yaxis.range) == [-7, 7]
+    assert max(abs(value) for value in contributions.data[0].y) < 0.5
+
+    waveform, _ = _faraday_figures(0.020, 4.5, 450, 0.045, 0.1, 0.0, -1.0)
+    assert list(waveform.layout.yaxis.range) == [-22, 22]
+    assert list(waveform.layout.yaxis2.range) == [-17, 17]
+    assert max(abs(value) for value in waveform.data[1].y) > 10
+
+
+def test_potential_changes_while_axes_remain_fixed():
+    from em_visualisering.theory_pages import _potential_figures
+
+    field_initial, _ = _potential_figures(2.0, -2.0, 1.0)
+    field_changed, _ = _potential_figures(4.0, -2.0, 1.0)
+    assert list(field_initial.layout.xaxis.range) == [-3, 3]
+    assert list(field_changed.layout.xaxis.range) == [-3, 3]
+    assert np.nanmax(np.abs(np.asarray(field_changed.data[0].z) - np.asarray(field_initial.data[0].z))) > 0

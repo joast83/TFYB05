@@ -64,6 +64,41 @@ THEORY_PAGE_LOOKUP = {page.title: page for page in THEORY_PAGES}
 GAUSS_DEFAULT_CHARGES = {(0.0, 0.0): 5.0}
 
 
+def _apply_plot_theme(*figures: go.Figure) -> None:
+    """Apply one quiet, readable visual style to every theory figure."""
+    for figure in figures:
+        figure.update_layout(
+            template="plotly_white",
+            font={"family": "Arial, sans-serif", "size": 14, "color": "#24313b"},
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            legend={
+                "orientation": "h",
+                "x": 0.5,
+                "xanchor": "center",
+                "y": -0.08,
+                "yanchor": "top",
+                "bgcolor": "rgba(255,255,255,0.88)",
+            },
+            margin={"b": 90},
+            hoverlabel={
+                "bgcolor": "#ffffff",
+                "bordercolor": "#b8c4ce",
+                "font": {"size": 13, "color": "#24313b"},
+            },
+            title_x=0.02,
+            title_xanchor="left",
+        )
+
+
+def _render_problem_guide(instructions: str) -> None:
+    """Keep multi-step problem advice available without pushing plots down."""
+    import streamlit as st
+
+    with st.expander("Så använder du modellen i en uppgift"):
+        st.markdown(instructions)
+
+
 def render_theory_page(page: TheoryPage) -> None:
     if page.key == "gauss_flux":
         _render_gauss_page()
@@ -176,7 +211,7 @@ def _render_gauss_page() -> None:
             help="Tecknet och beloppet gäller laddningen som läggs till vid nästa klick.",
             key="gauss_new_charge",
         )
-        show_normals = st.checkbox("Visa ytans normaler", value=True, key="gauss_normals")
+        show_normals = st.checkbox("Visa ytans normaler", value=False, key="gauss_normals")
 
     clear_col, reset_col, _ = st.columns([1, 1, 2])
     with clear_col:
@@ -212,9 +247,10 @@ def _render_gauss_page() -> None:
         st.rerun()
 
     st.caption(
-        "Klicka direkt på en av de tydliga rutnätspunkterna för att ändra modellen. "
-        "Koordinataxlar och färgskala är fasta när du ändrar inställningar. "
-        "Pilarna ändrar riktning och längd med E, och färgen visar E·n på ytan. "
+        "Klicka på en rutnätspunkt för att lägga till eller ta bort en laddning. "
+        "Axlarna och färgskalan (±120 N/C) är fasta; färgen klipps utanför intervallet. "
+        "Pilarna visar fältets riktning "
+        "med komprimerad längdskala; färgen visar E·n på ytan. "
         "Rutnätet har 0,25 m mellan punkterna."
     )
     enclosed, on_surface = _gauss_enclosed_charge(radius, charges)
@@ -351,7 +387,7 @@ def _gauss_cross_section_figure(
     grid_x, grid_y = np.meshgrid(grid_values, grid_values)
     flat_x, flat_y = grid_x.ravel(), grid_y.ravel()
     # Fixed axes and color limits keep the reference scale stable as the model changes.
-    field_reference = 1500.0  # N/C, fixed reference for arrow lengths and E·n colors.
+    field_color_reference = 120.0  # N/C, fixed colorbar reference.
     arrow_x = np.arange(-2.25, 2.251, 0.5)
     arrow_y = np.arange(-2.0, 2.001, 0.5)
     arrow_length_max = 0.34
@@ -361,8 +397,10 @@ def _gauss_cross_section_figure(
             magnitude = math.hypot(ex, ey)
             if magnitude < 1e-9:
                 continue
-            length = min(arrow_length_max, arrow_length_max * magnitude / field_reference)
-            length = max(0.025, length)
+            # A compressed scale keeps weak far-field arrows visible while
+            # preserving clear differences near the charges.
+            length = 0.07 + 0.27 * min(magnitude / 220.0, 1.0)
+            length = min(arrow_length_max, length)
             fig.add_annotation(
                 x=x + length * ex / magnitude,
                 y=y + length * ey / magnitude,
@@ -393,12 +431,12 @@ def _gauss_cross_section_figure(
     fig.add_trace(go.Scatter(
         x=surface_x, y=surface_y, mode="markers",
         marker={
-            "size": 9, "color": normal_field, "colorscale": "RdBu",
-            "cmin": -field_reference, "cmax": field_reference, "cauto": False,
+            "size": 10, "color": normal_field, "colorscale": "RdBu_r",
+            "cmin": -field_color_reference, "cmax": field_color_reference, "cauto": False,
             "showscale": True,
             "colorbar": {
-                "title": "E·n [N/C]", "tickvals": [-field_reference, 0, field_reference],
-                "ticktext": ["−1500", "0", "+1500"], "thickness": 14,
+                "title": "E·n [N/C]", "tickvals": [-field_color_reference, 0, field_color_reference],
+                "ticktext": ["−120", "0", "+120"], "thickness": 14,
             },
         },
         customdata=normal_field,
@@ -406,8 +444,11 @@ def _gauss_cross_section_figure(
         name="Lokalt flöde E·n",
     ))
     if show_normals:
-        normal_length = 0.20
-        for x, y, nx, ny in zip(surface_x[::3], surface_y[::3], normal_x[::3], normal_y[::3]):
+        normal_length = 0.14
+        normal_angles = np.arange(8) * (2 * np.pi / 8) + np.pi / 8
+        for angle in normal_angles:
+            nx, ny = math.cos(angle), math.sin(angle)
+            x, y = radius * nx, radius * ny
             fig.add_annotation(
                 x=x + normal_length * nx, y=y + normal_length * ny,
                 ax=x, ay=y, xref="x", yref="y", axref="x", ayref="y",
@@ -462,8 +503,8 @@ def _gauss_cross_section_figure(
             showlegend=False, name="Laddningsrutnät",
         ))
     fig.update_layout(
-        height=620,
-        title="E-fält och lokalt flöde genom Gaussytan",
+        height=540,
+        title="Fält och lokalt flöde på en sfärisk Gaussyta",
         xaxis={"range": [-3, 3], "tick0": -3, "dtick": 1, "title": "x [m]",
                "scaleanchor": "y", "constrain": "domain"},
         yaxis={"range": [-3, 3], "tick0": -3, "dtick": 1, "title": "y [m]"},
@@ -473,6 +514,7 @@ def _gauss_cross_section_figure(
         dragmode="pan" if show_grid else False,
         uirevision="gauss-fixed-axes",
     )
+    _apply_plot_theme(fig)
     return fig
 
 
@@ -531,17 +573,17 @@ def _render_stokes_page() -> None:
     c1, c2 = st.columns(2)
     with c1:
         current = st.slider("Fri ström I [A]", -5.0, 5.0, 2.0, 0.25)
-        loop_radius = st.slider("Slingradie R [m]", 0.5, 2.0, 1.0, 0.1)
+        loop_radius = st.slider("Slingradie R [m]", 0.5, 1.25, 1.0, 0.05)
     with c2:
         offset_ratio = st.slider(
             "Ledningens centrum x/R",
-            -1.5,
-            1.5,
+            -1.4,
+            1.4,
             0.0,
             0.05,
             help="|x/R| < 1 placerar ledningen innanför integrationsytan.",
         )
-        conductor_radius = st.slider("Ledningsradie a/R", 0.05, 0.4, 0.15, 0.01)
+        conductor_radius = st.slider("Ledningsradie a/R", 0.05, 0.35, 0.15, 0.01)
         orientation_label = st.radio("Orientering av C enligt högerhandsregeln",
             ["Moturs (+z-normal)", "Medurs (−z-normal)"], horizontal=True)
     orientation = 1 if orientation_label.startswith("Moturs") else -1
@@ -682,7 +724,7 @@ def _ampere_figure(
         font={"size": 12 + round(8 * min(abs(current), 5.0) / 5.0)},
         bgcolor="rgba(255,255,255,0.8)",
     )
-    extent = 4.0
+    extent = 2.4
     figure.update_layout(
         height=500,
         margin={"l": 20, "r": 20, "t": 40, "b": 20},
@@ -691,6 +733,7 @@ def _ampere_figure(
         yaxis={"range": [-extent, extent], "title": "y [m]"},
         legend={"orientation": "h"},
     )
+    _apply_plot_theme(figure)
     return figure
 
 
@@ -706,16 +749,13 @@ def _render_potential_page() -> None:
         "Potentialen är en skalär som summeras algebraisk. Fältet är en vektor och "
         "fås från potentialens lutning. E-fältet står vinkelrätt mot ekvipotentialerna."
     )
-    st.markdown(
-        "### Så använder du modellen i en uppgift\n"
+    _render_problem_guide(
         "1. Ställ in laddningarnas tecken, belopp och avstånd enligt uppgiften.\n"
-        "2. För muspekaren över ekvipotentialerna för att läsa V; använd profilen "
-        "för värden längs x-axeln.\n"
-        "3. Använd lutningen: ett brantare V(x) betyder större |Eₓ|, och "
-        "Eₓ = −dV/dx.\n"
-        "4. Kontrollera riktningen med pilarna och tecknet på laddningarna."
+        "2. Läs V från ekvipotentialerna eller använd profilen längs x-axeln.\n"
+        "3. Använd Eₓ = −dV/dx: brantare lutning betyder starkare fält.\n"
+        "4. Kontrollera riktningen med pilarna och laddningarnas tecken."
     )
-    st.info("Förutsäg först hur ekvipotentialerna ändras när tecknet på en av laddningarna vänds.")
+    st.caption("Prova att vända tecknet på en laddning och följ hur fältet och potentialen ändras.")
     c1, c2 = st.columns(2)
     with c1:
         q1 = st.slider("Vänster laddning q₁ [nC]", -5.0, 5.0, 2.0, 0.5)
@@ -723,13 +763,16 @@ def _render_potential_page() -> None:
     with c2:
         separation = st.slider("Laddningsavstånd d [m]", 0.4, 2.0, 1.0, 0.1)
     field_figure, profile_figure = _potential_figures(q1, q2, separation)
-    st.plotly_chart(field_figure, use_container_width=True, config={"displaylogo": False})
-    st.caption(
-        "Axlarna och potentialens färgskala är fasta. Pilarna visar E = −∇V; "
-        "deras längd ökar med fältstyrkan. Potentialfältet visas utanför ett "
-        "litet område kring varje punktladdning."
-    )
-    st.plotly_chart(profile_figure, use_container_width=True, config={"displaylogo": False})
+    field_tab, profile_tab = st.tabs(["Fältkarta", "Profil längs x"])
+    with field_tab:
+        st.plotly_chart(field_figure, use_container_width=True, config={"displaylogo": False})
+        st.caption(
+            "Ekvipotentialernas färgskala och axlar är fasta. Pilarna visar "
+            "E = −∇V med komprimerad längdskala, så även svagare fält syns."
+        )
+    with profile_tab:
+        st.plotly_chart(profile_figure, use_container_width=True, config={"displaylogo": False})
+        st.caption("V och Eₓ har varsin fast skala; använd lutningen på V-kurvan för att kontrollera Eₓ.")
 
 
 def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[go.Figure, go.Figure]:
@@ -773,9 +816,7 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
             magnitude = math.hypot(field_x, field_y)
             if near_charge or magnitude == 0:
                 continue
-            length = min(0.34, 0.34 * magnitude / 300.0)
-            if length < 0.018:
-                continue
+            length = 0.05 + 0.29 * min(magnitude / 300.0, 1.0)
             field.add_annotation(
                 x=gx + length * field_x / magnitude,
                 y=gy + length * field_y / magnitude,
@@ -794,7 +835,7 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
             text=[label], textposition="top center", name=label,
         ))
     field.update_layout(
-        height=560, title="Ekvipotentialer och elektriskt fält i planet",
+        height=520, title="Ekvipotentialer och elektriskt fält i planet",
         xaxis={"range": [-3, 3], "dtick": 1, "title": "x [m]", "scaleanchor": "y"},
         yaxis={"range": [-3, 3], "dtick": 1, "title": "y [m]"},
         margin={"l": 20, "r": 25, "t": 55, "b": 20},
@@ -819,13 +860,14 @@ def _potential_figures(q1_nc: float, q2_nc: float, separation: float) -> tuple[g
         line={"dash": "dash", "color": "#d77824"},
     ))
     profile.update_layout(
-        height=330, title="Potentialens lutning längs x-axeln",
+        height=370, title="Potentialens lutning längs x-axeln",
         xaxis={"range": [-3, 3], "dtick": 1, "title": "x [m]"},
         yaxis={"range": [-1000, 1000], "title": "V [V]"},
         yaxis2={"range": [-10000, 10000], "title": "Eₓ [V/m]", "overlaying": "y", "side": "right"},
         legend={"orientation": "h", "y": 1.12}, margin={"l": 20, "r": 45, "t": 60, "b": 30},
         uirevision="potential-profile-fixed-reference",
     )
+    _apply_plot_theme(field, profile)
     return field, profile
 
 
@@ -838,15 +880,13 @@ def _render_dielectric_page() -> None:
         "Vid en plan gränsyta i elektrostatik är den tangentiella komponenten av E "
         "kontinuerlig. Språnget i D:s normalkomponent bestäms av den fria ytladdningen."
     )
-    st.markdown(
-        "### Så använder du randvillkoren i en uppgift\n"
-        "1. Dela upp E₁ i normal- och tangentialkomponenter med den givna vinkeln.\n"
+    _render_problem_guide(
+        "1. Dela upp E₁ i normal- och tangentialkomponenter med vinkeln.\n"
         "2. Sätt E₂t = E₁t.\n"
         "3. Beräkna E₂n från ε₀εᵣ₂E₂n − ε₀εᵣ₁E₁n = σf.\n"
-        "4. Kombinera E₂n och E₂t för att få E₂:s storlek och riktning. "
-        "Om σf = 0 är D:s normalkomponent kontinuerlig."
+        "4. Kombinera komponenterna för E₂. Om σf = 0 är D:s normalkomponent kontinuerlig."
     )
-    st.info("Förutsäg hur E₂ ändras ifall εᵣ₂ ökar medan εᵣ₁, E₁ och σf hålls fasta.")
+    st.caption("Ändra ett värde i taget och följ hur E₂:s normal- och tangentialdel reagerar.")
     c1, c2 = st.columns(2)
     with c1:
         eps1 = st.slider("Relativ permittivitet εᵣ₁", 1.0, 12.0, 2.0, 0.5)
@@ -886,13 +926,13 @@ def _dielectric_figure(e1n: float, e1t: float, e2n: float, e2t: float,
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=[0, 0], y=[-1.4, 1.4], mode="lines",
         line={"color": "#444", "width": 3}, name="Gränsyta"))
-    field_reference = 20.0  # kV/m; one common physical scale for both regions.
-    scale = 0.75 / field_reference
     for x0, en, et, color, label in [(-0.7, e1n, e1t, "#1f77b4", "E₁"),
                                       (0.7, e2n, e2t, "#d95f02", "E₂")]:
         magnitude = math.hypot(en, et)
-        arrow_scale = min(scale, 0.95 / max(magnitude, 1e-12))
-        dx, dy = en * arrow_scale, et * arrow_scale
+        if magnitude == 0.0:
+            continue
+        length = min(0.95, 0.08 + 0.045 * magnitude)
+        dx, dy = length * en / magnitude, length * et / magnitude
         fig.add_annotation(x=x0+dx, y=dy, ax=x0, ay=0, xref="x", yref="y",
             axref="x", ayref="y", showarrow=True, arrowhead=3, arrowsize=1,
             arrowwidth=3, arrowcolor=color)
@@ -905,6 +945,7 @@ def _dielectric_figure(e1n: float, e1t: float, e2n: float, e2t: float,
         xaxis={"range": [-1.7, 1.7], "visible": False, "scaleanchor": "y"},
         yaxis={"range": [-1.35, 1.35], "visible": False},
         margin={"l": 10, "r": 10, "t": 50, "b": 10}, showlegend=False)
+    _apply_plot_theme(fig)
     return fig
 
 
@@ -917,35 +958,36 @@ def _render_biot_savart_page() -> None:
         "Varje strömelement bidrar med ett magnetfält. Bidragen adderas som vektorer; "
         "symmetri gör att många komponenter tar ut varandra."
     )
-    st.markdown(
-        "### Så använder du lagen i en uppgift\n"
-        "1. Ställ in strömmens tecken och slingans radie.\n"
-        "2. Placera observationspunkten längs axeln och använd högerhandsregeln "
-        "för riktningen.\n"
-        "3. Jämför bidragen från slingsegmenten och summera dem.\n"
-        "4. Kontrollera summan mot Bᶻ(z) och gränsfallen z = 0 eller långt från slingan.\n"
-        "Modellen visar en tunn cirkulär ledare i vakuum; Bᶻ-formeln gäller på axeln."
+    _render_problem_guide(
+        "1. Ställ in strömmens riktning, slingradie och observationspunkt.\n"
+        "2. Använd högerhandsregeln för riktningen på B längs axeln.\n"
+        "3. Jämför de 16 lika stora axialbidragen med summan Bᶻ(z).\n"
+        "Modellen visar en tunn cirkulär ledare i vakuum; formeln gäller på axeln."
     )
-    st.info("Förutsäg riktningen på B längs loopens axel innan du ändrar strömmens riktning.")
+    st.caption("Vänd strömmens tecken för att se hur alla bidrag och Bᶻ byter riktning.")
     c1, c2 = st.columns(2)
     with c1:
-        current = st.slider("Ström I [A]", -5.0, 5.0, 2.0, 0.25)
-        radius = st.slider("Loopradie a [m]", 0.1, 1.0, 0.5, 0.05)
+        current = st.slider("Ström I [A]", -5.0, 5.0, 3.0, 0.25)
+        radius = st.slider("Loopradie a [m]", 0.5, 1.0, 0.75, 0.05)
     with c2:
         z = st.slider("Observationspunkt z [m]", -1.5, 1.5, 0.5, 0.05)
     geometry, contributions, profile = _biot_savart_figures(current, radius, z)
-    st.plotly_chart(geometry, use_container_width=True, config={"displaylogo": False})
-    left, right = st.columns(2)
-    with left:
-        st.plotly_chart(contributions, use_container_width=True, config={"displaylogo": False})
-    with right:
-        st.metric("Bz på axeln", f"{_loop_axis_field(current, radius, z) * 1e6:.4g} µT")
-        st.plotly_chart(profile, use_container_width=True, config={"displaylogo": False})
-    st.caption("Slingan ligger i xy-planet; de visade segmentvisa dBz-bidragen summerar till det analytiska axelfältet.")
-    st.caption(
-        "Koordinataxlarna och diagrammens vertikala skalor är fasta. Konerna visar "
-        "riktningen; deras storlek ändras med strömmen och B på den valda punkten."
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Bᶻ vid vald punkt", f"{_loop_axis_field(current, radius, z) * 1e6:.3g} µT")
+    m2.metric("Bidrag från ett segment", f"{_loop_axis_field(current, radius, z) * 1e6 / 16:.3g} µT")
+    m3.metric("Segment", "16")
+    geometry_tab, contributions_tab, profile_tab = st.tabs(
+        ["Geometri och riktning", "Segmentbidrag", "Fält längs axeln"]
     )
+    with geometry_tab:
+        st.plotly_chart(geometry, use_container_width=True, config={"displaylogo": False})
+        st.caption("Axlarna är fasta i meter. Följ den blå strömpilen och orange B-pil med högerhandsregeln.")
+    with contributions_tab:
+        st.plotly_chart(contributions, use_container_width=True, config={"displaylogo": False})
+        st.caption("På loopens axel är alla 16 axialkomponenter lika stora; summan visas ovanför staplarna.")
+    with profile_tab:
+        st.plotly_chart(profile, use_container_width=True, config={"displaylogo": False})
+        st.caption("Den orange markören är den valda punkten på den blå Bᶻ(z)-kurvan.")
 
 
 def _loop_axis_field(current: float, radius: float, z: float) -> float:
@@ -960,19 +1002,20 @@ def _biot_savart_figures(current: float, radius: float, z: float) -> tuple[go.Fi
         mode="lines", line={"color":"#1f77b4","width":6}, name="Strömslinga"))
     loop.add_trace(go.Scatter3d(x=[0], y=[0], z=[z], mode="markers+text",
         marker={"size":6,"color":"#d95f02"}, text=["P"], textposition="top center", name="Fältpunkt"))
-    extent=2.5
     selected_field = abs(_loop_axis_field(current, radius, z))
     current_cone_size = 0.18 * radius * (0.15 + 0.85 * min(abs(current) / 5.0, 1.0))
-    field_cone_size = 0.28 * radius * (0.15 + 0.85 * min(selected_field / 31.5e-6, 1.0))
+    field_cone_size = 0.28 * radius * (0.15 + 0.85 * min(selected_field / 6.3e-6, 1.0))
     if current != 0:
         loop.add_trace(go.Cone(x=[radius],y=[0],z=[0],u=[0],v=[np.sign(current)],w=[0],
-            sizemode="absolute",sizeref=current_cone_size,showscale=False,name="I-riktning"))
+            sizemode="absolute",sizeref=current_cone_size,
+            colorscale=[[0,"#1f77b4"],[1,"#1f77b4"]], showscale=False,name="I-riktning"))
         loop.add_trace(go.Cone(x=[0],y=[0],z=[z],u=[0],v=[0],w=[np.sign(current)],
-            sizemode="absolute",sizeref=field_cone_size,showscale=False,name="B på axeln"))
-    loop.update_layout(height=450,title="Strömslinga och axial fältpunkt",
-        scene={"aspectmode":"data","xaxis":{"title":"x [m]","range":[-extent,extent]},
-               "yaxis":{"title":"y [m]","range":[-extent,extent]},
-               "zaxis":{"title":"z [m]","range":[-extent,extent]}},
+            sizemode="absolute",sizeref=field_cone_size,
+            colorscale=[[0,"#d95f02"],[1,"#d95f02"]], showscale=False,name="B på axeln"))
+    loop.update_layout(height=470,title="Cirkulär slinga och fältpunkt på axeln",
+        scene={"aspectmode":"data","xaxis":{"title":"x [m]","range":[-1.8,1.8]},
+               "yaxis":{"title":"y [m]","range":[-1.8,1.8]},
+               "zaxis":{"title":"z [m]","range":[-1.8,1.8]}},
         margin={"l":0,"r":0,"t":45,"b":0},uirevision="biot-geometry-fixed-reference")
 
     dphi=2.0*np.pi/n
@@ -983,8 +1026,8 @@ def _biot_savart_figures(current: float, radius: float, z: float) -> tuple[go.Fi
         text=f"Σ dBz = {_loop_axis_field(current, radius, z) * 1e6:.3g} µT",
         showarrow=False, font={"color": "#d95f02"},
     )
-    bars.update_layout(height=330,title="Axialt bidrag från varje strömelement",
-        xaxis_title="Strömelement",yaxis={"title":"dBz [µT]","range":[-2.5,2.5]},showlegend=False,
+    bars.update_layout(height=370,title="Axialt fältbidrag från varje segment",
+        xaxis_title="Segment",yaxis={"title":"dBᶻ [µT]","range":[-0.5,0.5]},showlegend=False,
         margin={"l":20,"r":20,"t":50,"b":25})
 
     zz=np.linspace(-2.5,2.5,500)
@@ -992,10 +1035,11 @@ def _biot_savart_figures(current: float, radius: float, z: float) -> tuple[go.Fi
     profile=go.Figure(go.Scatter(x=zz,y=bz,mode="lines",line={"color":"#1f77b4","width":2},name="Bz(z)"))
     profile.add_trace(go.Scatter(x=[z],y=[_loop_axis_field(current,radius,z)*1e6],mode="markers",
         marker={"size":9,"color":"#d95f02"},name="Vald punkt"))
-    profile.update_layout(height=330,title="Magnetfält längs loopens axel",xaxis_title="z [m]",
-        yaxis={"title":"Bz [µT]","range":[-35,35]},
+    profile.update_layout(height=370,title="Axialfält längs z-axeln",xaxis_title="z [m]",
+        yaxis={"title":"Bᶻ [µT]","range":[-7,7]},
         xaxis={"title":"z [m]","range":[-2.5,2.5]},
         margin={"l":20,"r":15,"t":50,"b":25},uirevision="biot-fixed-reference")
+    _apply_plot_theme(loop, bars, profile)
     return loop,bars,profile
 
 
@@ -1008,41 +1052,43 @@ def _render_faraday_page() -> None:
         "En förändring av det magnetiska flödet ger en inducerad emk. Lenz lag anger "
         "att den inducerade strömmen skapar ett fält som motverkar förändringen av flödet."
     )
-    st.markdown(
-        "### Så använder du lagen i en uppgift\n"
+    _render_problem_guide(
         "1. Bestäm flödet Φ = BA cos θ genom ett varv.\n"
-        "2. Ta tidsderivatan och multiplicera med N: emk = −N dΦ/dt.\n"
-        "3. Tecknet anger riktningen på den inducerade strömmen och dess fält.\n"
-        "4. Använd Lenz lag: fältet motverkar **förändringen** av flödet. "
-        "Om B ökar pekar det inducerade fältet emot B; om B minskar pekar det med B.\n"
-        "Här varierar det yttre fältet sinusformigt. Positiv riktning definieras "
-        "längs spolens normal n; när θ = 0 sammanfaller n med +z."
+        "2. Beräkna emk = −N dΦ/dt.\n"
+        "3. Emk-tecknet anger riktningen relativt spolens normal n.\n"
+        "4. Lenz lag säger att det inducerade fältet motverkar **förändringen** "
+        "av flödet: emot B när B ökar, med B när B minskar."
     )
+    st.caption("Här varierar B sinusformigt. När θ = 0 pekar spolens normal n längs +z.")
     c1,c2=st.columns(2)
     with c1:
-        b0_mt=st.slider("Fältamplitud B₀ [mT]",0.1,20.0,10.0,0.1)
-        frequency=st.slider("Frekvens f [Hz]",0.1,5.0,2.0,0.1)
+        b0_mt=st.slider("Fältamplitud B₀ [mT]",0.1,20.0,20.0,0.1)
+        frequency=st.slider("Frekvens f [Hz]",0.1,5.0,4.5,0.1)
     with c2:
-        turns=st.slider("Varvtal N",1,500,300,1)
-        area_cm2=st.slider("Spolarea A [cm²]",1.0,500.0,300.0,1.0)
+        turns=st.slider("Varvtal N",1,500,450,1)
+        area_cm2=st.slider("Spolarea A [cm²]",1.0,500.0,450.0,1.0)
         angle_deg=st.slider("Vinkel θ mellan B och spolnormal [°]",0,180,0,1)
-    phase=st.slider("Tidpunkt t/T",0.0,1.0,0.125,0.005)
+    phase=st.slider("Tidpunkt t/T",0.0,1.0,0.1,0.005)
     b0=b0_mt*1e-3
     area=area_cm2*1e-4
     omega=2*np.pi*frequency
     time=phase/frequency
     b, flux, emf = _faraday_state(b0, frequency, turns, area, time, angle_deg)
     graph,schematic=_faraday_figures(b0,frequency,turns,area,phase,angle_deg,emf)
-    st.plotly_chart(graph,use_container_width=True,config={"displaylogo":False})
+    waveform_tab, direction_tab = st.tabs(["Fält och emk över tid", "Inducerat fält"])
+    with waveform_tab:
+        st.plotly_chart(graph,use_container_width=True,config={"displaylogo":False})
+        st.caption("Den streckade linjen visar vald tidpunkt; jämför B med emk och dess tecken.")
     m1,m2,m3=st.columns(3)
     m1.metric("Bext(t)",f"{b*1e3:.4g} mT")
     m2.metric("Flödeskoppling NΦ",f"{turns*flux:.4g} Wb-turn")
     m3.metric("Inducerad emk",f"{emf:.4g} V")
-    st.plotly_chart(schematic,use_container_width=True,config={"displaylogo":False})
+    with direction_tab:
+        st.plotly_chart(schematic,use_container_width=True,config={"displaylogo":False})
+        st.caption(f"Vald tid är t = {time:.4g} s. Emk-tecknet anger inducerat fält längs +n eller −n.")
     st.caption(
-        f"Vald tid är t = {time:.4g} s. Grafernas axlar är fasta: B mellan "
-        "−20 och +20 mT och emk mellan −16 och +16 V. Vid vinkel θ påverkar "
-        "flödeskomponenten B cos θ; tecknet på emk anger riktningen relativt n."
+        "Fasta axlar: B mellan −22 och +22 mT, emk mellan −17 och +17 V. "
+        "Vinkeln påverkar flödet genom faktorn cos θ."
     )
 
 
@@ -1070,10 +1116,10 @@ def _faraday_figures(b0: float, frequency: float, turns: int, area: float,
     graph.add_trace(go.Scatter(x=phase,y=b*1e3,mode="lines",name="Bext [mT]",line={"color":"#1f77b4"}))
     graph.add_trace(go.Scatter(x=phase,y=emf,mode="lines",name="Inducerad emk [V]",yaxis="y2",line={"color":"#d95f02"}))
     graph.add_vline(x=selected_phase,line_dash="dash",line_color="#333")
-    graph.update_layout(height=400,title="Tidsvariation av fält och inducerad emk",xaxis={"title":"t/T","range":[0,2],"dtick":0.25},
-        yaxis={"title":"Bext [mT]","range":[-20,20]},
-        yaxis2={"title":"emk [V]","range":[-16,16],"overlaying":"y","side":"right"},
-        legend={"orientation":"h","y":1.12},margin={"l":20,"r":45,"t":60,"b":30},
+    graph.update_layout(height=470,title="Yttre fält och inducerad emk",xaxis={"title":"Tid t/T","range":[0,2],"dtick":0.25},
+        yaxis={"title":"Bext [mT]","range":[-22,22]},
+        yaxis2={"title":"emk [V]","range":[-17,17],"overlaying":"y","side":"right"},
+        legend={"orientation":"h","y":1.12},margin={"l":45,"r":55,"t":60,"b":40},
         uirevision="faraday-fixed-reference")
     schematic=go.Figure()
     theta=np.linspace(0,2*np.pi,200)
@@ -1092,5 +1138,6 @@ def _faraday_figures(b0: float, frequency: float, turns: int, area: float,
         xaxis={"range":[-1.3,1.3],"visible":False,"scaleanchor":"y"},
         yaxis={"range":[-1.3,1.3],"visible":False},showlegend=False,
         margin={"l":10,"r":10,"t":45,"b":10})
+    _apply_plot_theme(graph, schematic)
     return graph,schematic
 
