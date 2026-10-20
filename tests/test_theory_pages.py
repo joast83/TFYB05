@@ -65,6 +65,18 @@ def test_faraday_state_obeys_lenz_sign_and_zero_crossings():
     assert abs(emf_peak) < 1e-12
 
 
+def test_faraday_state_resolves_flux_by_coil_angle():
+    from em_visualisering.theory_pages import _faraday_state
+
+    args = (0.01, 2.0, 100, 0.02, 0.1)
+    _, flux_normal, emf_normal = _faraday_state(*args, angle_deg=0.0)
+    _, flux_perpendicular, emf_perpendicular = _faraday_state(*args, angle_deg=90.0)
+    assert abs(flux_normal) > 0
+    assert abs(emf_normal) > 0
+    assert abs(flux_perpendicular) < 1e-15
+    assert abs(emf_perpendicular) < 1e-12
+
+
 def test_gauss_surface_choice_changes_which_charges_are_enclosed():
     from em_visualisering.theory_pages import _gauss_enclosed_charge
 
