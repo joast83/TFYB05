@@ -93,6 +93,11 @@ def _render_gauss_page() -> None:
                 "Gauss sats innebär inte automatiskt att E är konstant på ytan. "
                 "Det följer endast av lämplig symmetri."
             )
+        st.plotly_chart(
+            _gauss_cross_section_figure(1.0, 0.35, True, 1.0),
+            use_container_width=True,
+            config={"displaylogo": False},
+        )
         return
 
     if section == "Beräkningsrecept":
@@ -105,9 +110,15 @@ def _render_gauss_page() -> None:
             "5. Kontrollera enheter och gränsfall."
         )
         st.latex(r"[\Phi_E]=\mathrm{N\,m^2/C}=\mathrm{V\,m}")
+        st.plotly_chart(
+            _gauss_cross_section_figure(1.0, 0.35, True, 1.0),
+            use_container_width=True,
+            config={"displaylogo": False},
+        )
         return
 
     st.markdown("### Flytta en punktladdning genom en sfär")
+    st.info("Förutsäg först: blir det lokala flödet lika stort över hela ytan när laddningen flyttas?")
     c1, c2 = st.columns(2)
     with c1:
         q_nc = st.slider("Laddning q [nC]", -10.0, 10.0, 5.0, 0.5)
@@ -121,10 +132,14 @@ def _render_gauss_page() -> None:
             0.05,
             help="|x/R| < 1 betyder att laddningen ligger innanför sfären.",
         )
-        show_vectors = st.checkbox("Visa radiella normalpilar", value=True)
+        show_vectors = st.checkbox("Visa ytans normalpilar", value=True)
 
-    figure = _gauss_sphere_figure(radius, position_ratio, show_vectors)
+    figure = _gauss_cross_section_figure(radius, position_ratio, show_vectors, q_nc)
     st.plotly_chart(figure, use_container_width=True, config={"displaylogo": False})
+    st.caption(
+        "2D-snitt av det tredimensionella fältet. Markörerna visar tecken och "
+        "relativ storlek på E·n lokalt; totalflödet bestäms av innesluten laddning."
+    )
 
     q = q_nc * 1e-9
     boundary_tolerance = 1e-9
@@ -225,6 +240,49 @@ def _gauss_sphere_figure(radius: float, position_ratio: float, show_vectors: boo
     return figure
 
 
+
+
+def _gauss_cross_section_figure(radius: float, position_ratio: float, show_normals: bool, charge_nc: float = 1.0) -> go.Figure:
+    """Qualitative 2D slice: field direction and relative local E dot n."""
+    qsign=float(np.sign(charge_nc)); qx=position_ratio*radius; fig=go.Figure()
+    if qsign:
+        for x in np.linspace(-1.45*radius,1.45*radius,9):
+            for y in np.linspace(-1.45*radius,1.45*radius,9):
+                dx,dy=x-qx,y; r=math.hypot(dx,dy)
+                if r<.16*radius: continue
+                length=.095*radius
+                fig.add_annotation(x=x+length*qsign*dx/r,y=y+length*qsign*dy/r,ax=x,ay=y,
+                    xref="x",yref="y",axref="x",ayref="y",showarrow=True,arrowhead=2,
+                    arrowsize=1,arrowwidth=1.2,arrowcolor="rgba(35,87,125,0.55)")
+    a=np.linspace(0,2*np.pi,240)
+    fig.add_trace(go.Scatter(x=radius*np.cos(a),y=radius*np.sin(a),mode="lines",
+        line={"color":"#1f4e79","width":3},name="Gaussyta (snitt)"))
+    a=np.linspace(0,2*np.pi,32,endpoint=False)
+    px,py=radius*np.cos(a),radius*np.sin(a); dx,dy=px-qx,py; r2=dx*dx+dy*dy
+    en=np.full_like(r2,np.nan,dtype=float); ok=r2>1e-14*radius*radius
+    en[ok]=qsign*(dx[ok]*np.cos(a[ok])+dy[ok]*np.sin(a[ok]))/(r2[ok]**1.5)
+    fig.add_trace(go.Scatter(x=px,y=py,mode="markers",
+        marker={"size":9,"color":en,"colorscale":"RdBu","cmid":0,"showscale":True,
+                "colorbar":{"title":"E·n<br>(relativt)","thickness":12}},
+        customdata=en,hovertemplate="E·n (relativt) = %{customdata:.3g}<extra></extra>",
+        name="Lokalt E·n på ytan"))
+    if show_normals:
+        for t in np.linspace(0,2*np.pi,12,endpoint=False):
+            x0,y0=radius*np.cos(t),radius*np.sin(t); length=.18*radius
+            fig.add_annotation(x=x0+length*np.cos(t),y=y0+length*np.sin(t),ax=x0,ay=y0,
+                xref="x",yref="y",axref="x",ayref="y",showarrow=True,arrowhead=3,
+                arrowsize=1,arrowwidth=1.4,arrowcolor="#c66a17")
+    fig.add_trace(go.Scatter(x=[qx],y=[0],mode="markers+text",
+        marker={"size":13,"color":"#b22222"},text=["q"],textposition="top center",
+        name="Punktladdning"))
+    e=1.65*radius
+    fig.update_layout(height=540,margin={"l":25,"r":25,"t":45,"b":25},
+        title="Elektriskt fält och Gaussyta: 2D-snitt",
+        xaxis={"range":[-e,e],"title":"x [m]","scaleanchor":"y"},
+        yaxis={"range":[-e,e],"title":"y [m]"},legend={"orientation":"h","y":-0.15})
+    return fig
+
+
 def _render_stokes_page() -> None:
     import streamlit as st
 
@@ -255,6 +313,9 @@ def _render_stokes_page() -> None:
             "Den magnetostatiska formen gäller stationära strömmar. Vid "
             "tidsvarierande elektriska fält måste Maxwells förskjutningsström tas med."
         )
+        st.markdown("### Randens riktning bestämmer tecknet")
+        st.plotly_chart(_ampere_figure(1.0, 0.0, 0.16, 1, 1.0),
+            use_container_width=True, config={"displaylogo": False})
         return
 
     if section == "Beräkningsrecept":
@@ -267,9 +328,13 @@ def _render_stokes_page() -> None:
             "5. Utnyttja symmetri för att förenkla H·dl."
         )
         st.latex(r"B=\mu_0 H\quad\text{i vakuum}")
+        st.caption("Kontrollera att randens orientering och ytans normal följer högerhandsregeln.")
+        st.plotly_chart(_ampere_figure(1.0, 0.0, 0.16, 1, 1.0),
+            use_container_width=True, config={"displaylogo": False})
         return
 
     st.markdown("### Ström genom en cirkulär ampereslinga")
+    st.info("Förutsäg först tecknet på ∮H·dl när du vänder integrationsriktningen.")
     c1, c2 = st.columns(2)
     with c1:
         current = st.slider("Fri ström I [A]", -5.0, 5.0, 2.0, 0.25)
@@ -284,46 +349,89 @@ def _render_stokes_page() -> None:
             help="|x/R| < 1 placerar ledningen innanför integrationsytan.",
         )
         conductor_radius = st.slider("Ledningsradie a/R", 0.05, 0.4, 0.15, 0.01)
-
-    figure = _ampere_figure(loop_radius, offset_ratio, conductor_radius)
+        orientation_label = st.radio("Orientering av C enligt högerhandsregeln",
+            ["Moturs (+z-normal)", "Medurs (−z-normal)"], horizontal=True)
+    orientation = 1 if orientation_label.startswith("Moturs") else -1
+    figure = _ampere_figure(loop_radius, offset_ratio, conductor_radius, orientation, current)
     st.plotly_chart(figure, use_container_width=True, config={"displaylogo": False})
 
-    enclosed = current if abs(offset_ratio) + conductor_radius <= 1.0 else 0.0
-    if abs(offset_ratio) - conductor_radius < 1.0 < abs(offset_ratio) + conductor_radius:
-        st.warning(
-            "Ledningen skär randens område. Den enkla allt-eller-inget-modellen är då "
-            "otillräcklig; den inneslutna strömdelen måste integreras över överlappet."
+    fraction = _circle_overlap_fraction(
+        loop_radius,
+        abs(offset_ratio) * loop_radius,
+        conductor_radius * loop_radius,
+    )
+    enclosed = current*fraction*orientation
+    if 1e-8 < fraction < 1-1e-8:
+        st.info(
+            f"Delvis innesluten ledare ({fraction:.1%}). Vid jämn strömtäthet "
+            f"blir I_innesluten = {enclosed:.4g} A."
         )
-        enclosed_text = "delvis innesluten"
-        circulation_text = "kräver överlappsintegral"
+    elif fraction >= 1-1e-8:
+        st.success("Hela strömmen passerar ytan: ∮H·dl = I, med tecken enligt orienteringen.")
     else:
-        enclosed_text = f"{enclosed:.4g} A"
-        circulation_text = f"{enclosed:.4g} A"
-        if enclosed != 0:
-            st.success("Strömmen är innesluten: ∮H·dl = I.")
-        else:
-            st.info("Ingen fri ström passerar ytan: cirkulationen är noll.")
-
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Fri ström", f"{current:.4g} A")
-    m2.metric("Innesluten ström", enclosed_text)
-    m3.metric("Förväntad ∮H·dl", circulation_text)
-    if loop_radius > 0 and isinstance(enclosed, float):
-        h_value = enclosed / (2.0 * math.pi * loop_radius)
-        b_value = MU0 * h_value
+        st.info("Ingen fri ström passerar ytan: cirkulationen är noll.")
+    m1,m2,m3=st.columns(3)
+    m1.metric("Fri ström I",f"{current:.4g} A")
+    m2.metric("Innesluten ström (tecken)",f"{enclosed:.4g} A")
+    m3.metric("Förväntad ∮H·dl",f"{enclosed:.4g} A")
+    if abs(offset_ratio)<1e-10 and fraction>=1-1e-8:
+        h=current/(2*math.pi*loop_radius)
         st.caption(
-            f"Vid full cylindrisk symmetri: H(R) = {h_value:.5g} A/m och "
-            f"B(R) = {b_value:.5g} T."
+            f"För centrerad cirkelsymmetri: H(R) = {h:.5g} A/m och "
+            f"B(R) = {MU0 * h:.5g} T. För en förskjuten slinga är H inte "
+            "konstant längs C, trots att cirkulationen fortfarande bestäms "
+            "av innesluten ström."
         )
 
 
-def _ampere_figure(radius: float, offset_ratio: float, conductor_ratio: float) -> go.Figure:
+
+def _circle_overlap_fraction(
+    loop_radius: float, center_distance: float, conductor_radius: float
+) -> float:
+    """Fraction of uniformly distributed wire current inside the Amperian circle."""
+    loop_r = loop_radius
+    wire_r = conductor_radius
+    distance = center_distance
+
+    if distance >= loop_r + wire_r:
+        return 0.0
+    if distance <= abs(loop_r - wire_r):
+        return (loop_r / wire_r) ** 2 if loop_r < wire_r else 1.0
+
+    radicand = max(
+        0.0,
+        (-distance + loop_r + wire_r)
+        * (distance + loop_r - wire_r)
+        * (distance - loop_r + wire_r)
+        * (distance + loop_r + wire_r),
+    )
+    loop_angle = math.acos(
+        max(-1.0, min(1.0, (distance**2 + loop_r**2 - wire_r**2) / (2 * distance * loop_r)))
+    )
+    wire_angle = math.acos(
+        max(-1.0, min(1.0, (distance**2 + wire_r**2 - loop_r**2) / (2 * distance * wire_r)))
+    )
+    overlap_area = (
+        loop_r**2 * loop_angle
+        + wire_r**2 * wire_angle
+        - 0.5 * math.sqrt(radicand)
+    )
+    return max(0.0, min(1.0, overlap_area / (math.pi * wire_r**2)))
+
+
+def _ampere_figure(
+    radius: float,
+    offset_ratio: float,
+    conductor_ratio: float,
+    orientation: int = 1,
+    current: float = 1.0,
+) -> go.Figure:
     angle = np.linspace(0.0, 2.0 * np.pi, 240)
     loop_x = radius * np.cos(angle)
     loop_y = radius * np.sin(angle)
     conductor_radius = conductor_ratio * radius
-    conductor_x = offset_ratio * radius + conductor_radius * np.cos(angle)
-    conductor_y = conductor_radius * np.sin(angle)
+    wire_x = offset_ratio * radius + conductor_radius * np.cos(angle)
+    wire_y = conductor_radius * np.sin(angle)
 
     figure = go.Figure()
     figure.add_trace(
@@ -331,32 +439,57 @@ def _ampere_figure(radius: float, offset_ratio: float, conductor_ratio: float) -
             x=loop_x,
             y=loop_y,
             mode="lines",
-            line={"width": 4},
+            line={"width": 4, "color": "#1f4e79"},
             name="Integrationsrand C",
         )
     )
     figure.add_trace(
         go.Scatter(
-            x=conductor_x,
-            y=conductor_y,
+            x=wire_x,
+            y=wire_y,
             mode="lines",
             fill="toself",
-            opacity=0.45,
-            name="Strömledare",
+            fillcolor="rgba(224,126,40,0.28)",
+            line={"color": "#d77824", "width": 2},
+            name="Ledarens tvärsnitt",
         )
     )
+
+    for angle_at in (0.45, 2.0, 3.55, 5.1):
+        x0 = radius * np.cos(angle_at)
+        y0 = radius * np.sin(angle_at)
+        arrow_length = 0.16 * radius
+        figure.add_annotation(
+            x=x0 - arrow_length * np.sin(angle_at) * orientation,
+            y=y0 + arrow_length * np.cos(angle_at) * orientation,
+            ax=x0,
+            ay=y0,
+            xref="x",
+            yref="y",
+            axref="x",
+            ayref="y",
+            showarrow=True,
+            arrowhead=3,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor="#245b35",
+        )
+
+    current_symbol = "⊙" if current >= 0 else "⊗"
+    normal_symbol = "⊙" if orientation > 0 else "⊗"
     figure.add_annotation(
         x=offset_ratio * radius,
         y=0.0,
-        text="I ⊙",
+        text=f"I {current_symbol}<br>n {normal_symbol}",
         showarrow=False,
-        font={"size": 18},
+        font={"size": 15},
+        bgcolor="rgba(255,255,255,0.8)",
     )
     extent = 1.7 * radius
     figure.update_layout(
         height=500,
         margin={"l": 20, "r": 20, "t": 40, "b": 20},
-        title="Ampereslinga och fri ström",
+        title="Randkurva, orientering och ström genom ytan",
         xaxis={"range": [-extent, extent], "title": "x [m]", "scaleanchor": "y"},
         yaxis={"range": [-extent, extent], "title": "y [m]"},
         legend={"orientation": "h"},
