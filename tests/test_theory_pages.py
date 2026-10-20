@@ -77,19 +77,53 @@ def test_faraday_state_resolves_flux_by_coil_angle():
     assert abs(emf_perpendicular) < 1e-12
 
 
-def test_gauss_surface_choice_changes_which_charges_are_enclosed():
+def test_gauss_default_is_one_positive_charge_at_origin():
+    from em_visualisering.theory_pages import GAUSS_DEFAULT_CHARGES
+
+    assert GAUSS_DEFAULT_CHARGES == {(0.0, 0.0): 5.0}
+
+
+def test_gauss_sphere_encloses_center_and_flags_boundary_charge():
     from em_visualisering.theory_pages import _gauss_enclosed_charge
 
-    charges = {(0.75, 0.75): 2.0}
-    assert _gauss_enclosed_charge("Sfär", 1.0, charges) == (0.0, False)
-    assert _gauss_enclosed_charge("Cylinder", 1.0, charges) == (2.0, False)
-    assert _gauss_enclosed_charge("Kub", 1.0, charges) == (2.0, False)
+    assert _gauss_enclosed_charge(1.0, {(0.0, 0.0): 5.0, (1.5, 0.0): -2.0}) == (5.0, False)
+    assert _gauss_enclosed_charge(1.0, {(1.0, 0.0): 3.0}) == (0.0, True)
+
+
+def test_gauss_grid_selection_parsing_and_coordinate_mapping():
+    from em_visualisering.theory_pages import (
+        _gauss_grid_index_from_selection,
+        _gauss_grid_position,
+        _toggle_gauss_charge,
+        _selection_points,
+    )
+
+    assert _selection_points({"selection": {"points": [{"point_index": 220}]}}) == [
+        {"point_index": 220}
+    ]
+    assert _gauss_grid_index_from_selection(
+        [{"curve_number": 3, "customdata": [220]}], grid_trace_index=3
+    ) == 220
+    assert _gauss_grid_index_from_selection(
+        [{"curveNumber": 2, "pointNumber": 14}], grid_trace_index=3
+    ) is None
+    assert _gauss_grid_index_from_selection(
+        [{"point_number": 14}], grid_trace_index=3
+    ) == 14
+    assert _gauss_grid_position(220) == (0.0, 0.0)
+    assert _gauss_grid_position(0) == (-2.5, -2.5)
+    assert _gauss_grid_position(440) == (2.5, 2.5)
+    charges = {(0.0, 0.0): 5.0}
+    charges = _toggle_gauss_charge(charges, (0.25, 0.0), -3.0)
+    assert charges == {(0.0, 0.0): 5.0, (0.25, 0.0): -3.0}
+    charges = _toggle_gauss_charge(charges, (0.25, 0.0), 5.0)
+    assert charges == {(0.0, 0.0): 5.0}
 
 
 def test_gauss_detects_point_charge_on_surface_as_singular():
     from em_visualisering.theory_pages import _gauss_enclosed_charge
 
-    enclosed, on_surface = _gauss_enclosed_charge("Sfär", 1.0, {(1.0, 0.0): 3.0})
+    enclosed, on_surface = _gauss_enclosed_charge(1.0, {(1.0, 0.0): 3.0})
     assert enclosed == 0.0
     assert on_surface
 
