@@ -1,0 +1,18 @@
+# Python caches and packaging
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+
+# Local environments and settings
+.venv/
+venv/
+.env
+.env.*
+.streamlit/secrets.toml
+.DS_Store

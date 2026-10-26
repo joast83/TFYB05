@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from .core import *
+from matplotlib.figure import Figure
 from .registry import PROBLEMS
 from .modes import mode_options_for_problem, normalize_mode_for_problem
 from .unit_scaling import (
@@ -29,7 +29,7 @@ class ElectrostaticsApp(tk.Tk):
         self.param_scales = {}
         self.param_specs = {}
         self.param_unit_vars = {}
-        self.param_unit_options = {}
+        self.param_widgets = {}
         self._build_layout()
         self._load_problem(self.current_problem.name)
 
@@ -103,7 +103,7 @@ class ElectrostaticsApp(tk.Tk):
         self.param_scales.clear()
         self.param_specs.clear()
         self.param_unit_vars.clear()
-        self.param_unit_options.clear()
+        self.param_widgets.clear()
         defaults = self.current_problem.defaults()
 
         for i, spec in enumerate(self.current_problem.parameter_specs()):
@@ -180,7 +180,7 @@ class ElectrostaticsApp(tk.Tk):
             self.param_vars[key] = var
             self.param_scales[key] = scale
             self.param_unit_vars[key] = unit_var
-            self.param_unit_options[key] = units
+            self.param_widgets[key] = widget
 
         mode_options = mode_options_for_problem(self.current_problem)
         self.mode_display_to_internal = dict(mode_options)
@@ -195,9 +195,19 @@ class ElectrostaticsApp(tk.Tk):
             value_si = old_scale.to_si(display_value)
             new_unit = self.param_unit_vars[key].get()
             new_scale = display_scale_by_unit(self.param_specs[key].label, new_unit)
-            self.param_scales[key] = new_scale
+            spec = self.param_specs[key]
+            if (spec.control == 'slider' and spec.ui_minimum_si is not None
+                    and spec.ui_maximum_si is not None):
+                self.param_widgets[key].configure(
+                    from_=new_scale.to_display(spec.ui_minimum_si),
+                    to=new_scale.to_display(spec.ui_maximum_si),
+                    increment=spec.step_si / new_scale.factor if spec.step_si is not None else 0.1,
+                )
             self.param_vars[key].set(format_display_value(new_scale.to_display(value_si)))
-        except Exception as exc:
+            self.param_scales[key] = new_scale
+        except (ValueError, TypeError, tk.TclError) as exc:
+            # The combobox has already changed; roll its label back on invalid input.
+            self.param_unit_vars[key].set(self.param_scales[key].display_unit)
             messagebox.showerror('Fel vid enhetsbyte', str(exc))
 
     def reset_defaults(self):
