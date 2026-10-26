@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from streamlit.testing.v1 import AppTest
 
 
 def _run_app() -> AppTest:
-    app = AppTest.from_file("streamlit_app.py", default_timeout=120)
+    app = AppTest.from_file(Path(__file__).resolve().parents[1] / "streamlit_app.py", default_timeout=120)
     app.run()
     assert not app.exception, [exception.value for exception in app.exception]
     return app

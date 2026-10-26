@@ -42,4 +42,12 @@ def test_default_matplotlib_rendering(problem, mode):
 def test_default_plotly_rendering(problem, mode):
     figure = make_plotly_3d_figure(problem, problem.defaults(), mode)
     assert figure is not None
-    assert len(figure.data) >= 0
+    assert len(figure.data) > 0
+    figure.to_json(validate=True)
+
+
+@pytest.mark.parametrize("problem,mode", CASES, ids=[case_id(case) for case in CASES])
+def test_default_summary_and_physics_check(problem, mode):
+    params = problem.defaults()
+    assert problem.result_summary(params, mode)
+    assert problem.physics_check(params)
