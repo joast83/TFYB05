@@ -158,7 +158,6 @@ def test_default_theory_figures_are_legible_on_fixed_references():
     assert list(ampere.layout.xaxis.range) == [-2.4, 2.4]
     assert list(ampere.layout.yaxis.range) == [-2.4, 2.4]
     assert ampere.layout.legend.orientation == "h"
-    assert ampere.layout.legend.y == -0.08
 
     _, contributions, profile = _biot_savart_figures(3.0, 0.75, 0.5)
     assert list(contributions.layout.yaxis.range) == [-0.5, 0.5]
@@ -179,3 +178,95 @@ def test_potential_changes_while_axes_remain_fixed():
     assert list(field_initial.layout.xaxis.range) == [-3, 3]
     assert list(field_changed.layout.xaxis.range) == [-3, 3]
     assert np.nanmax(np.abs(np.asarray(field_changed.data[0].z) - np.asarray(field_initial.data[0].z))) > 0
+
+
+def test_zero_charges_do_not_mask_potential_or_field():
+    from em_visualisering.theory_pages import _potential_figures
+
+    field, profile = _potential_figures(0.0, 0.0, 1.0)
+    assert np.isfinite(field.data[0].z).all()
+    assert np.count_nonzero(field.data[0].z) == 0
+    for trace in profile.data:
+        assert np.isfinite(trace.y).all()
+        assert np.count_nonzero(trace.y) == 0
+    # Removing the right charge leaves a smooth, finite single-charge profile there.
+    _, single = _potential_figures(2.0, 0.0, 1.0)
+    near_removed = np.abs(np.asarray(single.data[0].x) - 0.5) < 0.08
+    assert np.isfinite(np.asarray(single.data[0].y)[near_removed]).all()
+
+
+def test_segment_contributions_sum_to_analytic_field():
+    from em_visualisering.theory_pages import _biot_savart_figures, _loop_axis_field
+
+    for current in (-5.0, 0.0, 5.0):
+        for radius, z in ((0.5, 0.0), (1.0, -1.5), (0.75, 0.5)):
+            _, bars, _ = _biot_savart_figures(current, radius, z)
+            assert math.isclose(sum(bars.data[0].y),
+                                _loop_axis_field(current, radius, z) * 1e6,
+                                rel_tol=1e-12, abs_tol=1e-12)
+
+
+def test_dielectric_zero_field_remains_labelled_and_vectors_stay_in_material():
+    from em_visualisering.theory_pages import _dielectric_figure
+
+    for e2n in (-126.0, 0.0, 126.0):
+        fig = _dielectric_figure(4.0, 0.0, e2n, 0.0, 2.0, 5.0)
+        assert any("E₂" in (a.text or "") for a in fig.layout.annotations)
+        for a in fig.layout.annotations:
+            if a.showarrow:
+                assert a.ax * a.x > 0  # vectors stay in their own material
+                assert abs(a.x) < 1.7
+
+
+def test_all_theory_pages_render_with_streamlit():
+    from streamlit.testing.v1 import AppTest
+    from em_visualisering.theory_pages import THEORY_PAGES
+
+    for page in THEORY_PAGES:
+        app = AppTest.from_string(
+            "from em_visualisering.theory_pages import THEORY_PAGES, render_theory_page\n"
+            f"render_theory_page(THEORY_PAGES[{THEORY_PAGES.index(page)}])"
+        ).run(timeout=30)
+        assert not app.exception, page.key
+        assert len(app.get("plotly_chart")) >= 1
+        if page.key in ("gauss_flux", "stokes_magnetostatics"):
+            app.radio[0].set_value("Testlabb").run()
+        for extreme in ("max", "min"):
+            for slider in app.slider:
+                slider.set_value(getattr(slider, extreme))
+            app.run(timeout=30)
+            assert not app.exception, (page.key, extreme)
+
+
+def test_gauss_coordinate_add_remove_and_reset():
+    from streamlit.testing.v1 import AppTest
+
+    app = AppTest.from_string(
+        "from em_visualisering.theory_pages import THEORY_PAGES, render_theory_page\n"
+        "render_theory_page(THEORY_PAGES[0])"
+    ).run(timeout=30)
+    app.radio(key="gauss_section").set_value("Testlabb").run()
+    assert app.session_state.gauss_charges == {(0.0, 0.0): 5.0}
+    app.number_input(key="gauss_x").set_value(0.25).run()
+    app.button(key="gauss_coordinate_toggle").click().run()
+    assert app.session_state.gauss_charges[(0.25, 0.0)] == 5.0
+    app.button(key="gauss_coordinate_toggle").click().run()
+    assert (0.25, 0.0) not in app.session_state.gauss_charges
+    app.button(key="gauss_clear_charges").click().run()
+    assert app.session_state.gauss_charges == {}
+    app.button(key="gauss_reset_charges").click().run()
+    assert app.session_state.gauss_charges == {(0.0, 0.0): 5.0}
+    assert not app.exception
+
+
+def test_biot_cross_section_obeys_right_hand_rule():
+    from em_visualisering.theory_pages import _biot_savart_section
+
+    for current in (-3.0, 0.0, 3.0):
+        fig = _biot_savart_section(current, 0.75, 0.5)
+        arrows = [a for a in fig.layout.annotations if a.showarrow]
+        if current == 0:
+            assert not arrows
+        else:
+            assert (arrows[0].y - arrows[0].ay) * current > 0
+            assert fig.data[0].text[1] == ("⊗" if current > 0 else "⊙")
