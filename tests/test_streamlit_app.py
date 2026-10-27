@@ -76,3 +76,24 @@ def test_theory_page_runs_without_streamlit_exception():
     _radio(app, "Arbetssätt").set_value("Teori").run()
     assert not app.exception, [exception.value for exception in app.exception]
     assert any(selectbox.label == "Teoriavsnitt" for selectbox in app.selectbox)
+
+
+def test_targeted_help_uses_problem_specific_hints_and_keeps_legacy_fallback():
+    from em_visualisering.guidance import guidance_for_problem
+    from em_visualisering.registry import PROBLEMS
+
+    app = _run_app()
+    # Two reviewed exercises and one exercise awaiting its own review.
+    for pid in ("2.1", "2.8", "2.9"):
+        problem = next(p for p in PROBLEMS if p.name.split()[0] == pid)
+        guidance = guidance_for_problem(problem)
+        next(w for w in app.selectbox if w.label == "Uppgift").set_value(problem.name).run()
+        for choice, expected in (
+            ("Jag vet vilken idé jag vill använda men får inte upp matematiken",
+             guidance.setup_hint or guidance.hints[0]),
+            ("Jag fastnar på vektorer eller geometri",
+             guidance.geometry_hint or guidance.hints[1]),
+        ):
+            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").set_value(choice).run()
+            assert not app.exception
+            assert any(expected in message.value for message in app.info)

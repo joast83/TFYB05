@@ -23,6 +23,8 @@ class SolutionGuidance:
     self_checks: tuple[str, ...]
     common_pitfall: str = ""
     visualization_note: str = ""
+    setup_hint: str = ""
+    geometry_hint: str = ""
 
 
 G = SolutionGuidance
@@ -32,149 +34,182 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
     # ------------------------------------------------------------------
     # Kapitel 2 – Coulombs lag, E-fält och potential i vakuum/luft
     # ------------------------------------------------------------------
-    "ChargedSpheresSmallAngle": G(
-        problem_id="2.1",
-        learning_goal="Koppla ihop kraftjämvikt, geometri och småvinkelapproximation i samma härledning.",
-        concepts=("Coulombs lag", "statisk jämvikt", "små vinklar"),
-        start_here=(
-            "Börja inte med Coulombs lag. Rita först krafterna på en av kulorna och inför "
-            "halva vinkeln mellan trådarna. Vilka tre krafter verkar på kulan?"
+    'ChargedSpheresSmallAngle': G(
+        problem_id='2.1',
+        learning_goal='Koppla ihop kraftjämvikt, geometri och småvinkelapproximation i samma härledning.',
+        concepts=(
+            'Coulombs lag',
+            'statisk jämvikt',
+            'små vinklar',
         ),
+        start_here='Rita krafterna på en kula: tyngdkraft, trådspänning och elektrisk kraft. Inför θ=α/2 som trådens vinkel mot lodlinjen och välj horisontell och vertikal riktning.',
         hints=(
-            "Symmetrin gör att varje tråd lutar med vinkeln α/2 från lodlinjen. Skriv kraftjämvikt i horisontell och vertikal riktning.",
-            "Kulornas inbördes avstånd är 2ℓ sin(α/2). För liten α kan både sin(α/2) och tan(α/2) ersättas med sina argument.",
-            "Efter småvinkelapproximationen innehåller Coulombkraften en faktor 1/α² medan jämvikten ger ytterligare en faktor α. Samla därför alla α-termer innan du löser ekvationen.",
+            'Skriv T sinθ=F_el och T cosθ=mg. Dividera ekvationerna så att den okända trådspänningen T försvinner.',
+            'Kulornas avstånd är R=2ℓ sinθ. Sätt in detta i Coulombs lag F_el=Q²/(4πε₀R²); R är avståndet mellan kulorna, inte trådlängden.',
+            'Använd sinθ≈θ och tanθ≈θ med θ i radianer. Kombinera kraftjämvikten med Coulombs lag, samla potenserna av θ och byt sist tillbaka till α=2θ.',
         ),
         self_checks=(
-            "Om |Q| ökar ska α öka, inte minska.",
-            "Kontrollera att uttrycket för α är dimensionslöst och att α→0 när Q→0.",
+            'Ökar vinkeln när |Q| ökar, och minskar den när m eller ℓ ökar? Kontrollera även gränsen Q→0.',
+            'Uttrycket för α ska vara dimensionslöst. Sätt in värdena och kontrollera att α verkligen är mycket mindre än 1 radian; annars är småvinkelapproximationen inte tillförlitlig.',
         ),
-        common_pitfall="Att använda α som trådens vinkel mot lodlinjen i stället för α/2.",
+        common_pitfall='Att använda α som trådens vinkel mot lodlinjen i stället för α/2.',
+        setup_hint='Eliminera T genom att dividera den horisontella jämviktsekvationen med den vertikala. Då återstår en ekvation för θ med F_el/(mg) i högerledet.',
+        geometry_hint='Rita en lodlinje från upphängningen. Varje kula ligger ℓ sinθ från lodlinjen, så avståndet mellan kulorna är dubbelt så stort. Vinkeln α är hela öppningsvinkeln.',
     ),
-    "ChargedRingAxis": G(
-        problem_id="2.2",
-        learning_goal="Använd symmetri för att reducera en vektorintegral till en enda komponent.",
-        concepts=("Coulombs lag", "superposition", "symmetri"),
-        start_here=(
-            "Fråga först vilka fältkomponenter som över huvud taget kan finnas på z-axeln. "
-            "Para ihop ett laddningselement med elementet diametralt mittemot."
+    'ChargedRingAxis': G(
+        problem_id='2.2',
+        learning_goal='Använd symmetri för att reducera en vektorintegral till en enda komponent.',
+        concepts=(
+            'Coulombs lag',
+            'superposition',
+            'symmetri',
         ),
+        start_here='Para ihop två laddningselement på motsatta sidor av ringen. Vilka komponenter av deras fält tar ut varandra vid punkten (0,0,z)?',
         hints=(
-            "Alla laddningselement på ringen ligger på samma avstånd från observationspunkten. De tvärgående komponenterna tar ut varandra parvis.",
-            "Skriv dQ = λ a dφ och λ = Q/(2πa). Behåll endast z-komponenten av dE.",
-            "När geometrifaktorerna är konstanta runt hela ringen återstår i praktiken bara integralen av dQ över ringen.",
+            'Tvärkomponenterna tar ut varandra. Alla källelement har samma avstånd R=√(a²+z²) till fältpunkten, men bara projektionen på z-axeln ska summeras.',
+            'Parametrisera ringen med φ: dQ=λa dφ, där λ=Q/(2πa). Den signerade z-projektionen av separationsvektorn är z.',
+            'Skriv dE_z=z dQ/(4πε₀R³). Faktorn framför dQ är konstant runt ringen; integrera dQ över hela ringen utan att ersätta z med |z|.',
         ),
         self_checks=(
-            "E måste vara noll i ringens centrum, z=0.",
-            "För |z|≫a ska fältet närma sig fältet från en punktladdning Q.",
+            'Fältet ska vara noll vid z=0 och E_z ska byta tecken när z byter tecken.',
+            'För |z|≫a ska fältet närma sig punktladdningsfältet. För Q>0 ska det peka bort från ringen på båda sidor.',
         ),
-        common_pitfall="Att integrera fältets belopp och glömma att dE är en vektor.",
-        visualization_note="En axelgraf är användbar först efter härledningen, framför allt för att kontrollera z=0 och fjärrfältet.",
+        common_pitfall='Att integrera fältets belopp och glömma att dE är en vektor.',
+        visualization_note='En axelgraf är användbar först efter härledningen, framför allt för att kontrollera z=0 och fjärrfältet.',
+        setup_hint='Börja med vektorformen dE=dQ R⃗/(4πε₀|R⃗|³). Ta z-komponenten innan du integrerar; då återstår endast en konstant geometrifaktor gånger ∫dQ.',
+        geometry_hint='Källpunkten är (a cosφ,a sinφ,0) och fältpunkten är (0,0,z). Rita vektorn från källpunkten till fältpunkten och jämför med det diametralt motsatta elementet.',
     ),
-    "FiniteLineCharge2D": G(
-        problem_id="2.3",
-        learning_goal="Sätt upp Coulombintegralen för en ändlig linjeladdning och tolka gränsen mot en oändlig tråd.",
-        concepts=("linjeladdning", "vektorintegral", "gränsvärde"),
-        start_here=(
-            "Låt källpunkten ligga på z-axeln med koordinat z′. Skriv först vektorn från "
-            "källelementet till observationspunkten (x,0,0)."
+    'FiniteLineCharge2D': G(
+        problem_id='2.3',
+        learning_goal='Sätt upp Coulombintegralen för en ändlig linjeladdning och tolka gränsen mot en oändlig tråd.',
+        concepts=(
+            'linjeladdning',
+            'vektorintegral',
+            'gränsvärde',
         ),
+        start_here='Låt källkoordinaten vara z′ på tråden, från −b till a. Skriv vektorn från (0,0,z′) till fältpunkten (x,0,0) innan du väljer komponenter.',
         hints=(
-            "Integrera z′ från −b till a och använd dQ = ρℓ dz′. Avståndsvektorn innehåller både en x- och en z-komponent.",
-            "Dela upp integralen i E_x och E_z innan du integrerar. Det gör det tydligt varför en osymmetrisk ändlig tråd kan ge en z-komponent.",
-            "I gränsen a,b→∞ ska ändeffekterna försvinna. Kontrollera särskilt att E_z→0 och jämför E_x med Gauss-lagens resultat för en oändlig linjeladdning.",
+            'Separationsvektorn är x x̂−z′ ẑ och dess längd är √(x²+z′²). Använd dQ=ρℓ dz′.',
+            'Sätt upp separata integraler för E_x och E_z med samma nämnare (x²+z′²)^(3/2). I E_z-integralen hjälper substitutionen u=x²+z′²; i E_x kan du använda z′=|x|tanθ.',
+            'För del (b), låt båda ändpunkterna gå långt bort medan x hålls fixerat och skilt från noll. Undersök gränsvärdet av varje ändpunktsterm; a och b behöver inte vara lika.',
         ),
         self_checks=(
-            "Om a=b ska E_z vara noll redan för den ändliga tråden.",
-            "Det oändliga gränsfallet ska skala som 1/x.",
+            'Om a=b ska E_z försvinna. Om a>b och ρℓ>0 ska E_z vara negativ vid (x,0,0), eftersom mer positiv laddning ligger på +z-sidan.',
+            'I den oändliga gränsen ska E_z→0 och |E_x| avta som 1/|x|. Fältet ska peka bort från tråden för positiv linjeladdning.',
         ),
-        common_pitfall="Att anta cylindersymmetri redan i del (a), trots att tråden där är ändlig och kan vara osymmetrisk kring origo.",
+        common_pitfall='Att anta cylindersymmetri redan i del (a), trots att tråden där är ändlig och kan vara osymmetrisk kring origo.',
+        setup_hint='Integralerna har täljarna x respektive −z′. Behåll x konstant under integrationen och sätt in gränserna −b och a först efter att du har hittat primitiva funktioner.',
+        geometry_hint='Använd olika symboler för källpunkten z′ och fältpunkten x. Vektorn går från laddningen till observationspunkten, så dess z-komponent är −z′ även om x är positivt.',
     ),
-    "SemiCircularSurfaceAxis": G(
-        problem_id="2.4",
-        learning_goal="Hantera en ytladdningsintegral där endast en del av symmetrin finns kvar.",
-        concepts=("ytladdning", "polära koordinater", "komponentsymmetri"),
-        start_here=(
-            "Använd polära koordinater i den laddade halvcirkelytan. Innan du räknar: vilken "
-            "horisontell komponent måste försvinna av spegelsymmetri, och vilken behöver inte göra det?"
+    'SemiCircularSurfaceAxis': G(
+        problem_id='2.4',
+        learning_goal='Hantera en ytladdningsintegral där endast en del av symmetrin finns kvar.',
+        concepts=(
+            'ytladdning',
+            'polära koordinater',
+            'komponentsymmetri',
         ),
+        start_here='I appens skiss ligger halvcirkelskivan i xy-planet på sidan y≥0. Para ihop källpunkter med motsatta x-koordinater och avgör vilken fältkomponent som försvinner vid (0,0,z).',
         hints=(
-            "Sätt dS = R dR dφ och dQ = ρs dS. Avståndet till punkten på z-axeln är √(R²+z²).",
-            "Dela dE i x-, y- och z-komponenter. Integralen över vinkeln avgör vilka komponenter som tar ut varandra.",
-            "Gör vinkelintegralen och radialintegralen separat. Halvcirkeln gör att en tvärkomponent överlever, till skillnad från en hel cirkelskiva.",
+            'Använd källpunkten (R cosφ,R sinφ,0), med 0≤R≤a och 0≤φ≤π. Ytelementet är dS=R dR dφ och dQ=ρs dS.',
+            'Separationsvektorn är −R cosφ x̂−R sinφ ŷ+z ẑ och dess längd är √(R²+z²). Integrera vinkelberoendet i varje komponent innan du gör radialintegralen.',
+            'Integralen av cosφ över halvcirkeln är noll, medan integralen av sinφ inte är det. För z-komponenten är vinkelintegralen bara π. Behandla därefter de två återstående radialintegralerna var för sig.',
         ),
         self_checks=(
-            "Den komponent som motsvarar figurens spegelsymmetri ska bli exakt noll.",
-            "Långt från ytan ska hela laddningsfördelningen bete sig ungefär som en punktladdning med den totala laddningen.",
+            'För ρs>0 och z>0 ska E_x=0, E_y<0 och E_z>0. Kontrollera riktningarna mot den valda halvcirkeln.',
+            'Långt bort ska den ledande termen vara punktladdningsfältet för Q=ρsπa²/2; tvärkomponenten avtar snabbare. Punkten z=0 ligger på skivans kant och är inte ett vanligt reguljärt kontrollvärde.',
         ),
-        common_pitfall="Att låna symmetrin från en hel skiva och därför sätta alla tvärkomponenter till noll.",
+        common_pitfall='Att låna symmetrin från en hel skiva och därför sätta alla tvärkomponenter till noll.',
+        setup_hint='Sätt in dS och separationsvektorn i dE=ρs R⃗ dS/(4πε₀|R⃗|³). Skilj på den radiella källkoordinaten R och avståndet |R⃗| till fältpunkten.',
+        geometry_hint='Halvcirkeln är spegelsymmetrisk under x→−x men inte under y→−y. Det räcker för att eliminera E_x, men ger inget skäl att sätta E_y till noll.',
     ),
-    "SphericalShellPotential": G(
-        problem_id="2.5",
-        learning_goal="Beräkna potential direkt från en laddningsintegral och förstå varför resultatet blir styckvis.",
-        concepts=("potentialintegral", "sfärisk symmetri", "källområde"),
-        start_here=(
-            "Placera observationspunkten på z-axeln utan att förlora generalitet. Då beror avståndet "
-            "|r−r′| endast på r, a och polvinkeln θ."
+    'SphericalShellPotential': G(
+        problem_id='2.5',
+        learning_goal='Beräkna potential direkt från en laddningsintegral och förstå varför resultatet blir styckvis.',
+        concepts=(
+            'potentialintegral',
+            'sfärisk symmetri',
+            'källområde',
         ),
+        start_here='Använd potentialintegralen som uppgiften efterfrågar. Sfärisk symmetri gör att du kan placera observationspunkten på z-axeln på avståndet r från centrum.',
         hints=(
-            "Använd dQ = ρs a² sinθ dθ dφ med ρs = Q/(4πa²). φ-integralen kan göras direkt.",
-            "I nämnaren får du √(r²+a²−2ar cosθ). Substitutionen u=cosθ reducerar integralen till en enkel rotintegral.",
-            "När gränserna sätts in uppstår |r−a|. Det är just den absolutbeloppsfaktorn som delar svaret i r<a och r>a.",
+            'Ytladdningstätheten är ρs=Q/(4πa²) och dS=a²sinθ dθ dφ. Avståndet från källelementet till fältpunkten är √(r²+a²−2ar cosθ).',
+            'Integrera först över φ och använd sedan u=cosθ. För r>0 kan du nu integrera en funktion av formen 1/√(r²+a²−2aru).',
+            'Vid integrationsgränserna får du r+a och |r−a|. Dela därför upp r<a och r>a innan du förenklar. Vid r=0 kan du använda att alla källelement ligger på avståndet a, utan att dividera med r.',
         ),
         self_checks=(
-            "Potentialen ska vara kontinuerlig vid r=a.",
-            "Inuti skalet ska V vara konstant; utanför ska den falla som 1/r.",
+            'V ska vara kontinuerlig vid r=a och gå mot noll när r→∞.',
+            'Kontrollera med E_r=−dV/dr: inuti ska fältet vara noll och utanför ska det ha punktladdningens 1/r²-beroende. Derivatan får däremot ha ett språng vid den laddade ytan.',
         ),
-        common_pitfall="Att försöka använda E-fältets Gauss-lösning när uppgiften uttryckligen vill att potentialintegralen genomförs.",
+        common_pitfall='Att försöka använda E-fältets Gauss-lösning när uppgiften uttryckligen vill att potentialintegralen genomförs.',
+        setup_hint='Integrera över sfärens yta, inte dess volym. Integralen över φ ger 2π; θ-integralen innehåller sinθ dθ, vilket gör u=cosθ till ett naturligt variabelbyte.',
+        geometry_hint='Skilj observationsradien r från skalets fasta radie a. Cosinussatsen för triangeln mellan centrum, källpunkten och fältpunkten ger avståndet i nämnaren.',
     ),
-    "ConcentricChargedCylinders": G(
-        problem_id="2.6",
-        learning_goal="Välja rätt Gaussyta och hålla reda på vilken laddning som omsluts i olika radialområden.",
-        concepts=("Gauss lag", "cylindersymmetri", "styckvis fält"),
-        start_here="Dela först upp rummet i R<a, a<R<b och R>b. Rita en koaxial Gauss-cylinder i varje område.",
+    'ConcentricChargedCylinders': G(
+        problem_id='2.6',
+        learning_goal='Välja rätt Gaussyta och hålla reda på vilken laddning som omsluts i olika radialområden.',
+        concepts=(
+            'Gauss lag',
+            'cylindersymmetri',
+            'styckvis fält',
+        ),
+        start_here='Försumma ändeffekter för de långa cylindrarna. Dela upp rummet i R<a, a<R<b och R>b och rita en koaxial Gauss-cylinder i varje område.',
         hints=(
-            "På mantelytan är E radiellt och konstant i belopp. Ändytorna ger inget flöde.",
-            "Skriv den inneslutna laddningen per vald längd L. I mellanområdet omsluts bara laddningen på den inre cylindern.",
-            "Utanför båda cylindrarna måste bidragen från båda ytladdningarna tas med i Q_innesluten.",
+            'Symmetrin ger ett radiellt E som är konstant på Gauss-cylinderns mantel. Flödet genom ändytorna är noll och mantelytans area är 2πRL.',
+            'Skilj på Gaussytans radie R och de laddade ytornas radier a och b. Deras laddningar per längd L är ρsa·2πaL respektive ρsb·2πbL.',
+            'Summera bara de laddade ytor som ligger innanför respektive Gaussyta. Sätt sedan E_R·2πRL=Q_in/ε₀ och låt E_R behålla sitt tecken.',
         ),
         self_checks=(
-            "Fältet ska ha 1/R-beroende i de områden där den inneslutna laddningen per längd är konstant.",
-            "Språnget i E_n över en laddad yta ska vara förenligt med ytladdningstätheten.",
+            'För R<a är fältet noll. Utanför båda cylindrarna ska det också bli noll om aρsa+bρsb=0, även om vardera cylindern är laddad.',
+            'Med normalen riktad mot större R ska E_R(utanför)−E_R(innanför)=ρs/ε₀ vid varje laddad yta. Kontrollera båda sprången.',
         ),
-        common_pitfall="Att använda samma inneslutna laddning i alla tre radialområden.",
+        common_pitfall='Att använda samma inneslutna laddning i alla tre radialområden.',
+        setup_hint='Gör en tabell med de tre radialområdena och Q_in i varje rad. Samma flödesuttryck gäller i alla rader; det är den inneslutna laddningen som ändras.',
+        geometry_hint='Gaussytan är en tänkt cylinder vars radie R kan varieras. Laddningen sitter däremot på de verkliga cylindrarna vid a och b, så deras areor ska inte beräknas med R.',
     ),
-    "SphericalCapacitorDesign": G(
-        problem_id="2.7",
-        learning_goal="Göra en fysikalisk optimering där genomslagsfältet sätter en begränsning.",
-        concepts=("sfärisk kondensator", "fältmaximum", "optimering"),
-        start_here="Bestäm först var mellan sfärerna |E| är störst. Det är där genomslagsvillkoret ska appliceras.",
+    'SphericalCapacitorDesign': G(
+        problem_id='2.7',
+        learning_goal='Göra en fysikalisk optimering där genomslagsfältet sätter en begränsning.',
+        concepts=(
+            'sfärisk kondensator',
+            'fältmaximum',
+            'optimering',
+        ),
+        start_here='Ytterradien b och det tillåtna fältet Emax är givna. Bestäm först var i gapet |E(r)| är störst; där begränsas den tillåtna laddningen.',
         hints=(
-            "Mellan sfärerna har E(r) samma radialberoende som fältet från den inneslutna laddningen Q.",
-            "Använd E(a)=Emax för att uttrycka den största tillåtna Q som funktion av den inre radien a.",
-            "Sätt sedan in Q(a) i U=∫_a^b E(r)dr. Då blir U en enkel funktion av a som kan maximeras med derivata.",
+            'Använd en sfärisk Gaussyta i a<r<b. Fältets belopp avtar som 1/r², så gränsen sätts precis utanför den inre ledaren.',
+            'För varje vald radie a kan laddningens belopp ökas tills |E(a)|=Emax. Uttryck därför |Q|max som funktion av a; laddningen är inte konstant i optimeringen.',
+            'Integrera fältet från a till b för att få spänningens belopp och sätt in |Q|max(a). Derivera funktionen av a med b och Emax konstanta och kontrollera både den stationära punkten och randgränserna.',
         ),
         self_checks=(
-            "U ska gå mot noll både när a→0 och när a→b.",
-            "Optimum måste därför ligga strikt mellan 0 och b.",
+            'Vid genomslagsbegränsad laddning ska den tillåtna spänningen gå mot noll när a→0 och när a→b. Ett inre maximum måste jämföras med dessa gränser.',
+            'Den stationära punkten ska ligga i 0<a<b och ha negativ andraderivata. Enheten i spänningsuttrycket ska vara Emax gånger en längd.',
         ),
-        common_pitfall="Att optimera kondensatorns vanliga spänningsuttryck med Q konstant, trots att Q här begränsas av Emax och därför beror på a.",
+        common_pitfall='Att optimera kondensatorns vanliga spänningsuttryck med Q konstant, trots att Q här begränsas av Emax och därför beror på a.',
+        setup_hint='Skriv först U_max(a)=∫_a^b |E(r;Q_max(a))| dr. Först efter att Q_max uttryckts med a är det rätt funktion att derivera.',
+        geometry_hint='Rita de två radierna och ett godtyckligt r i gapet. Det minsta tillåtna r i luften är a, vilket är varför det största fältet uppstår där.',
     ),
-    "ConcentricSphericalShells": G(
-        problem_id="2.8",
-        learning_goal="Bygga en styckvis potential genom superposition och använda ledarvillkor efter sammankoppling.",
-        concepts=("superposition", "sfärskal", "elektrostatisk ledare"),
-        start_here="Behandla varje sfäriskt skal separat: vad är potentialen från ett jämnt laddat skal innanför respektive utanför skalet?",
+    'ConcentricSphericalShells': G(
+        problem_id='2.8',
+        learning_goal='Bygga en styckvis potential genom superposition och använda ledarvillkor efter sammankoppling.',
+        concepts=(
+            'superposition',
+            'sfärskal',
+            'elektrostatisk ledare',
+        ),
+        start_here='I del (a) är Qa och Qb givna. Bygg potentialen genom att lägga ihop bidragen från två jämnt laddade sfärskal med samma referens V(∞)=0.',
         hints=(
-            "Summera bidragen från Qa och Qb och skriv V(r) separat för r<a, a<r<b och r>b.",
-            "Potentialen från ett skal är konstant på alla punkter innanför det skalet. Det förenklar de två innersta områdena.",
-            "När skalen kopplas ihop blir de en enda sammanhängande ledare i elektrostatisk jämvikt. Fråga vad E måste vara i metall och i den tomma region som inte behöver bära laddning.",
+            'Ett skals potential är konstant innanför skalet och motsvarar en punktladdnings potential utanför. Skriv bidragen separat i r<a, a<r<b och r>b.',
+            'Summera sedan de två bidragen i varje område. Kontrollera att samma potential nås från båda sidor av varje skal innan du går vidare till del (b).',
+            'I del (b), kalla de nya laddningarna qa och qb. Använd både qa+qb=Qa+Qb och V(a)=V(b) under förbindelsen. Sätt in potentialerna från del (a) med de nya laddningarna och lös dessa två villkor.',
         ),
         self_checks=(
-            "V ska vara kontinuerlig vid både r=a och r=b.",
-            "Efter sammankopplingen ska den totala laddningen Qa+Qb vara bevarad.",
+            'Potentialen ska vara kontinuerlig vid a och b och närma sig noll vid oändligheten. Utanför b beror den bara på den sammanlagda laddningen.',
+            'Efter förbindelsen ska laddningen vara bevarad och potentialskillnaden mellan skalen vara noll. I den sfäriskt symmetriska modellen ska resultatet också ge noll fält i gapet.',
         ),
-        common_pitfall="Att kräva att laddningen på varje ursprungligt skal bevaras efter att de satts i ledande förbindelse.",
+        common_pitfall='Att bevara Qa och Qb var för sig efter sammankopplingen, eller anta att ett tomt område alltid har E=0. Här måste fältet i gapet följa av potentialvillkoret och geometrin.',
+        setup_hint='För del (b): byt namn på de okända slutladdningarna och skriv två oberoende ekvationer, en för bevarad total laddning och en för lika potential. Använd inte de ursprungliga laddningarna som om de vore låsta.',
+        geometry_hint='Markera ett observationsläge i vart och ett av de tre radialområdena. För varje skal, fråga om punkten ligger innanför eller utanför just det skalet innan du skriver dess potentialbidrag.',
     ),
     "AtmosphericChargeDensity": G(
         problem_id="2.9",

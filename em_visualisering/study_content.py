@@ -144,11 +144,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
  '2.4': 'Figuren illustrerar en halvcirkelformad yta som är gjord av ett isolerande material. På ytan har man lyckats '
         'fixera en ytladdningstäthet ρs som är konstant över hela ytan. Beräkna det elektriska fältet E i en punkt z '
         'ẑ det vill säga i en punkt på avståndet z rakt ovanför cirkelns medelpunkt. Halvcirkens radie är a.',
- '2.5': 'Ett sfäriskt skal med radie a har belagts med en laddning Q jämnt fördelad över ytan. Beräkna potentialen på '
-        'olika avstånd från sfärens centrum. (Referens på oändligt avstånd.) Uppgiften kan lätt lösas med Gauss sats '
-        'men det är intressant att se att vi kommer fram till samma resultat med hjälp av V (r) =\n'
-        '\n'
-        '⋆ avser källområdet. Det vill säga det område som innehåller laddning. Gedär ⊙ nomför denna räkning.',
+ '2.5': 'Ett sfäriskt skal med radie a har belagts med en laddning Q jämnt fördelad över ytan. Beräkna potentialen på olika avstånd från sfärens centrum med V(∞)=0. Genomför beräkningen med potentialintegralen för ytladdningen:\n\n$$V(\\mathbf r)=\\frac{1}{4\\pi\\varepsilon_0}\\int_{S^\\prime}\\frac{\\rho_s(\\mathbf r^\\prime)}{|\\mathbf r-\\mathbf r^\\prime|}\\,dS^\\prime.$$\n\nHär betecknar prim källkoordinater på det laddade skalet. Jämför gärna resultatet med Gauss lag efter integrationen.',
  '2.6': 'Två långa koncentriska cylindrar med radie a respektive b, b > a, ges en ytladdningstäthet ρsa respektive ρsb '
         '. Bestäm elektriska fältstyrkan som funktion av avståndet R från cylindrarnas symmetriaxel.',
  '2.7': 'En kondensator består av två sfäriska koncentriska metallskal. Den yttre sfären har radien b = 1,0 m. Den '
