@@ -233,17 +233,23 @@ class GroundedInnerSphereChargeSplit(ProblemBase):
             return 'a och εr måste vara positiva.'
         return None
 
+    @staticmethod
+    def surface_charges(Q, eps_r):
+        # V(a)=0 gives q_out=2*q_in/eps_r; q_in+q_out=Q.
+        q_inside = Q * eps_r / (eps_r + 2)
+        return q_inside, Q - q_inside
+
     def plot(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111)
         Q, eps_r = (params['Q'], params['eps_r'])
-        q_inside = Q / (1 + 2 * eps_r)
-        q_outside = Q - q_inside
+        q_inside, q_outside = self.surface_charges(Q, eps_r)
         ax.bar(['Inneryta', 'Ytteryta'], [q_inside, q_outside])
         ax.set_ylabel('Laddning [C]')
         ax.set_title('Laddningsfördelning på yttre skalet')
         ax.grid(True, axis='y', alpha=0.3)
-        ax.text(0.02, 0.98, f'Qoutside / Qinside = {q_outside / q_inside:.3g}', transform=ax.transAxes, va='top')
+        ratio_text = f'Qut / Qin = {2 / eps_r:.3g}' if Q != 0 else 'Q = 0: båda ytladdningarna är noll; kvoten är odefinierad'
+        ax.text(0.02, 0.98, ratio_text, transform=ax.transAxes, va='top')
 
     def draw_geometry(self, fig, params):
         fig.clear()
@@ -265,11 +271,15 @@ class GroundedInnerSphereChargeSplit(ProblemBase):
         """
         fig.clear()
         Q_base = params['Q']
+        if Q_base == 0:
+            ax = fig.add_subplot(111, projection='3d')
+            ax.text(0.5, 0.5, 0.5, 'Q = 0: Qut/Qin är odefinierad', ha='center')
+            ax.set_axis_off()
+            return
         eps_arr = np.linspace(1.0, 10.0, 40)
         Q_arr = np.linspace(0.1 * Q_base, 3 * Q_base, 40)
         EPS, QQ = np.meshgrid(eps_arr, Q_arr)
-        q_in = QQ / (1 + 2 * EPS)
-        ratio = (QQ - q_in) / q_in
+        ratio = 2 / EPS
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(EPS, QQ * 1000000000.0, ratio, cmap='coolwarm', alpha=0.85, rstride=1, cstride=1)
         ax.set_xlabel('εr')
@@ -392,7 +402,7 @@ class DielectricFilledSphericalGap(ProblemBase):
         if mode == 'Map':
             X, Z, R = _radial_slice_grid(rmax, n=220)
             e_gap = np.abs(Q) / (2 * math.pi * EPS0 * (eps1 + eps2) * np.maximum(R, 1e-30) ** 2)
-            e_out = np.abs(Q) / (4 * math.pi * EPS0 * np.maximum(R, 1e-30) ** 2)
+            e_out = np.zeros_like(R)  # +Q and -Q give zero exterior field.
             Emap = np.where((R >= a) & (R < b), e_gap, np.where(R >= b, e_out, 0.0))
             _show_scalar_map(ax, fig, X, Z, Emap, title='Sfäriskt gap med två dielektrika: |E|-karta', xlabel='x [m]', ylabel='z [m]', cbar_label='|E| [V/m]', scale='log', contours=True)
             for rad in [a, b]:
@@ -403,14 +413,14 @@ class DielectricFilledSphericalGap(ProblemBase):
         e_gap = Q / (2 * math.pi * EPS0 * (eps1 + eps2) * r ** 2)
         d1_gap = eps1 * Q / ((eps1 + eps2) * 2 * math.pi * r ** 2)
         d2_gap = eps2 * Q / ((eps1 + eps2) * 2 * math.pi * r ** 2)
-        e_out = Q / (4 * math.pi * EPS0 * r ** 2)
+        e_out = np.zeros_like(r)
         if mode == 'Field':
-            ax.plot(r, np.where(r < b, e_gap, e_out), label='|E_r|')
+            ax.plot(r, np.where(r < b, e_gap, e_out), label='E_r')
             ax.set_ylabel('Fält [V/m]')
             ax.set_title('Sfäriskt gap med två dielektrika: elektrisk fältstyrka')
         else:
-            ax.plot(r, np.where(r < b, d1_gap, np.nan), label='|D| i ε1-området')
-            ax.plot(r, np.where(r < b, d2_gap, np.nan), label='|D| i ε2-området')
+            ax.plot(r, np.where(r < b, d1_gap, np.nan), label='D_r i ε1-området')
+            ax.plot(r, np.where(r < b, d2_gap, np.nan), label='D_r i ε2-området')
             ax.set_ylabel('D [C/m²]')
             ax.set_title('Sfäriskt gap med två dielektrika: elektrisk flödestäthet')
         ax.legend()
@@ -448,8 +458,8 @@ class DielectricFilledSphericalGap(ProblemBase):
         d1_mid = eps1 * Q / ((eps1 + eps2) * 2 * math.pi * r_mid ** 2)
         d2_mid = eps2 * Q / ((eps1 + eps2) * 2 * math.pi * r_mid ** 2)
         theta = np.linspace(0, np.pi, 50)
-        phi_h1 = np.linspace(0, np.pi, 60)
-        phi_h2 = np.linspace(np.pi, 2 * np.pi, 60)
+        phi_h1 = np.linspace(-np.pi / 2, np.pi / 2, 60)
+        phi_h2 = np.linspace(np.pi / 2, 3 * np.pi / 2, 60)
         ax = fig.add_subplot(111, projection='3d')
         for r_s, alpha in [(a, 0.3), (r_mid, 0.55), (b, 0.3)]:
             for ph, col in [(phi_h1, 'steelblue'), (phi_h2, 'coral')]:
