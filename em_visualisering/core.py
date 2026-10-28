@@ -1,15 +1,7 @@
-"""Visualiseringsprogram för elektromagnetism — interaktiv Tkinter/Matplotlib-app.
+"""Gemensamma fysikmodeller och ritfunktioner för EM-studiehjälpens webbapp.
 
-Varje uppgift är en subklass av ProblemBase. Lägg till nya uppgifter genom att skapa
-en subklass till ProblemBase i rätt kapitelmodul under problems/ (t.ex. problems/ch06.py
-för kapitel 6) och lägga in en instans i PROBLEMS-listan i registry.py.
-
-Layout: [2-D-graf] [geometriskiss] [3-D-vy]
-3-D-vyn är en roterbar Axes3D-panel vars innehåll väljs uppgiftsvis för bästa fysikaliska översikt:
-  - Axialsymmetriska uppgifter → rotationsyta färgsatt efter fält/potential
-  - Skikt/kondensatorer       → 3-D-tvärsnitt med skuggade lager och fältpilar
-  - Ändlig linjeladdning      → 3-D-quiverfält i xz-planet utsträckt i y-led
-  - Design-/stapeldiagram     → 3-D-parameterstudie
+Uppgifter är subklasser till ProblemBase i problems/chXX.py och registreras i
+registry.py. Matplotlib-vyerna används av webbappen direkt eller via Plotly-bryggan.
 """
 import math
 import numpy as np
