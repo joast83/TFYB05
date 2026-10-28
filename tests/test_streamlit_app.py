@@ -84,7 +84,8 @@ def test_targeted_help_uses_problem_specific_hints_and_keeps_legacy_fallback():
 
     app = _run_app()
     # Two reviewed exercises and one exercise awaiting its own review.
-    for pid in ("2.1", "2.8", "2.9"):
+    for pid in ("2.1", "2.8", "3.1"):
+        app.selectbox(key="selected-chapter").set_value(int(pid.split(".")[0])).run()
         problem = next(p for p in PROBLEMS if p.name.split()[0] == pid)
         guidance = guidance_for_problem(problem)
         next(w for w in app.selectbox if w.label == "Uppgift").set_value(problem.name).run()
@@ -97,3 +98,37 @@ def test_targeted_help_uses_problem_specific_hints_and_keeps_legacy_fallback():
             next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").set_value(choice).run()
             assert not app.exception
             assert any(expected in message.value for message in app.info)
+
+
+def test_navigation_resets_disclosures_and_help_but_not_ordinary_reruns():
+    app = _run_app()
+    first_name = app.selectbox(key="selected-problem").value
+    first_panel = next(e for e in app.expander if e.label == "Ledtråd 1")._block_id
+    help_box = next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?")
+    help_box.select_index(2).run()
+    assert next(e for e in app.expander if e.label == "Ledtråd 1")._block_id == first_panel
+
+    app.selectbox(key="selected-problem").select_index(1).run()
+    second_panel = next(e for e in app.expander if e.label == "Ledtråd 1")._block_id
+    assert second_panel != first_panel
+    assert next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").value is None
+
+    app.selectbox(key="selected-problem").set_value(first_name).run()
+    assert next(e for e in app.expander if e.label == "Ledtråd 1")._block_id not in (first_panel, second_panel)
+    assert next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").value is None
+    app.selectbox(key="selected-chapter").set_value(3).run()
+    assert not app.exception
+    assert all(not e.proto.expanded for e in app.expander if e.label.startswith(("Ledtråd", "Kontroll", "Visa facit")))
+
+
+def test_navigation_hides_previously_revealed_figures():
+    app = _run_app()
+    app.selectbox(key="selected-problem").select_index(1).run()
+    _radio(app, "Arbetssätt").set_value("Utforska").run()
+    first_name = app.selectbox(key="selected-problem").value
+    next(b for b in app.button if b.label == "Visa figur").click().run()
+    assert app.session_state["visualization-revealed:ChargedRingAxis:Field"] is True
+    app.selectbox(key="selected-problem").select_index(2).run()
+    app.selectbox(key="selected-problem").set_value(first_name).run()
+    assert not app.exception
+    assert "visualization-revealed:ChargedRingAxis:Field" not in app.session_state
