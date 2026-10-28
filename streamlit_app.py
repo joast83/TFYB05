@@ -304,6 +304,26 @@ def _render_parameter_control(problem, spec) -> float:
     return value_si
 
 
+def _begin_problem_visit(problem) -> None:
+    """Reset disclosures on navigation, but keep deliberate numeric experiments."""
+    identity = problem.__class__.__name__
+    if st.session_state.get("active-problem") == identity:
+        return
+    st.session_state["active-problem"] = identity
+    st.session_state["problem-visit"] = st.session_state.get("problem-visit", 0) + 1
+    for key in list(st.session_state):
+        if key.startswith(("stuck:", "visualization-revealed:", "override-visualization:")):
+            del st.session_state[key]
+
+
+def _problem_expander(label: str, *, expanded: bool = False):
+    # A fresh key also resets frontend-only state when returning to an exercise.
+    return st.expander(
+        label, expanded=expanded,
+        key=f"problem-panel:{st.session_state['problem-visit']}:{label}",
+    )
+
+
 def _render_problem_statement(problem) -> str:
     statement = statement_for_problem(problem)
     st.markdown("### Uppgift")
@@ -315,7 +335,7 @@ def _render_geometry_if_needed(problem, statement: str) -> None:
     if "figur" not in statement.lower():
         return
 
-    with st.expander("Geometriskiss till uppgiften", expanded=True):
+    with _problem_expander("Geometriskiss till uppgiften", expanded=True):
         try:
             params = _default_params(problem)
             png = _render_matplotlib_png(
@@ -403,11 +423,11 @@ def _render_progressive_hints(problem, guidance) -> None:
         "mycket av lösningsarbetet som möjligt hos dig."
     )
     for index, hint in enumerate(guidance.hints, start=1):
-        with st.expander(f"Ledtråd {index}", expanded=False):
+        with _problem_expander(f"Ledtråd {index}", expanded=False):
             st.write(hint)
 
     if guidance.common_pitfall:
-        with st.expander("Vanlig fallgrop", expanded=False):
+        with _problem_expander("Vanlig fallgrop", expanded=False):
             st.warning(guidance.common_pitfall)
 
 
@@ -419,7 +439,7 @@ def _render_solution_checks(problem, guidance) -> None:
     )
 
     for index, check in enumerate(guidance.self_checks, start=1):
-        with st.expander(f"Kontroll {index}", expanded=False):
+        with _problem_expander(f"Kontroll {index}", expanded=False):
             st.write(check)
 
 
@@ -429,7 +449,7 @@ def _render_facit(problem) -> None:
         "Detta är slutresultatet från problemsamlingens tryckta facit. "
         "Det är avsiktligt inte en fullständig lösning."
     )
-    with st.expander("Visa facit", expanded=False):
+    with _problem_expander("Visa facit", expanded=False):
         answer = facit_for_problem(problem)
         if answer:
             st.markdown(answer)
@@ -445,7 +465,7 @@ def _render_solve_mode(problem) -> None:
 
     if guidance is None:
         st.warning("Specifik progressiv vägledning saknas för den här uppgiften.")
-        with st.expander("Fysikalisk idé", expanded=True):
+        with _problem_expander("Fysikalisk idé", expanded=True):
             st.write(problem.pedagogical_note())
         return
 
@@ -463,7 +483,7 @@ def _render_solve_mode(problem) -> None:
 def _render_explore_parameters(problem) -> dict[str, float]:
     _initialize_problem_state(problem)
 
-    with st.expander("Parametrar för utforskning", expanded=False):
+    with _problem_expander("Parametrar för utforskning", expanded=False):
         st.caption(
             "Ändra bara parametrar när du vill undersöka ett gränsfall eller en "
             "fysikalisk trend. De är inte en del av själva lösningssteget."
@@ -565,7 +585,7 @@ def _render_explore_mode(problem) -> None:
     guidance = guidance_for_problem(problem)
     st.subheader(f"Utforska: {problem.name}")
 
-    with st.expander("Visa uppgiftstext", expanded=False):
+    with _problem_expander("Visa uppgiftstext", expanded=False):
         st.markdown(statement_for_problem(problem))
 
     options = mode_options_for_problem(problem)
@@ -635,7 +655,7 @@ def _render_explore_mode(problem) -> None:
         "och gränsfall med det du väntade dig?"
     )
 
-    with st.expander("Avancerat: visa äldre 3-D-vy", expanded=False):
+    with _problem_expander("Avancerat: visa äldre 3-D-vy", expanded=False):
         st.caption(
             "3-D-vyn är inte en standarddel av studiegången. Öppna den bara om den "
             "hjälper dig att tolka geometrin eller fältstrukturen."
@@ -647,7 +667,7 @@ def _render_explore_mode(problem) -> None:
             _render_3d(problem, params, mode)
 
 
-    with st.expander("Avancerat: appens beräkning och interna kontroll", expanded=False):
+    with _problem_expander("Avancerat: appens beräkning och interna kontroll", expanded=False):
         st.caption(
             "Det här är inte kursens facit. Det är appens egen beräkning för de "
             "parametrar du valt och kan användas vid teknisk utforskning."
@@ -705,7 +725,9 @@ with st.sidebar:
 
 if work_mode == "Teori":
     render_theory_page(theory_page)
-elif work_mode == "Utforska":
-    _render_explore_mode(problem)
 else:
-    _render_solve_mode(problem)
+    _begin_problem_visit(problem)
+    if work_mode == "Utforska":
+        _render_explore_mode(problem)
+    else:
+        _render_solve_mode(problem)
