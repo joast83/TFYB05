@@ -380,10 +380,10 @@ def _render_targeted_help(problem, guidance) -> None:
     elif stuck == "Jag vet vilken idé jag vill använda men får inte upp matematiken":
         st.info(
             f"**Matematisk rörelse:** {meta.math_focus}\n\n"
-            f"{guidance.hints[0]}"
+            f"{guidance.setup_hint or guidance.hints[0]}"
         )
     elif stuck == "Jag fastnar på vektorer eller geometri":
-        hint = guidance.hints[1] if len(guidance.hints) > 1 else guidance.hints[0]
+        hint = guidance.geometry_hint or (guidance.hints[1] if len(guidance.hints) > 1 else guidance.hints[0])
         st.info(
             f"**Fokusera på representationen:** {meta.math_focus}\n\n"
             f"{hint}"
