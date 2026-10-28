@@ -193,7 +193,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
          '(c) Om vi, i stället för att föra in plattan med tjocklek d1 , ökar avståndet till d2 = 30 mm, vilken blir '
          'då potentialdifferensen?',
  '2.19': 'Två kondensatorplattor på avståndet d har mellan sig en likformigt fördelad laddning med tätheten ρ0 . Den '
-         'ena plattan är jordad och den andra har potentialen\n'
+         'ena plattan är jordad och den andra har potentialen V0.\n'
          '\n'
          '(a) Beräkna var mellan plattorna den elektriska fältstyrkan E är noll.\n'
          '\n'
