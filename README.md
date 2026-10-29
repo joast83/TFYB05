@@ -1,15 +1,13 @@
 # TFYB05 – EM-studiehjälp
 
-**[Öppna EM-studiehjälpen → tfyb05.streamlit.app](https://tfyb05.streamlit.app/)**
+**[Öppna EM-studiehjälpen – tfyb05.streamlit.app](https://tfyb05.streamlit.app/)**
 
-Ett webbaserat studiestöd för elektromagnetism i TFYB05. Här finns uppgifter,
-stegvisa ledtrådar, kontrollfrågor, facit och interaktiva visualiseringar som
-hjälper dig att förstå fysiken och komma vidare i din egen problemlösning.
+Ett webbaserat studiestöd för elektromagnetism i TFYB05. Välj kapitel och
+uppgift för att arbeta med stegvisa ledtrådar, kontrollfrågor och facit.
+Försök gärna lösa uppgiften på egen hand innan du öppnar hjälpen.
 
-- **Lös uppgift:** välj en uppgift och öppna ledtrådar eller facit när du behöver dem.
-- **Utforska:** ändra parametrar och undersök hur fält, potentialer och andra storheter påverkas.
-- **Teori:** utforska Gauss och Ampères lagar, elektrisk potential, dielektriska
-  randvillkor, Biot–Savarts lag samt Faradays och Lenz lag.
+Sidan är ett komplement till kursmaterialet och undervisningen.
 
-Gör gärna ett eget försök och förutsäg vad en figur borde visa innan du öppnar
-mer hjälp. Webbplatsen är ett komplement till kursmaterialet och undervisningen.
+> **Under utveckling:** avsnitten *Utforska* och *Teori* är tillfälligt dolda
+> för besökare. Utvecklare kan aktivera dem genom att sätta
+> `TFYB05_ENABLE_UNFINISHED_MODES=1` i appens miljö.
