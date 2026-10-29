@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 from streamlit.testing.v1 import AppTest
 
@@ -11,17 +10,6 @@ def _run_app() -> AppTest:
     return app
 
 
-
-def _run_unfinished_app() -> AppTest:
-    previous = os.environ.get("TFYB05_ENABLE_UNFINISHED_MODES")
-    try:
-        os.environ["TFYB05_ENABLE_UNFINISHED_MODES"] = "1"
-        return _run_app()
-    finally:
-        if previous is None:
-            os.environ.pop("TFYB05_ENABLE_UNFINISHED_MODES", None)
-        else:
-            os.environ["TFYB05_ENABLE_UNFINISHED_MODES"] = previous
 
 def _radio(app: AppTest, label: str):
     return next(widget for widget in app.radio if widget.label == label)
@@ -73,8 +61,9 @@ def test_real_facit_is_a_simple_expander_without_fake_readiness_gate():
     )
 
 
-def test_explore_mode_exposes_parameters_without_requiring_written_prediction():
-    app = _run_unfinished_app()
+def test_explore_mode_exposes_parameters_without_requiring_written_prediction(monkeypatch):
+    monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
+    app = _run_app()
     _radio(app, "Arbetssätt").set_value("Utforska").run()
     assert not app.exception, [exception.value for exception in app.exception]
     assert any(expander.label == "Parametrar för utforskning" for expander in app.expander)
@@ -85,8 +74,9 @@ def test_explore_mode_exposes_parameters_without_requiring_written_prediction():
     assert any(button.label == "Visa figur" for button in app.button)
 
 
-def test_theory_page_runs_without_streamlit_exception():
-    app = _run_unfinished_app()
+def test_theory_page_runs_without_streamlit_exception(monkeypatch):
+    monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
+    app = _run_app()
     _radio(app, "Arbetssätt").set_value("Teori").run()
     assert not app.exception, [exception.value for exception in app.exception]
     assert any(selectbox.label == "Teoriavsnitt" for selectbox in app.selectbox)
@@ -138,8 +128,9 @@ def test_navigation_resets_disclosures_and_help_but_not_ordinary_reruns():
     assert all(not e.proto.expanded for e in app.expander if e.label.startswith(("Ledtråd", "Kontroll", "Visa facit")))
 
 
-def test_navigation_hides_previously_revealed_figures():
-    app = _run_unfinished_app()
+def test_navigation_hides_previously_revealed_figures(monkeypatch):
+    monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
+    app = _run_app()
     app.selectbox(key="selected-problem").select_index(1).run()
     _radio(app, "Arbetssätt").set_value("Utforska").run()
     first_name = app.selectbox(key="selected-problem").value
@@ -184,8 +175,9 @@ def test_all_chapter_five_problems_show_their_specific_targeted_help():
             assert any(expected in message.value for message in app.info)
 
 
-def test_variable_conductivity_explore_views_are_named_and_renderable():
-    app = _run_unfinished_app()
+def test_variable_conductivity_explore_views_are_named_and_renderable(monkeypatch):
+    monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
+    app = _run_app()
     app.selectbox(key="selected-chapter").set_value(5).run()
     problem_name = next(name for name in app.selectbox(key="selected-problem").options if name.startswith("5.7 "))
     app.selectbox(key="selected-problem").set_value(problem_name).run()
