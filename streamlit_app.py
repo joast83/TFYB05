@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from io import BytesIO
 import math
+import os
 
 import matplotlib
 
@@ -683,18 +684,20 @@ def _render_explore_mode(problem) -> None:
 
 
 st.title("EM-studiehjälp")
-st.caption(
-    "Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan. "
-    "Utforska med figurer först efter att du själv har försökt förutsäga vad de bör visa."
-)
+st.caption("Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan.")
 
 
 with st.sidebar:
-    work_mode = st.radio(
-        "Arbetssätt",
-        ["Lös uppgift", "Utforska", "Teori"],
-        index=0,
-    )
+    # Hide unfinished sections from students without removing their implementation.
+    # Set the environment variable to 1 to enable the full navigation for development.
+    if os.environ.get("TFYB05_ENABLE_UNFINISHED_MODES") == "1":
+        work_mode = st.radio(
+            "Arbetssätt",
+            ["Lös uppgift", "Utforska", "Teori"],
+            index=0,
+        )
+    else:
+        work_mode = "Lös uppgift"
 
     if work_mode == "Teori":
         theory_title = st.selectbox(
