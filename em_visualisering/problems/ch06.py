@@ -39,14 +39,14 @@ class FiniteWireBiotSavart(ProblemBase):
         Rmax = params['Rmax']
         if mode == 'Field':
             ax = fig.add_subplot(111)
-            Rmin = max(0.005 * Rmax, 0.0001)
+            Rmin = 0.005 * Rmax
             R = np.geomspace(Rmin, Rmax, 600)
             B = np.abs(self.Bphi(I, L, R, z0))
-            B_inf = MU0 * I / (2 * np.pi * R)
+            B_inf = MU0 * abs(I) / (2 * np.pi * R)
             ax.plot(R * 100.0, B * 1000000.0, label='ändlig ledare')
             ax.plot(R * 100.0, B_inf * 1000000.0, '--', alpha=0.6, label='oändlig ledare')
             ax.set_xscale('log')
-            ax.set_yscale('log')
+            ax.set_yscale('log' if I else 'linear')
             ax.set_xlabel('R [cm]')
             ax.set_ylabel('|Bφ| [µT]')
             ax.set_title(f'Biot-Savart: |Bφ(R)| vid z = {z0:.2f} m  (L = {L:.2f} m)')
@@ -55,7 +55,7 @@ class FiniteWireBiotSavart(ProblemBase):
         else:
             ax = fig.add_subplot(111)
             zg = np.linspace(-1.2 * L, 1.2 * L, 300)
-            Rg = np.geomspace(max(0.002 * Rmax, 0.0001), Rmax, 260)
+            Rg = np.geomspace(0.002 * Rmax, Rmax, 260)
             ZZ, RR = np.meshgrid(zg, Rg)
             BB = np.abs(self.Bphi(I, L, RR, ZZ))
             BB_uT = BB * 1000000.0
@@ -73,8 +73,9 @@ class FiniteWireBiotSavart(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111)
         L = params['L']
-        ax.annotate('', xy=(0, L), xytext=(0, -L), arrowprops=dict(arrowstyle='->', lw=2, color='steelblue'))
-        ax.text(0.04, 0, 'I ↑', va='center', fontsize=10, color='steelblue')
+        direction = np.sign(params['I'])
+        ax.annotate('', xy=(0, direction * L), xytext=(0, -direction * L), arrowprops=dict(arrowstyle='->', lw=2, color='steelblue'))
+        ax.text(0.04, 0.5 * L, f"I = {params['I']:g} A", va='center', fontsize=10, color='steelblue')
         ax.plot([0, 0], [-L, L], color='steelblue', linewidth=3)
         ax.axhline(0, linestyle='--', linewidth=0.8, color='grey')
         ax.text(-0.05, L, '+L', va='bottom', ha='right')
@@ -84,7 +85,7 @@ class FiniteWireBiotSavart(ProblemBase):
         ax.annotate('', xy=(Rmax, z0), xytext=(0, z0), arrowprops=dict(arrowstyle='->', lw=1.5, color='coral'))
         ax.text(Rmax / 2, z0 + L * 0.04, 'R', ha='center', color='coral')
         ax.set_xlim(-0.2, params['Rmax'] * 1.2)
-        ax.set_ylim(-1.3 * L, 1.3 * L)
+        ax.set_ylim(min(-1.3 * L, z0 - .2 * L), max(1.3 * L, z0 + .2 * L))
         ax.set_aspect('equal')
         ax.set_axis_off()
         ax.set_title('Geometri')
@@ -100,7 +101,7 @@ class FiniteWireBiotSavart(ProblemBase):
         I, L, z0, Rmax = (params['I'], params['L'], params['z0'], params['Rmax'])
         nz, nR = (90, 70)
         zg = np.linspace(-1.2 * L, 1.2 * L, nz)
-        Rg = np.geomspace(max(0.002 * Rmax, 0.0001), Rmax, nR)
+        Rg = np.geomspace(0.002 * Rmax, Rmax, nR)
         ZZ, RR = np.meshgrid(zg, Rg)
         BB = np.abs(self.Bphi(I, L, RR, ZZ)) * 1000000.0
         Bpos = BB[BB > 0]
@@ -187,7 +188,7 @@ class SquareLoopOnAxis(ProblemBase):
             ax.set_xlabel('z [m]')
             ax.set_ylabel('Bz [T]')
             ax.set_title('Kvadratisk slinga: exakt fält på z-axeln')
-            ax.text(0.02, 0.98, f'Centrumvärde: B(0) = 2√2 μ₀ I / (π a) = {B0:.3e} T', transform=ax.transAxes, va='top', fontsize=9)
+            ax.text(0.03, 0.06, f'Bz(0) = {B0:.3e} T', transform=ax.transAxes, va='bottom', fontsize=9, bbox=dict(facecolor='white', edgecolor='none', alpha=0.85))
             ax.grid(True, alpha=0.3)
         else:
             ax = fig.add_subplot(111)
@@ -212,7 +213,9 @@ class SquareLoopOnAxis(ProblemBase):
         ax.plot([-half, half, half, -half, -half], [-half, -half, half, half, -half], linewidth=2)
         ax.plot([0, 0], [-0.8 * a, 0.8 * a], linestyle='--', linewidth=1, color='grey')
         ax.plot([-0.8 * a, 0.8 * a], [0, 0], linestyle=':', linewidth=0.8, color='grey')
-        ax.text(0.55 * half, -0.75 * half, 'I', fontsize=10)
+        direction = np.sign(params['I'])
+        ax.annotate('', xy=(direction * 0.3 * a, -half), xytext=(-direction * 0.3 * a, -half), arrowprops=dict(arrowstyle='->', lw=2))
+        ax.text(0, -0.7 * a, 'I > 0: moturs sedd från +z', ha='center', fontsize=9)
         ax.set_aspect('equal')
         ax.set_xlim(-0.9 * a, 0.9 * a)
         ax.set_ylim(-0.9 * a, 0.9 * a)
@@ -256,7 +259,7 @@ class RightAngleWireCorner(ProblemBase):
     @staticmethod
     def _bmag(I, h):
         h = np.asarray(h, dtype=float)
-        return MU0 * I / (2 * np.sqrt(2) * np.pi * np.maximum(h, 1e-18))
+        return MU0 * np.abs(I) / (2 * np.sqrt(2) * np.pi * np.maximum(h, 1e-18))
 
     def plot(self, fig, params, mode):
         fig.clear()
@@ -283,7 +286,7 @@ class RightAngleWireCorner(ProblemBase):
             im = ax.pcolormesh(Ivals, hvals * 100.0, BB_uT, cmap='viridis', shading='auto', norm=_positive_lognorm(BB_uT))
             fig.colorbar(im, ax=ax).set_label('|B| [µT]')
             ax.scatter([abs(I)], [h0 * 100.0], color='red', s=30)
-            ax.set_xlabel('Ström I [A]')
+            ax.set_xlabel('Strömbelopp |I| [A]')
             ax.set_ylabel('Höjd h [cm]')
             ax.set_title('Designkarta: |B|(I, h)')
 
@@ -295,6 +298,10 @@ class RightAngleWireCorner(ProblemBase):
         ax.plot([0, 0], [0, span], color='sienna', linewidth=3)
         ax.text(-0.75 * span, 0.08 * span, 'I', color='sienna')
         ax.text(0.06 * span, 0.75 * span, 'I', color='sienna')
+        for start, end in [((-0.8 * span, 0), (-0.3 * span, 0)), ((0, 0.3 * span), (0, 0.8 * span))]:
+            if params['I'] < 0:
+                start, end = end, start
+            ax.annotate('', xy=end, xytext=start, arrowprops=dict(arrowstyle='->', lw=2))
         ax.text(0.1 * span, 0.1 * span, 'hörn', fontsize=9)
         ax.set_xlim(-1.1 * span, 1.1 * span)
         ax.set_ylim(-0.6 * span, 1.1 * span)
@@ -311,7 +318,7 @@ class RightAngleWireCorner(ProblemBase):
         ax.plot([0, 0], [0, span], [0, 0], color='sienna', linewidth=3)
         ax.scatter([0], [0], [h], color='crimson', s=30)
         bmag = self._bmag(I, h)
-        vec = np.array([1.0, -1.0, 0.0]) / np.sqrt(2)
+        vec = np.sign(I) * np.array([1.0, -1.0, 0.0]) / np.sqrt(2)
         ax.quiver(0, 0, h, *vec * span * 0.45, color='steelblue', linewidth=2, arrow_length_ratio=0.15)
         ax.text(0.35 * span, -0.35 * span, h, f'|B|={bmag:.2e} T', fontsize=8)
         ax.set_xlim(-span, span)
@@ -340,6 +347,19 @@ class ThinCurrentStripField(ProblemBase):
     def B_normal_plane(I, a, y):
         return MU0 * I / (2 * math.pi * a) * np.arctan(a / y)
 
+    @staticmethod
+    def _field_xy(I, a, X, Y):
+        """Vector sum of parallel filaments; evaluate away from the strip."""
+        X, Y = np.broadcast_arrays(np.asarray(X, dtype=float), np.asarray(Y, dtype=float))
+        Bx, By = np.zeros_like(X), np.zeros_like(Y)
+        n = 600
+        for u in -a + (np.arange(n) + 0.5) * (2 * a / n):
+            r2 = (X - u) ** 2 + Y ** 2
+            coefficient = MU0 * I / (2 * np.pi * n * r2)
+            Bx -= coefficient * Y
+            By += coefficient * (X - u)
+        return Bx, By
+
     def plot(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111)
@@ -349,17 +369,17 @@ class ThinCurrentStripField(ProblemBase):
             B = self.B_normal_plane(I, a, y)
             ax.plot(y / a, B)
             ax.axvline(2, linestyle='--', linewidth=1)
-            ax.set_xlabel('avstånd/a')
-            ax.set_ylabel('B [T]')
-            ax.set_title(f'Perpendicular plane: B(2a) = {self.B_normal_plane(I, a, 2 * a):.3e} T')
+            ax.set_xlabel('y/a (x = 0)')
+            ax.set_ylabel('−Bx [T]')
+            ax.set_title(f'Normalplanet: B(2a) = {self.B_normal_plane(I, a, 2 * a):.3e} T')
         else:
             x = np.linspace(1.05 * a, 6 * a, 400)
             B = self.B_in_plane(I, a, x)
             ax.plot(x / a, B)
             ax.axvline(2, linestyle='--', linewidth=1)
-            ax.set_xlabel('avstånd/a')
-            ax.set_ylabel('B [T]')
-            ax.set_title(f'In strip plane: B(2a) = {self.B_in_plane(I, a, 2 * a):.3e} T')
+            ax.set_xlabel('x/a (y = 0)')
+            ax.set_ylabel('By [T]')
+            ax.set_title(f'I bandets plan: B(2a) = {self.B_in_plane(I, a, 2 * a):.3e} T')
         ax.grid(True, alpha=0.3)
 
     def draw_geometry(self, fig, params):
@@ -367,8 +387,9 @@ class ThinCurrentStripField(ProblemBase):
         ax = fig.add_subplot(111)
         a = params['a']
         ax.add_patch(Rectangle((-a, -0.15 * a), 2 * a, 0.3 * a, alpha=0.25))
-        ax.arrow(-0.7 * a, 0, 1.4 * a, 0, head_width=0.08 * a, length_includes_head=True)
-        ax.text(0, 0.28 * a, 'ström in/ut ur sidan längs bandet', ha='center')
+        symbol = r'$\odot$' if params['I'] > 0 else r'$\otimes$' if params['I'] < 0 else '0'
+        ax.text(0, 0, symbol, ha='center', va='center', fontsize=18)
+        ax.text(0, 0.38 * a, 'I > 0 längs +z (ut ur sidan)', ha='center', fontsize=9)
         ax.scatter([2 * a], [0], label='i planet')
         ax.scatter([0], [2 * a], label='normalplan')
         ax.legend(fontsize=7)
@@ -385,12 +406,8 @@ class ThinCurrentStripField(ProblemBase):
         x = np.linspace(1.05 * a, 5 * a, 60)
         y = np.linspace(0.05 * a, 5 * a, 60)
         X, Y = np.meshgrid(x, y)
-        u = np.linspace(-a, a, 300)
-        du = u[1] - u[0]
-        B = np.zeros_like(X)
-        for uu in u:
-            R2 = (X - uu) ** 2 + Y ** 2
-            B += MU0 * (I / (2 * a)) * du / (2 * math.pi * np.sqrt(R2))
+        Bx, By = self._field_xy(I, a, X, Y)
+        B = np.hypot(Bx, By)
         ax.plot_surface(X / a, Y / a, B, cmap='viridis', alpha=0.9)
         ax.set_xlabel('x/a')
         ax.set_ylabel('y/a')
@@ -430,10 +447,9 @@ class CircularArcOnAxis(ProblemBase):
         if loop == 1:
             Bx, By, Bz = self._quarter_components(I, a, z)
             if mode == 'Field':
-                ax.plot(z, Bx, label='Bx')
-                ax.plot(z, By, label='By')
+                ax.plot(z, Bx, label='Bx = By')
                 ax.plot(z, Bz, label='Bz')
-                ax.set_ylabel('B components [T]')
+                ax.set_ylabel('B-komponenter [T]')
                 ax.set_title('Kvartscirkelbåge: fältkomponenter på z-axeln')
             else:
                 Bmag = np.sqrt(Bx ** 2 + By ** 2 + Bz ** 2)
@@ -442,8 +458,8 @@ class CircularArcOnAxis(ProblemBase):
                 ax.set_title('Kvartscirkelbåge: |B| på z-axeln')
         else:
             Bz = self._full_loop_Bz(I, a, z)
-            ax.plot(z, Bz)
-            ax.set_ylabel('B_z [T]')
+            ax.plot(z, Bz if mode == 'Field' else np.abs(Bz))
+            ax.set_ylabel('Bz [T]' if mode == 'Field' else '|B| [T]')
             ax.set_title('Hel cirkelslinga: axiellt fält')
         ax.set_xlabel('z [m]')
         ax.grid(True, alpha=0.3)
@@ -458,15 +474,15 @@ class CircularArcOnAxis(ProblemBase):
         if loop == 1:
             t = np.linspace(0, np.pi / 2, 160)
             ax.plot(a * np.cos(t), a * np.sin(t), linewidth=2)
-            ax.plot([a, 1.35 * a], [0, 0], linewidth=2)
-            ax.plot([0, 0], [a, 1.35 * a], linewidth=2)
-            ax.text(0.75 * a, 0.12 * a, 'I', fontsize=10)
-            ax.text(0.1 * a, 0.82 * a, 'I', fontsize=10)
-            ax.set_title('Kvartsbåge + tangentiella ledare')
+            ax.set_title('Endast kvartsbågens bidrag')
         else:
             t = np.linspace(0, 2 * np.pi, 220)
             ax.plot(a * np.cos(t), a * np.sin(t), linewidth=2)
             ax.set_title('Hel cirkelslinga')
+        direction = np.sign(params['I'])
+        t0, t1 = np.pi / 4 - direction * 0.15, np.pi / 4 + direction * 0.15
+        ax.annotate('', xy=(a * np.cos(t1), a * np.sin(t1)), xytext=(a * np.cos(t0), a * np.sin(t0)), arrowprops=dict(arrowstyle='->', lw=2))
+        ax.text(0, -1.3 * a, 'I > 0: moturs sedd från +z', ha='center', fontsize=9)
         ax.set_aspect('equal')
         ax.set_xlim(-1.5 * a, 1.5 * a)
         ax.set_ylim(-1.5 * a, 1.5 * a)
@@ -474,7 +490,7 @@ class CircularArcOnAxis(ProblemBase):
 
     def draw_3d(self, fig, params, mode):
         """
-        3-D-vy: ritar strömgeometrin (kvartsbåge + anslutande ledare, eller hel slinga)
+        3-D-vy: ritar strömgeometrin (endast kvartsbåge, eller hel slinga)
         i xy-planet och visar B-fältpilar längs z-axeln.
         För hel slinga är fältet rent axiellt (Bz); för kvartsbågen visas
         alla tre komponenter som separata färgpilar.
@@ -500,9 +516,6 @@ class CircularArcOnAxis(ProblemBase):
         else:
             t = np.linspace(0, np.pi / 2, 120)
             ax.plot(a * np.cos(t), a * np.sin(t), np.zeros(120), color='firebrick', linewidth=2.5, label='båge (I)')
-            lead = 0.45 * a
-            ax.plot([a, a + lead], [0, 0], [0, 0], color='firebrick', linewidth=2.0)
-            ax.plot([0, 0], [a, a + lead], [0, 0], color='firebrick', linewidth=2.0)
             z_pts = np.linspace(-zmax * 0.85, zmax * 0.85, 9)
             Bx_pts, By_pts, Bz_pts = self._quarter_components(I, a, z_pts)
             Bpeak = max(np.max(np.abs(Bx_pts)), np.max(np.abs(By_pts)), np.max(np.abs(Bz_pts)), 1e-30)
@@ -528,8 +541,8 @@ class RotatingChargedDisk(ProblemBase):
     parameters = [('rho_s', 'Ytladdningstäthet ρs [C/m²]', 0.0005), ('a', 'Skivradie a [m]', 0.15), ('omega', 'Vinkelhastighet ω [rad/s]', 500.0), ('zmax', 'Halvt axelintervall zmax [m]', 0.4)]
 
     def validate(self, params):
-        if params['a'] <= 0 or params['zmax'] <= 0 or params['omega'] <= 0:
-            return 'a, omega och zmax måste vara positiva.'
+        if params['a'] <= 0 or params['zmax'] <= 0:
+            return 'a och zmax måste vara positiva.'
         return None
 
     @staticmethod
@@ -539,14 +552,14 @@ class RotatingChargedDisk(ProblemBase):
         Varje ring med radie r har ström dI = ρs * ω * r * dr / (2π) × 2π = ρs ω r dr.
         B_z från en ring på höjden z över ringen: µ0 dI r² / (2(r²+z²)^{3/2}).
         """
-        r_rings = np.linspace(1e-06 * a, a, n_rings)
-        dr = r_rings[1] - r_rings[0]
+        dr = a / n_rings
+        r_rings = (np.arange(n_rings) + 0.5) * dr
         dI = rho_s * omega * r_rings * dr
         z_arr = np.asarray(z_arr)
-        z2D = z_arr[:, None]
-        r2D = r_rings[None, :]
+        z2D = z_arr[..., None]
+        r2D = r_rings
         dB = MU0 / 2.0 * dI * r2D ** 2 / np.power(r2D ** 2 + z2D ** 2, 1.5)
-        return dB.sum(axis=1)
+        return dB.sum(axis=-1)
 
     @staticmethod
     def _analytic_Bz(rho_s, omega, a, z):
@@ -555,8 +568,9 @@ class RotatingChargedDisk(ProblemBase):
         B_z = (µ0 ρs ω / 2) * ( (a² + 2z²)/√(a²+z²) − 2|z| )
         """
         z = np.asarray(z, dtype=float)
-        root = np.sqrt(a ** 2 + z ** 2)
-        return MU0 * rho_s * omega / 2.0 * ((a ** 2 + 2 * z ** 2) / root - 2 * np.abs(z))
+        # Rationalized form avoids cancellation in the dipole far field.
+        root = np.hypot(a, z)
+        return MU0 * rho_s * omega / 2.0 * a * (a / root) * (a / (root + np.abs(z))) ** 2
 
     @staticmethod
     def _Bz_offaxis(rho_s, omega, a, R_arr, z_arr, n_rings=200):
@@ -570,8 +584,8 @@ class RotatingChargedDisk(ProblemBase):
         R_arr och z_arr är 2-D-arrayer med samma form (meshgrid).
         Returnerar en Bz-array med samma form.
         """
-        r_rings = np.linspace(1e-06 * a, a, n_rings)
-        dr = r_rings[1] - r_rings[0]
+        dr = a / n_rings
+        r_rings = (np.arange(n_rings) + 0.5) * dr
         dI = rho_s * omega * r_rings * dr
         n_phi = 60
         phi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
@@ -630,8 +644,12 @@ class RotatingChargedDisk(ProblemBase):
         disk = Ellipse((0, 0), 2 * a, 0.45 * a, fill=True, facecolor='steelblue', alpha=0.35, edgecolor='steelblue', linewidth=2)
         ax.add_patch(disk)
         theta = np.linspace(0.15 * np.pi, 0.85 * np.pi, 60)
+        if params['omega'] < 0:
+            theta = theta[::-1]
+        if params['omega'] != 0:
+            ax.annotate('', xy=(a * .6 * np.cos(theta[-1]), a * .22 * np.sin(theta[-1])), xytext=(a * .6 * np.cos(theta[-6]), a * .22 * np.sin(theta[-6])), arrowprops=dict(arrowstyle='->', color='darkorange'))
         ax.plot(a * 0.6 * np.cos(theta), a * 0.22 * np.sin(theta), color='darkorange', linewidth=2)
-        ax.annotate('ω', xy=(a * 0.6 * np.cos(0.85 * np.pi), a * 0.22 * np.sin(0.85 * np.pi)), fontsize=12, color='darkorange', xytext=(-a * 0.7, a * 0.18), ha='center')
+        ax.annotate(f"ω = {params['omega']:g} rad/s", xy=(a * 0.6 * np.cos(0.85 * np.pi), a * 0.22 * np.sin(0.85 * np.pi)), fontsize=12, color='darkorange', xytext=(-a * 0.7, a * 0.18), ha='center')
         ax.annotate('', xy=(0, a), xytext=(0, -a * 0.3), arrowprops=dict(arrowstyle='->', lw=1.5, color='grey'))
         ax.text(0.04 * a, a * 0.85, 'z-axel', fontsize=9, color='grey')
         ax.set_xlim(-1.2 * a, 1.2 * a)
@@ -658,10 +676,11 @@ class RotatingChargedDisk(ProblemBase):
         Yd = R2D * np.sin(PHI2D)
         Zd = np.zeros_like(Xd)
         Js = rho_s * omega * R2D
-        norm_Js = Normalize(vmin=0, vmax=np.max(Js))
-        fc = colormaps['YlOrRd'](norm_Js(Js))
+        limit = float(np.max(np.abs(Js))) or 1.0
+        norm_Js = Normalize(vmin=-limit, vmax=limit)
+        fc = colormaps['RdBu_r'](norm_Js(Js))
         ax.plot_surface(Xd, Yd, Zd, facecolors=fc, rstride=1, cstride=1, antialiased=False, shade=False, alpha=0.85)
-        sm = ScalarMappable(cmap='YlOrRd', norm=norm_Js)
+        sm = ScalarMappable(cmap='RdBu_r', norm=norm_Js)
         sm.set_array([])
         fig.colorbar(sm, ax=ax, shrink=0.45, pad=0.1).set_label('Js [A/m]')
         z_pts = np.linspace(-zmax * 0.85, zmax * 0.85, 8)
