@@ -15,7 +15,7 @@ from ..core import *
 
 class ElectronOrbitDipoleMoment(ProblemBase):
     name = '7.1 Elektron i cirkelbana'
-    description = "En elektron med laddning -e i cirkelbana med radie a och hastighet v motsvarar en strömslinga. Det magnetiska dipolmomentet är m = -(1/2) e v a ẑ för positiv cirkulation relativt +z. Läget 'Fält' visar |m| mot hastighet; läget 'Karta' visar designytan |m|(a, v)."
+    description = "En elektron med laddning -e i cirkelbana med radie a och hastighet v motsvarar en strömslinga. Det magnetiska dipolmomentet är m = -(1/2) e v a ẑ för positiv cirkulation relativt +z. Profilen visar |m| mot hastighet; kartan visar |m|(a, v)."
     parameters = [('v', 'Elektronhastighet v [m/s]', 2000000.0), ('a', 'Banradie a [m]', 5e-11), ('vmax', 'Största plottade hastighet vmax [m/s]', 10000000.0), ('amax', 'Kartans största radie amax [m]', 2e-10)]
 
     def validate(self, params):
@@ -61,15 +61,17 @@ class ElectronOrbitDipoleMoment(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111)
         t = np.linspace(0, 2 * np.pi, 260)
-        ax.plot(np.cos(t), np.sin(t), color='firebrick', linewidth=2)
-        ax.annotate('', xy=(np.cos(1.3), np.sin(1.3)), xytext=(np.cos(0.8), np.sin(0.8)), arrowprops=dict(arrowstyle='->', linewidth=1.8, color='firebrick'))
-        ax.annotate('-m', xy=(0, -1.15), xytext=(0, -0.2), arrowprops=dict(arrowstyle='->', linewidth=2, color='steelblue'), color='steelblue', ha='center')
-        ax.text(0.55, 0.55, 'elektronbana', fontsize=9)
-        ax.set_xlim(-1.3, 1.3)
-        ax.set_ylim(-1.3, 1.3)
-        ax.set_aspect('equal')
+        ax.plot(np.cos(t), np.sin(t), color='black', linewidth=2)
+        for radius, start, end, color in [(1, 0.5, 1.0, 'steelblue'), (1.15, 2.3, 1.8, 'darkorange')]:
+            ax.annotate('', xy=(radius*np.cos(end), radius*np.sin(end)), xytext=(radius*np.cos(start), radius*np.sin(start)), arrowprops=dict(arrowstyle='->', lw=2, color=color))
+        ax.text(1.15, .6, 'v', color='steelblue')
+        ax.text(-.55, 1.15, 'I', color='darkorange')
+        ax.text(0, 0, r'$\otimes$', ha='center', va='center', fontsize=26, color='steelblue')
+        ax.text(0, -.4, 'm längs −z', ha='center', color='steelblue')
+        ax.text(0, -1.35, 'Elektron moturs, ström medurs', ha='center', fontsize=9)
+        ax.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Geometri: cirkelbana i xy-planet')
+        ax.set_title('Elektronbana sedd från +z')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -89,7 +91,7 @@ class ElectronOrbitDipoleMoment(ProblemBase):
 
 class CircularLoopTorqueUniformField(ProblemBase):
     name = '7.2 Kraftmoment på cirkulär slinga i homogent fält'
-    description = "En cirkulär strömslinga med radie a ligger i xy-planet i ett homogent magnetfält B = B x̂. Strömmen går positivt relativt +z. Läget 'Fält' visar fördelat momentbidrag dT_y/dφ och dess kumulativa integral; läget 'Karta' varierar B och I för totala momentet T = π I B a² ŷ."
+    description = "En cirkulär strömslinga med radie a ligger i xy-planet i ett homogent magnetfält B = B x̂. Strömmen går positivt relativt +z. Profilen visar fördelat momentbidrag dT_y/dφ och dess kumulativa integral; kartan varierar signerade B och I för totala momentet T = π I B a² ŷ."
     parameters = [('I', 'Slingström I [A]', 2.0), ('B', 'Homogent fält B [T]', 0.3), ('a', 'Slingradie a [m]', 0.12), ('samples', 'Vinkelpunkter', 500), ('Imax', 'Kartans största ström Imax [A]', 6.0), ('Bmax', 'Kartans största fält Bmax [T]', 1.0)]
 
     def validate(self, params):
@@ -108,21 +110,21 @@ class CircularLoopTorqueUniformField(ProblemBase):
         I, B, a = (params['I'], params['B'], params['a'])
         if mode == 'Map':
             ax = fig.add_subplot(111)
-            Ivals = np.linspace(0.0, params['Imax'], 220)
-            Bvals = np.linspace(0.0, params['Bmax'], 220)
+            Ivals = np.linspace(-max(params['Imax'], abs(I)), max(params['Imax'], abs(I)), 220)
+            Bvals = np.linspace(-max(params['Bmax'], abs(B)), max(params['Bmax'], abs(B)), 220)
             II, BB = np.meshgrid(Ivals, Bvals)
             TT = self._torque(II, BB, a)
-            im = ax.pcolormesh(Ivals, Bvals, TT, cmap='viridis', shading='auto')
-            fig.colorbar(im, ax=ax).set_label('|T| [N·m]')
+            im = ax.pcolormesh(Ivals, Bvals, TT, cmap='RdBu_r', shading='auto')
+            fig.colorbar(im, ax=ax).set_label('Ty [N·m]')
             ax.scatter([I], [B], color='red', s=30)
             ax.set_xlabel('Ström I [A]')
             ax.set_ylabel('Fält B [T]')
-            ax.set_title('Momentkarta: |T| = π I B a²')
+            ax.set_title('Signerat moment Ty = π I B a²')
             return
         ax = fig.add_subplot(111)
         n = int(round(params['samples']))
         phi = np.linspace(0.0, 2 * np.pi, n)
-        dTy_dphi = I * B * a ** 2 * np.sin(phi) ** 2
+        dTy_dphi = I * B * a ** 2 * np.cos(phi) ** 2
         cumulative = np.zeros_like(phi)
         cumulative[1:] = np.cumsum(0.5 * (dTy_dphi[1:] + dTy_dphi[:-1]) * np.diff(phi))
         ax.plot(phi, dTy_dphi, label='dT_y/dφ')
@@ -137,35 +139,40 @@ class CircularLoopTorqueUniformField(ProblemBase):
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        t = np.linspace(0, 2 * np.pi, 300)
-        ax.plot(params['a'] * np.cos(t), params['a'] * np.sin(t), color='firebrick', linewidth=2)
-        ax.annotate('I', xy=(0.55 * params['a'], 0.83 * params['a']), xytext=(0.1 * params['a'], 1.1 * params['a']), arrowprops=dict(arrowstyle='->', linewidth=1.8, color='firebrick'), color='firebrick')
-        for y0 in np.linspace(-0.75 * params['a'], 0.75 * params['a'], 5):
-            ax.annotate('', xy=(1.55 * params['a'], y0), xytext=(0.95 * params['a'], y0), arrowprops=dict(arrowstyle='->', linewidth=1.6, color='steelblue'))
-        ax.text(1.25 * params['a'], 0.95 * params['a'], 'B = B x̂', color='steelblue', ha='center')
-        ax.annotate('T', xy=(0.0, 1.45 * params['a']), xytext=(0.0, 0.35 * params['a']), arrowprops=dict(arrowstyle='->', linewidth=2.2, color='darkgreen'), color='darkgreen', ha='center')
-        ax.text(0.12 * params['a'], 1.48 * params['a'], '+ŷ', color='darkgreen', va='bottom')
-        ax.set_xlim(-1.4 * params['a'], 1.9 * params['a'])
-        ax.set_ylim(-1.4 * params['a'], 1.8 * params['a'])
-        ax.set_aspect('equal')
+        a, I, B = params['a'], params['I'], params['B']
+        t = np.linspace(0, 2*np.pi, 300)
+        ax.plot(a*np.cos(t), a*np.sin(t), color='black', lw=2)
+        if I:
+            t0, t1 = .7 - .2*np.sign(I), .7 + .2*np.sign(I)
+            ax.annotate('', xy=(a*np.cos(t1), a*np.sin(t1)), xytext=(a*np.cos(t0), a*np.sin(t0)), arrowprops=dict(arrowstyle='->', lw=2, color='darkorange'))
+        if B:
+            for y in [-.6*a, 0, .6*a]:
+                ax.annotate('', xy=(1.35*a + .3*a*np.sign(B), y), xytext=(1.35*a - .3*a*np.sign(B), y), arrowprops=dict(arrowstyle='->', color='steelblue', lw=2))
+        torque = self._torque(I, B, a)
+        if torque:
+            ax.annotate('', xy=(0, np.sign(torque)*1.25*a), xytext=(0, 0), arrowprops=dict(arrowstyle='->', color='darkgreen', lw=2))
+        ax.text(-1.3*a, 1.4*a, f'I = {I:g} A', color='darkorange', fontsize=9)
+        ax.text(1.3*a, .85*a, f'Bx = {B:g} T', ha='center', color='steelblue', fontsize=9)
+        ax.text(0, -1.65*a, f'Ty = {torque:.2e} N·m', ha='center', color='darkgreen', fontsize=9)
+        ax.set(xlim=(-1.5*a, 2*a), ylim=(-1.9*a, 1.8*a), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Geometri: slinga i xy-planet, B längs +x')
+        ax.set_title('Sedd från +z: x åt höger, y uppåt')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
         I, B, a = (params['I'], params['B'], params['a'])
         ax = fig.add_subplot(111, projection='3d')
         if mode == 'Map':
-            Ivals = np.linspace(0.0, params['Imax'], 80)
-            Bvals = np.linspace(0.0, params['Bmax'], 80)
+            Ivals = np.linspace(-max(params['Imax'], abs(I)), max(params['Imax'], abs(I)), 80)
+            Bvals = np.linspace(-max(params['Bmax'], abs(B)), max(params['Bmax'], abs(B)), 80)
             II, BB = np.meshgrid(Ivals, Bvals)
             TT = self._torque(II, BB, a)
-            surf = ax.plot_surface(II, BB, TT, cmap='viridis', alpha=0.92, linewidth=0)
-            fig.colorbar(surf, ax=ax, shrink=0.55, pad=0.1).set_label('|T| [N·m]')
+            surf = ax.plot_surface(II, BB, TT, cmap='RdBu_r', alpha=0.92, linewidth=0)
+            fig.colorbar(surf, ax=ax, shrink=0.55, pad=0.1).set_label('Ty [N·m]')
             ax.scatter([I], [B], [self._torque(I, B, a)], color='red', s=35)
             ax.set_xlabel('I [A]')
             ax.set_ylabel('B [T]')
-            ax.set_zlabel('|T| [N·m]')
+            ax.set_zlabel('Ty [N·m]')
             ax.set_title('Designyta för moment på cirkulär slinga')
             return
         t = np.linspace(0, 2 * np.pi, 300)
@@ -174,9 +181,9 @@ class CircularLoopTorqueUniformField(ProblemBase):
         z = np.zeros_like(t)
         ax.plot(x, y, z, color='firebrick', linewidth=2.5)
         for y0 in np.linspace(-0.8 * a, 0.8 * a, 5):
-            ax.quiver(-1.2 * a, y0, 0.0, 0.9 * a, 0.0, 0.0, color='steelblue', linewidth=1.3, arrow_length_ratio=0.15)
+            ax.quiver(-1.2 * a, y0, 0.0, np.sign(B) * 0.9 * a, 0.0, 0.0, color='steelblue', linewidth=1.3, arrow_length_ratio=0.15)
         torque = self._torque(I, B, a)
-        ax.quiver(0.0, 0.0, 0.0, 0.0, min(1.4 * a, max(0.2 * a, torque / max(B * I * a, 1e-18) * 0.2)), 0.0, color='darkgreen', linewidth=2.4, arrow_length_ratio=0.12)
+        ax.quiver(0.0, 0.0, 0.0, 0.0, np.sign(torque) * a, 0.0, color='darkgreen', linewidth=2.4, arrow_length_ratio=0.12)
         ax.text(0.0, 1.25 * a, 0.0, f'T = {torque:.2e} ŷ N·m', fontsize=8)
         ax.set_xlim(-1.5 * a, 1.5 * a)
         ax.set_ylim(-1.5 * a, 1.7 * a)
@@ -184,11 +191,11 @@ class CircularLoopTorqueUniformField(ProblemBase):
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
         ax.set_zlabel('z [m]')
-        ax.set_title('3-D-vy: m || +z, B || +x, T || +y')
+        ax.set_title('Slinga: B längs x, moment längs y (signerade)')
 
 class DipoleDipoleTorque(ProblemBase):
     name = '7.3 Kraftmoment mellan två magnetiska dipoler'
-    description = "Två små spolar har lika magnetiska dipolmoment m = m ẑ. Separationsvektorn har längd r och bildar vinkeln θ med +z. Momentets belopp på vardera dipolen är T = (3 μ0 m² / (8π r³)) sin(2θ). Läget 'Fält' visar moment mot vinkel; läget 'Karta' varierar r och θ."
+    description = "Två små spolar har lika magnetiska dipolmoment m = m ẑ. Separationsvektorn har längd r och bildar vinkeln θ med +z. Momentets y-komponent i xz-geometrin är Ty = (3 μ0 m² / (8π r³)) sin(2θ); beloppet är |Ty|. Profilen visar signerat moment mot vinkel; kartan visar momentbelopp mot r och θ."
     parameters = [('m', 'Dipolmoment m [A·m²]', 1.0), ('r', 'Avstånd r [m]', 1.0), ('theta_deg', 'Vinkel θ [grad]', 45.0), ('rmax', 'Kartans största avstånd rmax [m]', 3.0)]
 
     def validate(self, params):
@@ -196,6 +203,8 @@ class DipoleDipoleTorque(ProblemBase):
             return 'm får inte vara noll.'
         if params['r'] <= 0 or params['rmax'] <= 0:
             return 'r och rmax måste vara positiva.'
+        if not 0 <= params['theta_deg'] <= 180:
+            return 'θ måste ligga mellan 0 och 180 grader.'
         return None
 
     @staticmethod
@@ -210,8 +219,8 @@ class DipoleDipoleTorque(ProblemBase):
         T0 = self._torque(m, r, theta)
         if mode == 'Map':
             ax = fig.add_subplot(111)
-            theta_vals = np.linspace(0.0, 90.0, 220)
-            r_vals = np.linspace(max(0.08 * params['rmax'], 0.05), params['rmax'], 220)
+            theta_vals = np.linspace(0.0, 180.0, 220)
+            r_vals = np.geomspace(min(0.08 * params['rmax'], r), max(params['rmax'], r), 220)
             TT, RR = np.meshgrid(np.radians(theta_vals), r_vals)
             torque = np.abs(self._torque(m, RR, TT))
             im = ax.pcolormesh(theta_vals, r_vals, torque, cmap='viridis', shading='auto')
@@ -222,13 +231,14 @@ class DipoleDipoleTorque(ProblemBase):
             ax.set_title('Dipol–dipol-momentkarta')
             return
         ax = fig.add_subplot(111)
-        theta_vals = np.linspace(0.0, 90.0, 500)
+        theta_vals = np.linspace(0.0, 180.0, 500)
         torque = self._torque(m, r, np.radians(theta_vals))
         ax.plot(theta_vals, torque)
         ax.scatter([theta_deg], [T0], color='red', s=35)
         ax.axvline(45.0, linestyle='--', linewidth=1, color='grey', label='Max vid 45°')
         ax.set_xlabel('Vinkel θ [grad]')
-        ax.set_ylabel('Moment T [N·m]')
+        ax.axhline(0, color='black', lw=.8)
+        ax.set_ylabel('Signerat moment Ty [N·m]')
         ax.set_title('Moment på ena dipolen från den andra')
         ax.grid(True, alpha=0.3)
         ax.legend(fontsize=8)
@@ -237,24 +247,22 @@ class DipoleDipoleTorque(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111)
         theta = math.radians(params['theta_deg'])
-        r = 1.0
-        p0 = np.array([0.0, 0.0])
-        p1 = r * np.array([math.sin(theta), math.cos(theta)])
-        ax.scatter([p0[0], p1[0]], [p0[1], p1[1]], color=['black', 'firebrick'], s=30)
-        ax.plot([p0[0], p1[0]], [p0[1], p1[1]], color='grey', linestyle='--')
-        ax.annotate('m', xy=p0 + np.array([0, 0.8]), xytext=p0 + np.array([0, 0.15]), arrowprops=dict(arrowstyle='->', linewidth=2, color='steelblue'), color='steelblue', ha='center')
-        ax.annotate('m', xy=p1 + np.array([0, 0.8]), xytext=p1 + np.array([0, 0.15]), arrowprops=dict(arrowstyle='->', linewidth=2, color='steelblue'), color='steelblue', ha='center')
-        arc = np.linspace(0, theta, 120)
-        ax.plot(0.25 * np.sin(arc), 0.25 * np.cos(arc), color='darkgreen')
-        ax.text(0.18 * math.sin(theta / 2), 0.18 * math.cos(theta / 2), 'θ', color='darkgreen')
-        ax.text(0.55 * p1[0], 0.55 * p1[1] + 0.05, 'r', color='grey')
-        ax.plot([0, 0], [-0.1, 1.25], color='black', linewidth=1)
-        ax.text(0.04, 1.18, '+z', fontsize=9)
-        ax.set_xlim(-0.3, 1.2)
-        ax.set_ylim(-0.15, 1.35)
-        ax.set_aspect('equal')
+        p1 = np.array([math.sin(theta), math.cos(theta)])
+        ax.plot([0, p1[0]], [0, p1[1]], '--', color='grey')
+        for pos in [np.zeros(2), p1]:
+            ax.scatter([pos[0]], [pos[1]], color='black', s=25)
+            ax.annotate('', xy=pos + [0, .45*np.sign(params['m'])], xytext=pos, arrowprops=dict(arrowstyle='->', color='steelblue', lw=2))
+        arc = np.linspace(0, theta, 100)
+        ax.plot(.25*np.sin(arc), .25*np.cos(arc), color='darkorange')
+        ax.text(.35*math.sin(theta/2), .35*math.cos(theta/2), 'θ', color='darkorange')
+        ax.text(.5*p1[0]+.08, .5*p1[1], 'r')
+        ax.axvline(0, color='grey', lw=.6)
+        ax.text(-.35, 1.4, '+z ↑', fontsize=9)
+        torque = self._torque(params['m'], params['r'], theta)
+        ax.text(.45, -1.45, f'Ty = {torque:.2e} N·m', ha='center', fontsize=9)
+        ax.set(xlim=(-.5, 1.6), ylim=(-1.6, 1.6), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Geometri: två dipoler, m || ẑ')
+        ax.set_title('xz-planet: moment kring ±y')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -264,15 +272,17 @@ class DipoleDipoleTorque(ProblemBase):
         p1 = np.array([r * math.sin(theta), 0.0, r * math.cos(theta)])
         ax.scatter([0, p1[0]], [0, p1[1]], [0, p1[2]], color=['black', 'firebrick'], s=40)
         ax.plot([0, p1[0]], [0, p1[1]], [0, p1[2]], color='grey', linestyle='--')
-        ax.quiver(0, 0, 0, 0, 0, 0.7 * r, color='steelblue', linewidth=2, arrow_length_ratio=0.15)
-        ax.quiver(p1[0], p1[1], p1[2], 0, 0, 0.7 * r, color='steelblue', linewidth=2, arrow_length_ratio=0.15)
-        Tmag = abs(self._torque(m, r, theta))
-        ax.quiver(p1[0], p1[1], p1[2], 0.25 * r, 0, 0, color='darkgreen', linewidth=2, arrow_length_ratio=0.2)
+        ax.quiver(0, 0, 0, 0, 0, np.sign(m) * 0.7 * r, color='steelblue', linewidth=2, arrow_length_ratio=0.15)
+        ax.quiver(p1[0], p1[1], p1[2], 0, 0, np.sign(m) * 0.7 * r, color='steelblue', linewidth=2, arrow_length_ratio=0.15)
+        torque = self._torque(m, r, theta)
+        Tmag = abs(torque)
+        direction = 0 if abs(np.sin(2*theta)) < 1e-14 else np.sign(torque)
+        ax.quiver(p1[0], p1[1], p1[2], 0, direction * 0.4 * r, 0, color='darkgreen', linewidth=2, arrow_length_ratio=0.2)
         ax.text(p1[0], p1[1], p1[2] + 0.15 * r, f'|T|={Tmag:.2e} N·m', fontsize=8)
         lim = 1.25 * max(r, 1e-06)
         ax.set_xlim(-0.3 * lim, lim)
         ax.set_ylim(-0.6 * lim, 0.6 * lim)
-        ax.set_zlim(-0.1 * lim, 1.3 * lim)
+        ax.set_zlim(-1.8 * r, 1.8 * r)
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
         ax.set_zlabel('z [m]')
@@ -290,16 +300,17 @@ class LoopDipoleApproximationError(ProblemBase):
 
     @staticmethod
     def z_for_tol(a, tol):
-        return a / math.sqrt((1 + tol) ** (2 / 3) - 1)
+        return a / math.sqrt(math.expm1((2 / 3) * math.log1p(tol)))
 
     def plot(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111)
         a, I, tol = (params['a'], params['I'], params['tol'])
-        z = np.linspace(1.01 * a, 30 * a, 700)
+        ztol = self.z_for_tol(a, tol)
+        z = np.geomspace(a, max(30*a, 1.3*ztol), 700)
         exact = MU0 * I * a * a / (2 * (z * z + a * a) ** 1.5)
         dip = MU0 * I * a * a / (2 * z ** 3)
-        err = np.abs(dip / exact - 1)
+        err = np.expm1(1.5 * np.log1p((a / z) ** 2))
         ztol = self.z_for_tol(a, tol)
         if mode == 'Map':
             ax.plot(z / a, exact, label='exakt')
@@ -311,36 +322,37 @@ class LoopDipoleApproximationError(ProblemBase):
             ax.axhline(tol, linestyle='--', linewidth=1)
             ax.axvline(ztol / a, linestyle='--', linewidth=1)
             ax.set_ylabel('relativt fel')
-        ax.set_xlabel('z/a')
-        ax.set_title(f'Fel < {tol:.1%} för z > {ztol / a:.2f} a')
+        ax.set_xscale('log')
+        ax.set_xlabel('|z|/a')
+        ax.set_title(f'Fel < {tol:.3g} för |z| > {ztol / a:.2f} a')
+        if I == 0:
+            ax.text(.03, .04, 'I = 0: fälten är noll; felet visas som gränsvärde.', transform=ax.transAxes, fontsize=8)
         ax.grid(True, which='both', alpha=0.3)
 
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        a = params['a']
-        z = self.z_for_tol(a, params['tol'])
-        ax.add_patch(Circle((0, 0), a, fill=False, linewidth=2))
-        ax.plot([0, 0], [0, z], linestyle='--')
-        ax.scatter([0], [z])
-        ax.text(0, z, '  threshold', va='center')
-        ax.set_aspect('equal')
-        ax.set_xlim(-1.3 * a, 1.3 * a)
-        ax.set_ylim(-0.4 * a, min(z * 1.1, 15 * a))
+        ratio = self.z_for_tol(params['a'], params['tol']) / params['a']
+        # Schematic side view: use a labelled break rather than clip distant thresholds.
+        ax.plot([-1, 1], [0, 0], color='steelblue', lw=4)
+        ax.plot([0, 0], [0, 2.5], '--', color='grey')
+        ax.scatter([0], [2.5], color='black')
+        ax.text(.15, 2.5, f'|z| = {ratio:.2f} a', va='center')
+        ax.text(.15, 1.2, '⋯', fontsize=18)
+        ax.text(0, -.3, 'Slinga sedd från sidan (bredd 2a)', ha='center', fontsize=9)
+        ax.set(xlim=(-1.5, 2.5), ylim=(-.6, 3.1), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Slingans axel')
+        ax.set_title('Normalaxeln — schematisk avståndsskala')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111, projection='3d')
-        a, I = (params['a'], params['I'])
+        a = params['a']
         th = np.linspace(0, 2 * np.pi, 200)
         ax.plot(a * np.cos(th), a * np.sin(th), np.zeros_like(th), linewidth=2)
         z = np.linspace(a, 15 * a, 80)
-        exact = MU0 * I * a * a / (2 * (z * z + a * a) ** 1.5)
-        dip = MU0 * I * a * a / (2 * z ** 3)
         ax.plot(np.zeros_like(z), np.zeros_like(z), z, label='axel')
-        ax.scatter(np.zeros(10), np.zeros(10), z[::8], s=15, c=(dip / exact)[::8])
+        ax.scatter(np.zeros(10), np.zeros(10), z[::8], s=15, c=((1 + (a / z)**2)**1.5)[::8])
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
@@ -348,14 +360,14 @@ class LoopDipoleApproximationError(ProblemBase):
 
 class AntarcticIceFlux(ProblemBase):
     name = '7.6 Magnetiskt flöde genom Antarktis iskalott'
-    description = "Söder om latitud 70°S antas ett 1000 m tjockt islager med vertikal yttervägg. Med jordens dipolmoment m fås flödet ut ur isen till luften: Φ = (μ0 m / (2 r_J)) sin²(θ_max), där θ_max = 90° − latitud. Läget 'Fält' visar ackumulerat flöde mot latitudgräns; läget 'Karta' varierar dipolmoment och latitud."
-    parameters = [('m', 'Jordens dipolmoment m [A·m²]', 8.24e+22), ('rJ', 'Jordradie rJ [m]', 6370000.0), ('latitude_deg', 'Latitudgräns syd [grad]', 70.0), ('ice_h', 'Istjocklek h [m]', 1000.0), ('mmax', 'Kartans största dipolmoment [A·m²]', 1.4e+23)]
+    description = "Söder om latitud 70°S antas ett 1000 m tjockt islager med vertikal yttervägg. Med jordens dipolmoment m fås flödet ut ur isen till luften: Φ = (μ0 m / (2 r_J)) sin²(θ_max), där θ_max = 90° − latitud. Profilen visar flöde mot latitudgräns; kartan varierar dipolmoment och latitud. Istjockleken påverkar inte summan av flödena genom ovansida och rand."
+    parameters = [('m', 'Jordens dipolmoment m [A·m²]', 8.24e+22), ('rJ', 'Jordradie rJ [m]', 6370000.0), ('latitude_deg', 'Latitudgräns syd [grad]', 70.0), ('mmax', 'Kartans största dipolmoment [A·m²]', 1.4e+23)]
 
     def validate(self, params):
-        if params['m'] <= 0 or params['rJ'] <= 0 or params['ice_h'] <= 0 or (params['mmax'] <= 0):
-            return 'm, rJ, ice_h och mmax måste vara positiva.'
-        if not 0 < params['latitude_deg'] < 90:
-            return 'latitud måste ligga mellan 0 och 90 grader syd.'
+        if params['m'] <= 0 or params['rJ'] <= 0 or (params['mmax'] <= 0):
+            return 'm, rJ och mmax måste vara positiva.'
+        if not 0 <= params['latitude_deg'] <= 90:
+            return 'latitud måste ligga mellan 0 och 90 grader syd, inklusive ändpunkterna.'
         return None
 
     @staticmethod
@@ -373,8 +385,8 @@ class AntarcticIceFlux(ProblemBase):
         phi0 = self._flux(m, rJ, lat)
         if mode == 'Map':
             ax = fig.add_subplot(111)
-            lats = np.linspace(1.0, 89.0, 220)
-            mvals = np.linspace(2e+22, params['mmax'], 220)
+            lats = np.linspace(0.0, 90.0, 220)
+            mvals = np.linspace(0, max(params['mmax'], m), 220)
             LL, MM = np.meshgrid(lats, mvals)
             Phi = self._flux(MM, rJ, LL)
             im = ax.pcolormesh(lats, mvals / 1e+23, Phi, cmap='viridis', shading='auto')
@@ -385,7 +397,7 @@ class AntarcticIceFlux(ProblemBase):
             ax.set_title('Flöde från isen ut i luften')
             return
         ax = fig.add_subplot(111)
-        lats = np.linspace(1.0, 89.0, 500)
+        lats = np.linspace(0.0, 90.0, 500)
         Phi = self._flux(m, rJ, lats)
         ax.plot(lats, Phi)
         ax.scatter([lat], [phi0], color='red', s=35)
@@ -398,23 +410,26 @@ class AntarcticIceFlux(ProblemBase):
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        R = 1.0
-        lat = params['latitude_deg']
-        theta = math.radians(90.0 - lat)
-        t = np.linspace(math.pi / 2, 3 * math.pi / 2, 300)
-        ax.plot(np.cos(t), np.sin(t), color='black', linewidth=1.5)
-        z_cut = -math.cos(theta)
-        x_cut = math.sin(theta)
-        ax.plot([-x_cut, x_cut], [z_cut, z_cut], color='steelblue', linewidth=2)
-        ax.fill_between(np.linspace(-x_cut, x_cut, 200), z_cut, -1.0, color='lightskyblue', alpha=0.5)
-        ax.annotate('is', xy=(0.0, (z_cut - 1.0) / 2), ha='center', color='navy')
-        ax.annotate('h', xy=(1.08, z_cut), xytext=(1.08, -1.0), arrowprops=dict(arrowstyle='<->', linewidth=1.8, color='darkgreen'), color='darkgreen', va='center')
-        ax.text(0.05, -0.05, 'Jordtvärsnitt', fontsize=9)
-        ax.set_xlim(-1.2, 1.3)
-        ax.set_ylim(-1.15, 0.15)
-        ax.set_aspect('equal')
+        theta = math.radians(90 - params['latitude_deg'])
+        t = np.linspace(-theta, theta, 160)
+        outer = 1.08  # Deliberately exaggerated thickness, not the cap height.
+        x, z = np.sin(t), -np.cos(t)
+        xo, zo = outer*x, outer*z
+        ax.fill(np.r_[x, xo[::-1]], np.r_[z, zo[::-1]], color='lightskyblue', alpha=.6)
+        ax.plot(x, z, color='black', lw=2, label='Botten mot jorden')
+        ax.plot(xo, zo, color='steelblue', lw=2, label='Is–luft: ovansida + rand')
+        for j in [0, -1]:
+            ax.plot([x[j], xo[j]], [z[j], zo[j]], color='steelblue', lw=2)
+            ax.plot([0, x[j]], [0, z[j]], ':', color='grey')
+        ax.annotate('', xy=(0, -outer), xytext=(0, -1), arrowprops=dict(arrowstyle='<->', color='black'))
+        ax.text(.04, -1.04, 'h (överdriven)', fontsize=9, va='center')
+        ax.annotate('', xy=(0, -.65), xytext=(0, -.2), arrowprops=dict(arrowstyle='->', color='darkorange', lw=2))
+        ax.text(.05, -.45, 'm mot syd', color='darkorange', fontsize=9)
+        ax.text(-.65, -.18, f'θmax = {90-params["latitude_deg"]:g}°', fontsize=9)
+        ax.set(xlim=(-1.2, 1.2), ylim=(-1.2, .05), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Geometri: område söder om vald latitud')
+        ax.legend(loc='upper right', fontsize=8)
+        ax.set_title('Isvolym: botten + ovansida + rand')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -435,7 +450,7 @@ class AntarcticIceFlux(ProblemBase):
         ax.text(0.1, 0.0, -0.15, f'Φ={phi0:.2e} Wb', fontsize=8)
         ax.set_xlim(-1.1, 1.1)
         ax.set_ylim(-1.1, 1.1)
-        ax.set_zlim(-1.1, 0.2)
+        ax.set_zlim(-1.4, 0.2)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
@@ -443,7 +458,7 @@ class AntarcticIceFlux(ProblemBase):
 
 class CopperWireMagneticLevitation(ProblemBase):
     name = '7.7 Kraftbalans för koppartråd'
-    description = "En horisontell koppartråd har likformig strömtäthet J = J x̂ i ett homogent fält B = B ŷ. Den magnetiska krafttätheten J×B pekar i +z och kan balansera tyngden ρg. Läget 'Fält' visar nettokrafttäthet mot B; läget 'Karta' varierar J och ρ och visar B_req = ρg/J."
+    description = "En horisontell koppartråd har likformig strömtäthet J = J x̂ i ett homogent fält B = B ŷ. Den magnetiska krafttätheten J×B pekar i +z och kan balansera tyngden ρg. Profilen visar krafttätheter mot B; kartan varierar J och ρ och visar B_req = ρg/J. Kraftbalans innebär inte automatiskt stabil svävning."
     parameters = [('J', 'Strömtäthet J [A/m²]', 3000000.0), ('rho_cu', 'Masstäthet ρ [kg/m³]', 8900.0), ('g', 'Tyngdacceleration g [m/s²]', 9.81), ('Bmax', 'Största plottade fält Bmax [T]', 0.08), ('Jmax', 'Kartans största strömtäthet Jmax [A/m²]', 8000000.0), ('rhomax', 'Kartans största densitet ρmax [kg/m³]', 12000.0)]
 
     def validate(self, params):
@@ -463,8 +478,8 @@ class CopperWireMagneticLevitation(ProblemBase):
         Breq = self._required_B(J, rho_cu, g)
         if mode == 'Map':
             ax = fig.add_subplot(111)
-            Jvals = np.linspace(200000.0, params['Jmax'], 220)
-            rhos = np.linspace(1000.0, params['rhomax'], 220)
+            Jvals = np.geomspace(min(.025*params['Jmax'], J), max(params['Jmax'], J), 220)
+            rhos = np.linspace(0, max(params['rhomax'], rho_cu), 220)
             JJ, RR = np.meshgrid(Jvals, rhos)
             BB = self._required_B(JJ, RR, g)
             im = ax.pcolormesh(Jvals / 1000000.0, rhos, BB, cmap='viridis', shading='auto')
@@ -475,7 +490,7 @@ class CopperWireMagneticLevitation(ProblemBase):
             ax.set_title('Krävt B för magnetisk levitation: B = ρg/J')
             return
         ax = fig.add_subplot(111)
-        B = np.linspace(0.0, params['Bmax'], 500)
+        B = np.linspace(0.0, max(params['Bmax'], 1.2*Breq), 500)
         f_mag = J * B
         f_grav = rho_cu * g * np.ones_like(B)
         f_net = f_mag - f_grav
@@ -492,17 +507,17 @@ class CopperWireMagneticLevitation(ProblemBase):
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        a = 1.0
-        ax.add_patch(Rectangle((-1.2 * a, -0.18 * a), 2.4 * a, 0.36 * a, fill=False, linewidth=2, color='sienna'))
-        ax.annotate('J', xy=(0.95 * a, 0), xytext=(-0.8 * a, 0), arrowprops=dict(arrowstyle='->', linewidth=2.0, color='firebrick'), color='firebrick', va='center')
-        ax.annotate('B', xy=(0.0, 1.0 * a), xytext=(0.0, 0.2 * a), arrowprops=dict(arrowstyle='->', linewidth=2.0, color='steelblue'), color='steelblue', ha='center')
-        ax.annotate('J×B', xy=(1.35 * a, 0.95 * a), xytext=(1.35 * a, 0.15 * a), arrowprops=dict(arrowstyle='->', linewidth=2.2, color='darkgreen'), color='darkgreen', ha='center')
-        ax.annotate('ρg', xy=(-1.35 * a, -1.0 * a), xytext=(-1.35 * a, -0.1 * a), arrowprops=dict(arrowstyle='->', linewidth=2.2, color='black'), color='black', ha='center')
-        ax.set_xlim(-1.8 * a, 1.8 * a)
-        ax.set_ylim(-1.35 * a, 1.35 * a)
-        ax.set_aspect('equal')
+        ax.add_patch(Rectangle((-1.2, -.15), 2.4, .3, fill=False, lw=2))
+        ax.annotate('', xy=(.9, 0), xytext=(-.9, 0), arrowprops=dict(arrowstyle='->', lw=2, color='darkorange'))
+        ax.text(-.9, .25, 'J längs +x', color='darkorange', fontsize=9)
+        ax.text(0, .65, r'$\otimes$ B längs +y', color='steelblue', ha='center', fontsize=12)
+        ax.annotate('', xy=(1.4, 1), xytext=(1.4, 0), arrowprops=dict(arrowstyle='->', lw=2, color='steelblue'))
+        ax.text(1.4, 1.1, 'J×B', ha='center', color='steelblue')
+        ax.annotate('', xy=(-1.4, -1), xytext=(-1.4, 0), arrowprops=dict(arrowstyle='->', lw=2, color='black'))
+        ax.text(-1.4, -1.2, 'ρg', ha='center')
+        ax.set(xlim=(-1.9, 1.9), ylim=(-1.4, 1.4), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Geometri: ström +x, fält +y, lyft +z')
+        ax.set_title('xz-planet: +z uppåt, +y in i bilden')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -510,8 +525,8 @@ class CopperWireMagneticLevitation(ProblemBase):
         Breq = self._required_B(J, rho_cu, g)
         ax = fig.add_subplot(111, projection='3d')
         if mode == 'Map':
-            Jvals = np.linspace(200000.0, params['Jmax'], 80)
-            rhos = np.linspace(1000.0, params['rhomax'], 80)
+            Jvals = np.geomspace(min(.025*params['Jmax'], J), max(params['Jmax'], J), 80)
+            rhos = np.linspace(0, max(params['rhomax'], rho_cu), 80)
             JJ, RR = np.meshgrid(Jvals, rhos)
             BB = self._required_B(JJ, RR, g)
             surf = ax.plot_surface(JJ / 1000000.0, RR, BB, cmap='viridis', alpha=0.92, linewidth=0)
@@ -548,7 +563,7 @@ class InfiniteWireRectangularLoopFlux(ProblemBase):
 
     @staticmethod
     def flux(I, a, b, c):
-        return MU0 * I * a / (4 * math.pi) * math.log((b * b + c * c) / (c * c))
+        return MU0 * I * a / (4 * math.pi) * math.log1p((b / c) ** 2)
 
     def plot(self, fig, params, mode):
         fig.clear()
@@ -570,15 +585,18 @@ class InfiniteWireRectangularLoopFlux(ProblemBase):
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        a, b = (params['a'], params['b'])
-        ax.plot([0, a, a, 0, 0], [0, 0, b, b, 0], linewidth=2)
-        ax.arrow(-0.1 * a, -0.15 * b, 1.2 * a, 0, head_width=0.04 * b, length_includes_head=True)
-        ax.text(0.5 * a, -0.25 * b, 'ledare längs x', ha='center')
-        ax.set_aspect('equal')
-        ax.set_xlim(-0.2 * a, 1.2 * a)
-        ax.set_ylim(-0.35 * b, 1.2 * b)
-        ax.set_axis_off()
-        ax.set_title('Slingans projektion')
+        b, c, I = params['b'], params['c'], params['I']
+        span = max(b, c)
+        ax.plot([0, b], [c, c], color='steelblue', lw=3, label='Slinga i z=c (längd a längs x)')
+        symbol = r'$\odot$' if I > 0 else r'$\otimes$' if I < 0 else '0'
+        ax.text(0, 0, symbol, ha='center', va='center', fontsize=22)
+        ax.text(.12*span, 0, 'Ledare längs x', va='center', fontsize=9)
+        ax.plot([0, 0], [0, c], ':', color='grey')
+        ax.annotate('', xy=(.5*b, c+.3*span), xytext=(.5*b, c), arrowprops=dict(arrowstyle='->', lw=2))
+        ax.text(.5*b+.06*span, c+.25*span, 'n = +z', fontsize=9)
+        ax.set(xlim=(-.25*span, b+.3*span), ylim=(-.2*span, c+.5*span), aspect='equal', xlabel='y [m]', ylabel='z [m]')
+        ax.legend(loc='upper left', fontsize=8)
+        ax.set_title('yz-snitt: x ut ur bilden')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
