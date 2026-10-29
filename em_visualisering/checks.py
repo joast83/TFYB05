@@ -174,7 +174,8 @@ def physics_checks_for_problem(problem, params):
         if isinstance(problem, ConductiveCoaxialElectrodes):
             sigma, ell, a, b, U = params['sigma'], params['ell'], params['a'], params['b'], params['U']
             I = problem.current(sigma, ell, a, b, U)
-            R = U / I if I != 0 else float('inf')
+            # Use the conductance at unit voltage when U=I=0.
+            R = U / I if I != 0 else 1 / problem.current(sigma, ell, a, b, 1.0)
             lines.append('Kontroll av resistans för koaxiell ledande vätska:')
             lines.append(_check_line('R = ln(b/a)/(2πσℓ)', R, math.log(b / a) / (2 * math.pi * sigma * ell), unit='Ω'))
             return '\n'.join(lines)

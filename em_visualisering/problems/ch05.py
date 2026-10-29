@@ -49,7 +49,7 @@ class ConductiveCoaxialElectrodes(ProblemBase):
         a, b = (params['a'], params['b'])
         ax.add_patch(Circle((0, 0), b, fill=False, linewidth=2))
         ax.add_patch(Circle((0, 0), a, fill=False, linewidth=2))
-        ax.text(0, 0, 'vätska', ha='center')
+        ax.text(0, (a + b) / 2, 'vätska', ha='center', va='center')
         ax.set_aspect('equal')
         ax.set_xlim(-1.2 * b, 1.2 * b)
         ax.set_ylim(-1.2 * b, 1.2 * b)
@@ -95,12 +95,12 @@ class CoaxialCableLeakage(ProblemBase):
         rr = np.logspace(math.log10(rho / 20), math.log10(rho * 20), 400)
         II, PP = self.leakage(rr, L, a, b, V)
         if mode == 'Magnitude':
-            ax.loglog(rr, PP)
+            ax.semilogx(rr, PP)
             ax.set_ylabel('P [W]')
             ax.set_title(f'P = {P * 1000.0:.3g} mW')
         else:
-            ax.loglog(rr, II)
-            ax.set_ylabel('I [A]')
+            ax.semilogx(rr, II)
+            ax.set_ylabel('Signerad läckström I [A]')
             ax.set_title(f'Läckström I = {I * 1000.0:.3g} mA')
         ax.axvline(rho, linestyle='--', linewidth=1)
         ax.set_xlabel('ρ [Ω m]')
@@ -112,7 +112,7 @@ class CoaxialCableLeakage(ProblemBase):
         a, b = (params['a'], params['b'])
         ax.add_patch(Circle((0, 0), b / 2, fill=False, linewidth=2))
         ax.add_patch(Circle((0, 0), a / 2, fill=True, alpha=0.25))
-        ax.text(0, 0, 'isolering', ha='center', va='bottom')
+        ax.text(0, (a + b) / 4, 'isolering', ha='center', va='center')
         ax.set_aspect('equal')
         ax.set_xlim(-0.6 * b, 0.6 * b)
         ax.set_ylim(-0.6 * b, 0.6 * b)
@@ -161,12 +161,14 @@ class VariableSigmaCoaxialElectrolyte(ProblemBase):
             ax.plot(R, np.full_like(R, rho))
             ax.set_ylabel('ρfree [C/m³]')
             ax.set_title(f'ρfree = {rho:.3e} C/m³')
+        elif mode == 'Magnitude':
+            ax.plot(R, J)
+            ax.set_ylabel('J_R [A/m²]')
+            ax.set_title(f'Strömtäthet; resistans = {self.resistance(k, L, a, b):.3e} Ω')
         else:
-            ax.plot(R, E, label='E_R [V/m]')
-            ax.plot(R, J, label='J_R [A/m²]')
-            ax.legend()
-            ax.set_ylabel('fält / strömtäthet')
-            ax.set_title(f'R = {self.resistance(k, L, a, b):.3e} Ω')
+            ax.plot(R, E)
+            ax.set_ylabel('E_R [V/m]')
+            ax.set_title(f'Elektriskt fält; resistans = {self.resistance(k, L, a, b):.3e} Ω')
         ax.set_xlabel('R [m]')
         ax.grid(True, alpha=0.3)
 
@@ -176,7 +178,7 @@ class VariableSigmaCoaxialElectrolyte(ProblemBase):
         a, b = (params['a'], params['b'])
         ax.add_patch(Circle((0, 0), b, fill=False, linewidth=2))
         ax.add_patch(Circle((0, 0), a, fill=False, linewidth=2))
-        ax.text(0, 0, 'σ=k/R²', ha='center')
+        ax.text(0, (a + b) / 2, 'σ=k/R²', ha='center', va='center')
         ax.set_aspect('equal')
         ax.set_xlim(-1.2 * b, 1.2 * b)
         ax.set_ylim(-1.2 * b, 1.2 * b)
@@ -230,17 +232,24 @@ class SemicylindricalRingResistor(ProblemBase):
         ax = fig.add_subplot(111)
         a, b = (params['a'], params['b'])
         th = np.linspace(0, math.pi, 200)
-        ax.plot(a * np.cos(th), a * np.sin(th), linewidth=2)
-        ax.plot(b * np.cos(th), b * np.sin(th), linewidth=2)
-        ax.plot([a, b], [0, 0], linewidth=2)
-        ax.plot([-a, -b], [0, 0], linewidth=2)
+        ax.plot(a * np.cos(th), a * np.sin(th), linewidth=2, color='black')
+        ax.plot(b * np.cos(th), b * np.sin(th), linewidth=2, color='black')
+        ax.plot([a, b], [0, 0], linewidth=2, color='black')
+        ax.plot([-a, -b], [0, 0], linewidth=2, color='black')
         ax.text(b * 0.85, 0.05 * b, 'A', ha='center')
         ax.text(-b * 0.85, 0.05 * b, 'B', ha='center')
+        for radius in np.linspace(a, b, 5)[1:-1]:
+            ax.plot(radius * np.cos(th), radius * np.sin(th),
+                    color='steelblue', linestyle='--', linewidth=1)
+            angles = np.array([0.35, 0.45]) * math.pi
+            ax.annotate('', xy=(radius * np.cos(angles[1]), radius * np.sin(angles[1])),
+                        xytext=(radius * np.cos(angles[0]), radius * np.sin(angles[0])),
+                        arrowprops=dict(arrowstyle='->', color='steelblue'))
         ax.set_aspect('equal')
         ax.set_xlim(-1.15 * b, 1.15 * b)
         ax.set_ylim(-0.15 * b, 1.15 * b)
         ax.set_axis_off()
-        ax.set_title('Halvring')
+        ax.set_title('Parallella strömvägar A → B (V_A > V_B)')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -282,7 +291,7 @@ class SteadyCurrentInterfaceCharge(ProblemBase):
         ax.axvline(s2, linestyle='--', linewidth=1)
         ax.set_xlabel('σ2 [S/m]')
         ax.set_ylabel('ρs [C/m²]')
-        ax.set_title(f'ρs = {self.rho_s(alpha, e1, e2, s1, s2):.3e} C/m²; zero if σ2/ε2 = σ1/ε1')
+        ax.set_title(f'Fri ytladdning ρs = {self.rho_s(alpha, e1, e2, s1, s2):.3e} C/m²')
         ax.grid(True, which='both', alpha=0.3)
 
     def draw_geometry(self, fig, params):

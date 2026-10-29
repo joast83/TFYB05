@@ -315,10 +315,10 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
          'Materialet i motståndet har konduktiviteten σ. Uppskatta motståndets resistans, det vill säga resistansen '
          'från ytan A till ytan B i figuren. Vi antar att strömmen går i tangentiell riktning, det vill säga att J = J '
          '· ϕ̂, och att J enbart beror av avståndet till z-axeln.',
- '5.15': 'Ett gränsskikt mellan två medium går längs yz-planet. Medium ⃝, 1 x < 0, och medium ⃝, 2 x > 0, är inte '
+ '5.15': 'Ett gränsskikt mellan två medium går längs yz-planet. Medium 1 (x < 0) och medium 2 (x > 0) är inte '
          'perfekta dielektrikum som i uppgift 3.20, utan karakteriseras av ε1 och σ1 respektive ε2 och σ2 . Vi kan '
          'alltså ha strömmar genom medierna. Vi antar dock att steady-state, fortvarighetstillstånd, råder. Det vill '
-         'säga att alla strömmar och laddningstätheter är tidsoberoende. Antag att strömtätheten för x = 0− är J 1 = '
+         'säga att alla strömmar och laddningstätheter är tidsoberoende. Antag att strömtätheten för x = 0− är J1 = '
          'αx̂ + β ŷ.\n'
          '\n'
          '(a) Beräkna ytladdningstätheten av fria laddningar, ρs , i ytskiktet.\n'
