@@ -56,6 +56,13 @@ SUPPORTS_TRUE_MAP = (
 def mode_options_for_problem(problem):
     """Returnerar synliga lägesnamn och motsvarande interna lägen för en uppgift."""
     special_options = (
+        (ElectronOrbitDipoleMoment, [('Dipolmoment mot hastighet', 'Field'), ('Moment mot radie och hastighet', 'Map')]),
+        (CircularLoopTorqueUniformField, [('Momentbidrag runt slingan', 'Field'), ('Moment mot ström och fält', 'Map')]),
+        (DipoleDipoleTorque, [('Signerat moment mot vinkel', 'Field'), ('Momentbelopp mot vinkel och avstånd', 'Map')]),
+        (LoopDipoleApproximationError, [('Relativt fel', 'Field'), ('Exakt fält och dipolfält', 'Map')]),
+        (AntarcticIceFlux, [('Flöde mot latitudgräns', 'Field'), ('Flöde mot latitud och dipolmoment', 'Map')]),
+        (CopperWireMagneticLevitation, [('Kraftbalans', 'Field'), ('Krävt fält mot strömtäthet och densitet', 'Map')]),
+        (InfiniteWireRectangularLoopFlux, [('Normalkomponent Bz och flöde', 'Field'), ('Bz över slingytan', 'Map')]),
         (ConductiveCoaxialElectrodes, [('Elektriskt fält E', 'Field'), ('Strömtäthet J', 'Magnitude')]),
         (CoaxialCableLeakage, [('Läckström I', 'Field'), ('Effektförlust P', 'Magnitude')]),
         (VariableSigmaCoaxialElectrolyte, [('Elektriskt fält E', 'Field'), ('Strömtäthet J', 'Magnitude'), ('Fri laddningstäthet ρ', 'D')]),
