@@ -255,12 +255,12 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
          '(d) Hur skulle beskrivningen i (c)-uppgiften ändrats om vi inte haft en elektret utan i stället två ytor med '
          'fri ytladdningstäthet, ρs = P vid z = h och ρs = −P vid z = 0?',
  '3.19': 'Ett gränsskikt mellan två medier går längs ett plan som är parallellt med z-axeln men skär x-axeln i punkten '
-         'ax̂ och y-axeln i punkten bŷ. Konstanterna a och b är positiva. Se figur. Medium ⃝, 1 som är det som '
-         'innehåller origo, utgörs av en perfekt ledare medan medium ⃝ 2 är ett perfekt dielektrikum. Med perfekt '
+         'ax̂ och y-axeln i punkten bŷ. Konstanterna a och b är positiva. Se figur. Medium 1 som är det som '
+         'innehåller origo, utgörs av en perfekt ledare medan medium 2 är ett perfekt dielektrikum. Med perfekt '
          'dielektrikum menar vi ett material som är linjärt, har relativ permittivitet εr , är en perfekt isolator, σ '
          '= 0, och inte innehåller någon fri laddningstäthet, ρ = 0.\n'
          '\n'
-         'På metallytan ligger dock en ytladdningstäthet av fria laddningar, ρs . Beräkna Doch E-fälten i en punkt '
+         'På metallytan ligger dock en ytladdningstäthet av fria laddningar, ρs . Beräkna D- och E-fälten i en punkt '
          'omedelbart utanför metallytan.',
  '4.1': 'Hur stort arbete åtgår för att ladda ett tunt, sfäriskt ledande skal med radie a till laddningen Q?',
  '4.2': 'En plan luftkondensator med plattarea A = 50 cm2 laddas upp till en spänning av V = 450 V. Hur stort skall '

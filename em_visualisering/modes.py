@@ -44,7 +44,7 @@ SUPPORTS_TRUE_MAP = (
     ChargedRingAxis, FiniteLineCharge2D, SphericalShellPotential,
     ConcentricChargedCylinders, ConcentricSphericalShells, CoaxialCylinderVoltage,
     HClDipoleField, PorcelainSlabCapacitor, ChargedDielectricShell,
-    DielectricFilledSphericalGap, DielectricSlabCapacitor, ElectretCylinderAxis,
+    DielectricFilledSphericalGap, DielectricSlabCapacitor,
     ThundercloudEnergyEstimate, FiniteWireBiotSavart, RotatingChargedDisk,
     SquareLoopOnAxis, RightAngleWireCorner, UniformSpaceChargePlates,
     ObliqueConductorDielectricBoundary, InfiniteWireRectangularLoopFlux,

@@ -649,6 +649,10 @@ class BreakdownVoltageCases(ProblemBase):
     @staticmethod
     def _mixed_case(d, t_plexi, E_air_max, E_plexi_max, eps_r):
         d_air = d - t_plexi
+        if t_plexi == 0:
+            return (d_air, E_air_max, 0.0, E_air_max * d, 'luft')
+        if d_air == 0:
+            return (0.0, 0.0, E_plexi_max, E_plexi_max * d, 'plexiglas')
         E_air = min(E_air_max, eps_r * E_plexi_max)
         E_plexi = E_air / eps_r
         Umax = E_air * d_air + E_plexi * t_plexi
@@ -668,7 +672,7 @@ class BreakdownVoltageCases(ProblemBase):
         U_plexi = E_plexi_max * d
         if mode == 'Field':
             z = np.linspace(0, d, 700)
-            field = np.where(z <= t_plexi, E_plexi, E_air)
+            field = np.full_like(z, E_air) if t_plexi == 0 else np.where(z <= t_plexi, E_plexi, E_air)
             ax.plot(z, field)
             if 0 < t_plexi < d:
                 ax.axvline(t_plexi, linestyle='--', linewidth=1)
@@ -677,12 +681,13 @@ class BreakdownVoltageCases(ProblemBase):
             ax.set_title(f'Blandad stapel vid Umax={U_mixed:.2e} V (begränsad av {limiting})')
             ax.grid(True, alpha=0.3)
         else:
-            t = np.linspace(0, d, 300)
+            t = np.linspace(0, d, 302)[1:-1]
             U_curve = np.empty_like(t)
             for i, tt in enumerate(t):
                 _, _, _, Uv, _ = self._mixed_case(d, tt, E_air_max, E_plexi_max, eps_r)
                 U_curve[i] = Uv
-            ax.plot(t, U_curve, label='blandad stapel')
+            ax.plot(t, U_curve, label='båda materialen finns')
+            ax.scatter([0, d], [U_air, U_plexi], label='ett enda material', zorder=3)
             ax.axhline(U_air, linestyle='--', linewidth=1, label='endast luft')
             ax.axhline(U_plexi, linestyle='--', linewidth=1, label='endast plexiglas')
             ax.axvline(t_plexi, linestyle=':', linewidth=1)
@@ -716,7 +721,7 @@ class BreakdownVoltageCases(ProblemBase):
         E_air_max = params['E_air_max']
         E_plexi_max = params['E_plexi_max']
         eps_r = params['eps_r']
-        t = np.linspace(0, d, 80)
+        t = np.linspace(0, d, 82)[1:-1]
         er = np.linspace(max(1.2, 0.6 * eps_r), max(6.0, 1.8 * eps_r), 80)
         T, ER = np.meshgrid(t, er)
         Eair_lim = np.minimum(E_air_max, ER * E_plexi_max)
@@ -842,14 +847,9 @@ class ElectretCylinderAxis(ProblemBase):
         ax = fig.add_subplot(111)
         P, a, h = (params['P'], params['a'], params['h'])
         zmin, zmax = (params['zmin'], params['zmax'])
+        # Only the symmetry-axis field is known; do not repeat it off-axis.
         if mode == 'Map':
-            x = np.linspace(-1.4 * a, 1.4 * a, 180)
-            z = np.linspace(zmin, zmax, 220)
-            X, Z = np.meshgrid(x, z)
-            data = np.abs(self.e_field(Z, P, a, h))
-            _show_scalar_map(ax, fig, X, Z, data, title='Elektretcylinder: axiellt snitt, |E|-karta', xlabel='x [m]', ylabel='z [m]', cbar_label='|E_z| [V/m]', scale='log', contours=True)
-            ax.add_patch(Rectangle((-a, 0), 2 * a, h, fill=False, edgecolor='white', linewidth=1.0))
-            return
+            mode = 'Field'
         z = np.linspace(zmin, zmax, 1200)
         if mode == 'Field':
             y = self.e_field(z, P, a, h)
