@@ -30,7 +30,8 @@ class SphericalShellChargingEnergy(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111)
         Q, a = (params['Q'], params['a'])
-        q = np.linspace(0, max(abs(Q) * 1.3, 1e-12), 400)
+        q_end = math.copysign(max(abs(Q) * 1.3, 1e-12), Q)
+        q = np.linspace(min(0, q_end), max(0, q_end), 400)
         V = q / (4 * math.pi * EPS0 * a)
         W = self.energy(q, a)
         if mode == 'Magnitude':
@@ -61,7 +62,8 @@ class SphericalShellChargingEnergy(ProblemBase):
         ax = fig.add_subplot(111, projection='3d')
         Q, a = (params['Q'], params['a'])
         aa = np.linspace(max(0.1 * a, 1e-06), 2 * a, 60)
-        qq = np.linspace(0, max(abs(Q) * 1.5, 1e-12), 60)
+        q_end = math.copysign(max(abs(Q) * 1.5, 1e-12), Q)
+        qq = np.linspace(min(0, q_end), max(0, q_end), 60)
         A, QG = np.meshgrid(aa, qq)
         W = self.energy(QG, A)
         ax.plot_surface(A, QG, W, cmap='viridis', alpha=0.9)
@@ -78,6 +80,8 @@ class ParallelPlateForceDistance(ProblemBase):
     def validate(self, params):
         if params['A'] <= 0 or params['F'] <= 0:
             return 'A och F måste vara positiva.'
+        if params['V'] == 0:
+            return 'En positiv attraktionskraft kräver en spänning som inte är noll.'
         return None
 
     @staticmethod
@@ -111,7 +115,7 @@ class ParallelPlateForceDistance(ProblemBase):
         ax.set_ylim(-0.6, 0.6)
         ax.set_aspect('equal')
         ax.set_axis_off()
-        ax.set_title('Plattattraktion')
+        ax.set_title('Yttre krafter som balanserar plattattraktionen')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -319,18 +323,32 @@ class CylindricalCapacitorDielectricPullIn(ProblemBase):
         ax.grid(True, alpha=0.3)
 
     def draw_geometry(self, fig, params):
+        """Axial section: the sleeve enters along the tubes, not radially."""
         fig.clear()
         ax = fig.add_subplot(111)
-        a, b = (params['a'], params['b'])
-        ax.add_patch(Circle((0, 0), b, fill=False, linewidth=2))
-        ax.add_patch(Circle((0, 0), a, fill=False, linewidth=2))
-        ax.arrow(-1.5 * b, 0, 0.6 * b, 0, head_width=0.07 * b, length_includes_head=True)
-        ax.text(-1.55 * b, 0.13 * b, 'dielektriskt hölje', ha='left')
-        ax.set_aspect('equal')
-        ax.set_xlim(-1.8 * b, 1.2 * b)
-        ax.set_ylim(-1.2 * b, 1.2 * b)
+        inner = params['a'] / params['b']
+        front = 0.55
+        # Schematic axial lengths; radial ratios follow the chosen a and b.
+        for lower in (inner, -1.0):
+            ax.add_patch(Rectangle((-0.35, lower), front + 0.35,
+                                   1 - inner, color='steelblue', alpha=0.3))
+        for radius in (-1, -inner, inner, 1):
+            ax.plot([0, 1.3], [radius, radius], color='black', linewidth=2)
+        ax.axvline(0, color='grey', linestyle=':', linewidth=1)
+        ax.plot([front, front], [-1, 1], color='steelblue', linestyle='--')
+        ax.annotate('', xy=(front, 0), xytext=(0, 0),
+                    arrowprops=dict(arrowstyle='<->'))
+        ax.text(front / 2, 0.08, 'inskjuten längd x', ha='center')
+        ax.annotate('rörelse inåt', xy=(0.1, 1.28), xytext=(-0.4, 1.28),
+                    arrowprops=dict(arrowstyle='->'), va='center')
+        ax.text(0.26, -(1 + inner) / 2, 'εr', ha='center', va='center')
+        ax.text(0.95, -(1 + inner) / 2, 'luft', ha='center', va='center')
+        ax.text(1.34, inner, 'r = a', va='center')
+        ax.text(1.34, 1, 'r = b', va='center')
+        ax.set_xlim(-0.65, 1.75)
+        ax.set_ylim(-1.2, 1.55)
         ax.set_axis_off()
-        ax.set_title('Koaxiellt gap')
+        ax.set_title('Längdsnitt längs rören (schematiskt)')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -381,29 +399,35 @@ class PointChargeConductingPlane(ProblemBase):
         else:
             ax.plot(bb, Qind / q if q != 0 else Qind)
             ax.axvline(b, linestyle='--', linewidth=1)
-            ax.set_xlabel('b [m]')
-            ax.set_ylabel('Qind/q')
+            ax.set_xlabel('Avståndsgräns b från laddningen [m]')
+            ax.set_ylabel('Qind/q' if q != 0 else 'Qind [C] (q = 0)')
             ax.set_title(f'Inducerad laddning inom b: {self.induced_within(q, a, b):.3e} C')
         ax.grid(True, alpha=0.3)
 
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        a, b = (params['a'], params['b'])
-        r = math.sqrt(max(b * b - a * a, 0))
-        ax.plot([-1.2 * r, 1.2 * r], [0, 0], linewidth=2)
-        ax.add_patch(Circle((0, a), 0.05 * a, fill=False, linewidth=2))
-        ax.add_patch(Circle((0, -a), 0.05 * a, fill=False, linestyle='--'))
-        ax.add_patch(Circle((0, 0), r, fill=False, linestyle=':'))
-        ax.plot([0, r], [a, 0], linestyle='--', linewidth=1)
-        ax.text(0.5 * r, 0.5 * a, 'b', ha='left')
-        ax.text(0, a * 1.15, 'q', ha='center')
-        ax.text(0, -a * 1.2, 'spegelladdning -q', ha='center')
+        a, b = params['a'], params['b']
+        radius = math.sqrt(b * b - a * a)
+        extent = max(radius, a)
+        ax.plot([-1.2 * extent, 1.2 * extent], [0, 0], color='black', linewidth=1)
+        # The integration disk is seen edge-on in this vertical section.
+        ax.plot([-radius, radius], [0, 0], color='steelblue', linewidth=5,
+                solid_capstyle='butt')
+        ax.scatter([0], [a], color='black', s=40)
+        ax.scatter([0], [-a], facecolors='none', edgecolors='black', s=40)
+        ax.plot([0, 0], [0, a], linestyle=':', color='grey')
+        ax.plot([0, radius], [a, 0], linestyle='--', color='grey')
+        ax.text(-0.04 * extent, 0.5 * a, 'a', ha='right', va='center')
+        ax.text(0.55 * radius, 0.55 * a, 'b', ha='left')
+        ax.text(0, 1.12 * a, 'q', ha='center')
+        ax.text(0, -1.22 * a, 'spegelladdning −q', ha='center')
+        ax.text(radius / 2, -0.15 * a, 'R = √(b² − a²)', ha='center', va='top')
         ax.set_aspect('equal')
-        ax.set_xlim(-1.25 * max(r, a), 1.25 * max(r, a))
-        ax.set_ylim(-1.4 * a, 1.5 * a)
+        ax.set_xlim(-1.3 * extent, 1.3 * extent)
+        ax.set_ylim(-1.5 * a, 1.55 * a)
         ax.set_axis_off()
-        ax.set_title('Spegelladdningsgeometri')
+        ax.set_title('Vertikalt snitt: integrationsskivan ligger i planet')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()

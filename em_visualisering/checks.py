@@ -168,7 +168,7 @@ def physics_checks_for_problem(problem, params):
             q, a, b = params['q'], params['a'], params['b']
             lines.append('Kontroll av spegelladdning:')
             lines.append(_check_line('kraftbelopp', problem.force(q, a), q ** 2 / (16 * math.pi * EPS0 * a ** 2), unit='N'))
-            lines.append(f'OK: inducerad laddning inom radien b blir {_format_number(problem.induced_within(q, a, b))} C och går mot -q när b blir stor.')
+            lines.append(f'OK: inducerad laddning inom avståndet b från kulan blir {_format_number(problem.induced_within(q, a, b))} C och går mot -q när b blir stor.')
             return '\n'.join(lines)
 
         if isinstance(problem, ConductiveCoaxialElectrodes):
