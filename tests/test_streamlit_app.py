@@ -83,8 +83,11 @@ def test_targeted_help_uses_problem_specific_hints_and_keeps_legacy_fallback():
     from em_visualisering.registry import PROBLEMS
 
     app = _run_app()
-    # Two reviewed exercises and one exercise awaiting its own review.
-    for pid in ("2.1", "2.8", "3.1"):
+    # Keep a real legacy fallback case as successive chapters are reviewed.
+    legacy = next(p for p in PROBLEMS
+                  if not guidance_for_problem(p).setup_hint
+                  and not guidance_for_problem(p).geometry_hint)
+    for pid in ("2.1", "2.8", legacy.name.split()[0]):
         app.selectbox(key="selected-chapter").set_value(int(pid.split(".")[0])).run()
         problem = next(p for p in PROBLEMS if p.name.split()[0] == pid)
         guidance = guidance_for_problem(problem)
@@ -132,3 +135,20 @@ def test_navigation_hides_previously_revealed_figures():
     app.selectbox(key="selected-problem").set_value(first_name).run()
     assert not app.exception
     assert "visualization-revealed:ChargedRingAxis:Field" not in app.session_state
+
+
+
+def test_all_chapter_four_problems_show_their_specific_targeted_help():
+    from em_visualisering.guidance import guidance_for_problem
+    from em_visualisering.registry import PROBLEMS
+
+    app = _run_app()
+    app.selectbox(key="selected-chapter").set_value(4).run()
+    for problem in (p for p in PROBLEMS if p.name.startswith("4.")):
+        app.selectbox(key="selected-problem").set_value(problem.name).run()
+        guidance = guidance_for_problem(problem)
+        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
+            assert expected
+            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
+            assert not app.exception
+            assert any(expected in message.value for message in app.info)

@@ -553,105 +553,117 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         learning_goal="Förstå uppladdningsarbete som en successiv process där potentialen ändras medan laddningen byggs upp.",
         concepts=("elektrostatisk energi", "potential", "uppladdningsarbete"),
         start_here=(
-            "Tänk inte på skalet som att det får hela laddningen Q på en gång. Betrakta i stället ett mellanläge där skalet redan har laddningen q och du för in ytterligare dq."
+            'Bygg upp laddningen från ett neutralt skal. När en liten laddning dq förs in från oändligheten är skalets laddning q, inte redan slutladdningen Q.'
         ),
         hints=(
-            "Potentialen hos ett tunt ledande sfäriskt skal med aktuell laddning q är samma som potentialen från en punktladdning q på avståndet a.",
-            "Det lilla arbete som krävs för nästa laddningsbidrag är dW = V(q)dq. Det viktiga är att V inte är konstant under uppladdningen.",
-            "Integrera från q=0 till q=Q. Jämför gärna resultatet med formen W=(1/2)QV för en färdiguppladdad kondensatorliknande geometri.",
+            'Med V(∞)=0 har det ledande skalet potentialen V(q)=q/(4πε0a). Den är konstant över skalytan men ökar i belopp under uppladdningen.',
+            'Det yttre arbetet för nästa lilla laddning är dW=V(q)dq vid långsam uppladdning. Summan av dessa bidrag blir en integral från q=0 till q=Q.',
+            'Integrera q-beroendet och jämför med W=Q²/(2C), där en ensam sfär har C=4πε0a. Alternativt kan du integrera fältenergitätheten ε0E²/2 utanför skalet.',
         ),
         self_checks=(
-            "Energin ska vara proportionell mot Q²; byte av tecken på Q får inte ändra energin.",
-            "Vid given Q ska ett större skal kräva mindre uppladdningsarbete eftersom potentialen blir lägre.",
+            'Arbetet ska vara positivt för både positiv och negativ slutladdning och vara proportionellt mot Q². För Q=0 är arbetet noll.',
+            'Vid fast Q minskar arbetet när a ökar. Kontrollera också dW/dQ=V(Q); faktorn 1/2 hör till det totala arbetet, inte till det sista lilla laddningssteget.',
         ),
-        common_pitfall="Att använda slutpotentialen V(Q) för hela laddningen och skriva W=QV; då missar man att potentialen växer från noll under processen.",
+        common_pitfall='Att använda slutpotentialen för hela laddningen och skriva W=QV(Q), vilket räknar allt arbete som om skalet redan var fulladdat.',
+        geometry_hint='Skalet är en ensam sfär med radie a, med potentialreferens vid oändligheten. Fältet är noll inuti och finns för r>a; blanda inte ihop skalradien a med integrationsradien r i en alternativ fältenergiberäkning.',
+        setup_hint='Skriv W=∫₀^Q q/(4πε0a) dq. Håll radien konstant och låt q vara integrationsvariabel. För Q<0 är både potentialen och laddningsstegen negativa, men arbetet blir fortfarande positivt.',
     ),
     "ParallelPlateForceDistance": G(
         problem_id="4.2",
         learning_goal="Koppla den elektriska fältenergin eller det elektriska trycket till den mekaniska kraften mellan kondensatorplattor.",
         concepts=("elektriskt tryck", "plattkondensator", "kraft"),
-        start_here="Bestäm först fältet mellan plattorna i termer av V och d. Därefter behöver du en relation mellan fältstyrka och kraft per area.",
+        start_here='Betrakta den givna kraften som beloppet av den yttre kraft som balanserar plattornas attraktion. Använd fältet i luftgapet för att bestämma det elektriska trycket.',
         hints=(
-            "För en stor plan luftkondensator utan randeffekter är E≈V/d.",
-            "Det attraktiva elektriska trycket på en ledaryta kan skrivas p=(1/2)ε0E². Multiplicera med plattarean A för att få kraftens belopp.",
-            "Sätt den givna kraften lika med detta uttryck och lös därefter efter avståndet d. Kontrollera vilken storhet som ligger under en kvadratrot.",
+            'I plattkondensatorapproximationen, utan kanteffekter, är fältbeloppet E=|V|/d. Spänningen 450 V avser potentialskillnaden mellan plattorna.',
+            'Det elektriska trycket är p=ε0E²/2. Multiplicera med A för kraften. Faktorn 1/2 kan förstås genom att en platta påverkas av den andra plattans fält, inte av sitt eget.',
+            'Sätt kraftbeloppet lika med 0,05 N och lös efter det positiva avståndet d. Omvandla 50 cm² till 0,005 m² innan du sätter in talen.',
         ),
         self_checks=(
-            "Vid samma spänning ska kraften öka kraftigt när plattavståndet minskar.",
-            "Det sökta avståndet ska få längdenhet efter dimensionskontroll.",
+            'Sätt tillbaka ditt d i ε0A V²/(2d²) och kontrollera att kraften blir den givna. Attraktionen ändras inte om spänningens tecken vänds.',
+            'Vid given V och A ska större efterfrågad kraft ge mindre d, med d proportionellt mot 1/√F. Avståndet bör vara litet jämfört med plattornas sidomått för att kanteffekter ska kunna försummas.',
         ),
-        common_pitfall="Att använda F=QE med hela plattans laddning och hela fältet; en platta ska inte räknas som påverkad av sitt eget fält.",
+        common_pitfall='Att skriva F=QE med hela gapfältet och därmed få dubbla kraften, eller derivera enbart fältenergin vid konstant V utan att räkna med spänningskällans energiutbyte.',
+        geometry_hint='Markera en pil inåt för den elektriska kraften på varje platta och en lika stor pil utåt för den kraft som håller dem isär. d är vinkelrätt avstånd mellan plattorna; A är en plattas yta, inte summan av bådas.',
+        setup_hint='Skriv F=(ε0A/2)(V/d)² och isolera d² innan du tar den positiva roten. Tryckmetoden gäller för det aktuella tillståndet utan att du behöver anta hur en strömkälla kopplas vid en senare förflyttning.',
     ),
     "CopperFoilLevitationEbonite": G(
         problem_id="4.3",
         learning_goal="Använd randvillkor mellan luft och dielektrikum för att koppla elektriskt tryck till tyngdkraft.",
         concepts=("dielektrikum", "elektriskt tryck", "kraftjämvikt"),
         start_here=(
-            "Börja med kraftjämvikten på kopparblecket per area. Dess tyngd per area är ρCu t g. Vilket elektriskt tryck måste balansera detta?"
+            'Skriv kraftbalansen per area för kopparblecket: elektriskt tryck uppåt ska balansera tyngden ρ_Cu t g nedåt. Då förkortas den okända plattarean bort.'
         ),
         hints=(
-            "Det infinitesimala luftgapet är viktigt för kraften på kopparblecket: använd p=(1/2)ε0 E_luft² i gapet.",
-            "Det finns ingen fri ytladdning i gränsen luft–ebonit, så den normala D-komponenten är densamma. Därför är E_luft=εr E_ebonit.",
-            "Spänningsfallet över det infinitesimala luftgapet kan försummas. Skriv därför U≈E_ebonit d och kombinera detta med kraftjämvikten.",
+            'Kraften på blecket bestäms av luftfältet precis utanför metallen: p_el=ε0E_luft²/2. Det infinitesimala luftgapet är därför viktigt även om dess spänningsfall är försumbart.',
+            'Utan fri laddning på luft–ebonitgränsen är D_n kontinuerligt. Därmed gäller ε0E_luft=ε0εrE_ebonit.',
+            'När luftgapets tjocklek går mot noll blir U≈E_ebonit d. Kombinera detta med p_el=ρ_Cu t g och lös efter minsta spänningsbelopp som balanserar tyngden.',
         ),
         self_checks=(
-            "E_luft ska vara större än E-fältet inne i eboniten när εr>1.",
-            "Ett tjockare eller tätare kopparbleck ska kräva högre spänning för att sväva.",
+            'Sätt in ditt U och kontrollera att ε0(εrU/d)²/2=ρ_Cu t g. Båda leden ska ha enheten N/m².',
+            'Större t eller ρ_Cu ska kräva större spänning, proportionellt mot kvadratroten. Kraftbalansen visar att folien kan hållas uppe i idealmodellen, inte att en fritt svävande jämvikt är stabil.',
         ),
-        common_pitfall="Att använda E=U/d direkt som fältet i luftgapet; U/d beskriver i denna approximation främst fältet i eboniten.",
+        common_pitfall='Att använda U/d som luftfält eller ta bort luftgapet innan kraften bestämts. U/d är ebonitfältet i gränsen av ett mycket tunt luftgap.',
+        geometry_hint='Rita i ordning: övre metallbelägg, ebonit med tjocklek d, ett mycket tunt luftgap och kopparfolie med tjocklek t. Det är luftfältet vid foliens övre yta som ger trycket; d och t har olika roller.',
+        setup_hint='Lös först E_luft ur ε0E_luft²/2=ρ_Cu t g och använd sedan U≈d E_luft/εr. Sätt d=0,02 m, t=10⁻⁴ m och ρ_Cu=8,9·10³ kg/m³.',
     ),
     "ThundercloudEnergyEstimate": G(
         problem_id="4.5",
         learning_goal="Göra en ordningsstorleksmodell av ett åskmoln som en plattkondensator och koppla genomslagsfält till laddning och energi.",
         concepts=("plattkondensator", "genomslagsfält", "fältenergi"),
-        start_here="Modellera molnundersidan och marken som två stora motsatt laddade plattor. Börja med sambandet mellan ytladdningstäthet och fältet mellan plattorna.",
+        start_here='Följ uppgiftens modell med negativ molnbas och positiv mark som två stora plattor. Låt Q beteckna laddningsbeloppet, så att molnets signerade laddning är −Q.',
         hints=(
-            "För två stora motsatt laddade plattor blir fältet mellan dem E=σs/ε0. Sätt E till det givna genomslagsfältet för uppskattningen.",
-            "När σs är känd fås den totala laddningen från Q=σsA. Konvertera arean och fältstyrkan till SI innan du sätter in talen.",
-            "Energin kan beräknas antingen som (1/2)QU med U=Eh eller från energitätheten (1/2)ε0E² multiplicerad med volymen Ah.",
+            'Fälten från de två motsatt laddade ytorna adderas i gapet. Sätt E=Q/(ε0A) lika med det angivna Emax för denna uppskattning.',
+            'Omvandla först A=1 km² till 10⁶ m² och Emax=20 000 V/cm till 2·10⁶ V/m. Bestäm sedan Q från fältet.',
+            'Beräkna energin med W_e=ε0Emax²Ah/2. Kontrollera genom C=ε0A/h, spänningsbelopp U=Emax h och W_e=CU²/2=QU/2.',
         ),
         self_checks=(
-            "De två energiberäkningarna ska ge samma resultat.",
-            "Resultatet bör bli mycket stort jämfört med laboratoriekondensatorer; modellen omfattar en area på en kvadratkilometer.",
+            'De två energiberäkningarna ska stämma och ge joule. Energin är positiv även om molnets laddning är negativ; använd laddnings- och spänningsbelopp i QU/2.',
+            'Vid fast Emax och area är Q oberoende av h, medan U och W_e växer linjärt med h. Detta är en idealiserad kondensatoruppskattning, inte en detaljerad modell av ett verkligt åskmoln.',
         ),
-        common_pitfall="Att använda fältet från en ensam laddad platta, σs/(2ε0), trots att modellen innehåller två motsatt laddade ledarytor.",
+        common_pitfall='Att missa faktorn 100 när V/cm omvandlas till V/m, eller använda ensamplattans E=σ/(2ε0) när båda plattornas fält bidrar.',
+        geometry_hint='Marken är vid z=0 och molnbasen vid z=h. Fältet pekar uppåt från markens +Q till molnets −Q, medan potentialen minskar uppåt. A är en ytas area och ska inte dubbleras.',
+        setup_hint='Skriv Q=ε0A Emax och W_e=(ε0Emax²/2)Ah. Skilj energitätheten i J/m³ från den totala energin i J; volymen i modellen är Ah.',
     ),
     "CylindricalCapacitorDielectricPullIn": G(
         problem_id="4.6",
         learning_goal="Beräkna en dielektrisk indragningskraft genom hur kapacitansen ändras med inskjutningslängden.",
         concepts=("energimetod", "kapacitans", "dielektrisk kraft"),
         start_here=(
-            "Inför en inskjutningslängd x. Fråga hur den totala kapacitansen ändras när en liten extra längd dx går från vakuum/luft till dielektrikum."
+            'Låt x öka när hålcylindern dras in längs metallrörens axel. Spänningskällan är ansluten och håller V0 konstant; både kondensatorns laddning och dess fältenergi kan därför ändras.'
         ),
         hints=(
-            "En koaxial kondensator har en kapacitans per längdenhet. Den redan fyllda delen och den ofyllda delen ligger elektriskt parallellt eftersom de har samma spänning mellan samma två ledare.",
-            "Skriv C(x) som summan av bidraget från längden x med εr och resten med εr=1. Då blir dC/dx konstant.",
-            "Spänningskällan är fortfarande ansluten, alltså är V0 konstant. Använd kraftrelationen F=(1/2)V0² dC/dx för rörelse i riktning mot ökande kapacitans.",
+            'Dela upp en aktiv längd L i en fylld del x och en luftfylld del L−x. Delarna har samma spänning mellan samma elektroder och deras kapacitanser adderas parallellt.',
+            'Kapacitans per längd är 2πε0εr/ln(b/a) i den fyllda delen och 2πε0/ln(b/a) i den tomma. Skriv C(x) och beräkna dC/dx.',
+            'Vid konstant V0 tillför källan dW_källa=V0 dQ=V0²dC. Fältenergin ökar med dW_fält=V0²dC/2. Resten blir mekaniskt arbete F_x dx; använd detta för att få kraften och dess riktning.',
         ),
         self_checks=(
-            "Kraften ska dra dielektrikumet längre in eftersom det ökar kapacitansen.",
-            "I den idealiserade modellen blir kraften oberoende av hur långt cylindern redan är inskjuten, så länge ändeffekter försummas.",
+            'För εr>1 ska kraften peka inåt, mot större x och större C. Den ska försvinna när εr=1 eller V0=0 och vara oförändrad om spänningens tecken vänds.',
+            'Kraften blir oberoende av x medan både fylld och tom del finns och kapacitansen kan approximeras som linjär i x. Nära full inskjutning eller långt utanför gäller inte denna konstanta kraftmodell.',
         ),
-        common_pitfall="Att använda energin (1/2)CV² och direkt derivera den som mekanisk potentiell energi utan att ta hänsyn till att spänningskällan utbyter energi med kondensatorn.",
+        common_pitfall='Att använda F_x=−d(CV0²/2)/dx vid konstant spänning och få fel tecken. Fältenergin ensam är inte den mekaniska potentialenergin när källan utbyter energi med systemet.',
+        geometry_hint='Hålcylindern fyller hela radialgapet a<r<b men bara en del av längden. Rörelsen är axiell, inte radiell. Kraften verkar vid övergången till fylld del; energimetoden ger nettokraften utan att fransfältet behöver lösas i detalj.',
+        setup_hint='Skriv C(x)=2πε0[L+(εr−1)x]/ln(b/a). Kombinera dC/dx med F_x=V0²(dC/dx)/2. L försvinner ur kraften; logaritmens argument b/a är dimensionslöst.',
     ),
     "PointChargeConductingPlane": G(
         problem_id="4.7",
         learning_goal="Använd spegelladdningsmetoden både för inducerad ytladdning och för kraften på en punktladdning.",
         concepts=("spegelladdning", "ledarvillkor", "inducerad ytladdning"),
         start_here=(
-            "Ersätt först det jordade/utbredda ledande planet med den spegelladdning som ger V=0 i planet. Därefter kan samma konstruktion användas på två olika sätt i deluppgifterna."
+            'Välj planet z=0 och den verkliga laddningen q vid z=a. Använd den idealisering med ett oändligt plan på noll potential som ligger bakom appens modell och facit; spegelladdningen är ett hjälpmedel utanför det fysiska området.'
         ),
         hints=(
-            "Placera spegelladdningen −q på samma avstånd a på andra sidan planet. Fältet ovanför planet blir då identiskt med det verkliga fältet.",
-            "För den inducerade ytladdningen: bestäm E_n precis ovanför planet och använd ρs=ε0E_n. Integrera sedan över en cirkelskiva med radie b i planet.",
-            "För kraften på den verkliga kulan räcker det att beräkna Coulombkraften från spegelladdningen. Avståndet mellan q och −q är 2a.",
+            'Placera −q vid z=−a. Potentialbidragen tar ut varandra på z=0. Fältet i det övre halvrummet är då den sökta lösningen, men fältet inne i den verkliga ledaren är noll.',
+            'För del (a): b mäts från kulan, inte från dess lodräta projektion på planet. Punkter i planet på avstånd högst b från kulan bildar en skiva med radie R_max=√(b²−a²). Bestäm σ(R)=ε0E_z(R,0⁺) med normal +ẑ.',
+            'Integrera den inducerade laddningen med ringelement dS=2πR dR från 0 till R_max. Låt sedan b→∞ för del (b). I del (c) används enbart spegelladdningens fält vid q, med avståndet 2a.',
         ),
         self_checks=(
-            "När b→∞ ska den integrerade inducerade laddningen gå mot −q.",
-            "Kraften måste vara attraktiv och riktad mot planet oavsett tecknet på q.",
+            'När b→a⁺ ska den integrerade laddningen gå mot noll, eftersom skivan krymper till en punkt. När b→∞ ska den gå mot −q.',
+            'Den inducerade laddningen har motsatt tecken mot q. Kraften är riktad nedåt och dess belopp är proportionellt mot q²/a², oberoende av avståndsgränsen b.',
         ),
-        common_pitfall="Att multiplicera kraften från spegelladdningen med två; spegelladdningen är redan konstruerad så att dess fält vid den verkliga laddningen ger rätt kraft.",
+        common_pitfall='Att integrera till radien b i planet, vilket motsvarar ett annat område än uppgiften frågar efter. Förväxla inte heller kraften med energin: kraften fås direkt från bilden, men bildparets fulla Coulombenergi är inte systemets verkliga energi.',
         visualization_note="Här kan en geometrisk bild av verklig laddning, spegelladdning och fältlinjer vara mer pedagogisk än en generell fältkarta.",
+        geometry_hint='Rita en rätvinklig triangel med höjden a, sträckan R i planet och hypotenusan b från kulan till skivans kant. Skivan ligger i planet; i ett vertikalt snitt syns den som en sträcka, inte som en cirkel runt origo.',
+        setup_hint='Fältets normaldel ger σ(R)=−qa/[2π(R²+a²)^(3/2)]. Skriv Q_ind=∫₀^√(b²−a²) σ(R)2πR dR och använd u=R²+a². För kraften: använd Coulombs lag mellan q och −q på avstånd 2a, utan extra faktor 2.',
     ),
 
     # ------------------------------------------------------------------
