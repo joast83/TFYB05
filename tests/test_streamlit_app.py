@@ -152,3 +152,34 @@ def test_all_chapter_four_problems_show_their_specific_targeted_help():
             next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
             assert not app.exception
             assert any(expected in message.value for message in app.info)
+
+
+def test_all_chapter_five_problems_show_their_specific_targeted_help():
+    from em_visualisering.guidance import guidance_for_problem
+    from em_visualisering.registry import PROBLEMS
+
+    app = _run_app()
+    app.selectbox(key="selected-chapter").set_value(5).run()
+    for problem in (p for p in PROBLEMS if p.name.startswith("5.")):
+        app.selectbox(key="selected-problem").set_value(problem.name).run()
+        guidance = guidance_for_problem(problem)
+        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
+            assert expected
+            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
+            assert not app.exception
+            assert any(expected in message.value for message in app.info)
+
+
+def test_variable_conductivity_explore_views_are_named_and_renderable():
+    app = _run_app()
+    app.selectbox(key="selected-chapter").set_value(5).run()
+    problem_name = next(name for name in app.selectbox(key="selected-problem").options if name.startswith("5.7 "))
+    app.selectbox(key="selected-problem").set_value(problem_name).run()
+    _radio(app, "Arbetssätt").set_value("Utforska").run()
+    labels = ["Elektriskt fält E", "Strömtäthet J", "Fri laddningstäthet ρ"]
+    assert next(w for w in app.selectbox if w.label == "Vad vill du visualisera?").options == labels
+    for label in labels:
+        next(w for w in app.selectbox if w.label == "Vad vill du visualisera?").set_value(label).run()
+        next(b for b in app.button if b.label == "Visa figur").click().run()
+        assert not app.exception
+        assert not any("kunde inte" in warning.value for warning in app.warning)

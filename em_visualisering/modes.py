@@ -56,6 +56,11 @@ SUPPORTS_TRUE_MAP = (
 def mode_options_for_problem(problem):
     """Returnerar synliga lägesnamn och motsvarande interna lägen för en uppgift."""
     special_options = (
+        (ConductiveCoaxialElectrodes, [('Elektriskt fält E', 'Field'), ('Strömtäthet J', 'Magnitude')]),
+        (CoaxialCableLeakage, [('Läckström I', 'Field'), ('Effektförlust P', 'Magnitude')]),
+        (VariableSigmaCoaxialElectrolyte, [('Elektriskt fält E', 'Field'), ('Strömtäthet J', 'Magnitude'), ('Fri laddningstäthet ρ', 'D')]),
+        (SemicylindricalRingResistor, [('Resistans', 'Field')]),
+        (SteadyCurrentInterfaceCharge, [('Fri ytladdning ρs', 'Field')]),
         (SphericalCapacitorDesign, [('Fältvillkor', 'Field'), ('Maxspänning', 'Potential')]),
         (AtmosphericChargeDensity, [('Fältprofil', 'Field'), ('Medelladdningstäthet', 'Potential')]),
         (BreakdownVoltageCases, [('Fältprofil', 'Field'), ('Umax-svep', 'Magnitude')]),
