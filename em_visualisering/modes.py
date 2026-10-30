@@ -101,6 +101,11 @@ def mode_options_for_problem(problem):
     return options
 
 
+def supports_3d_view(problem):
+    """Det gamla off-axis-3D-fältet i 2.4 saknar fysikaliskt stöd."""
+    return not isinstance(problem, SemiCircularSurfaceAxis)
+
+
 def normalize_mode_for_problem(problem, requested_mode):
     """Normaliserar ett önskat internt läge till ett läge som uppgiften stöder."""
     if requested_mode == 'Potential / D':

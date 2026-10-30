@@ -311,30 +311,6 @@ class SemiCircularSurfaceAxis(ProblemBase):
         ax.set_ylim(-0.2 * a, 1.25 * a)
         ax.set_axis_off()
 
-    def draw_3d(self, fig, params, mode):
-        """
-        Yta för |E| över planet (y-förskjutning, z), med halvcirkeln
-        ritad som en 3-D-kurva.
-        """
-        fig.clear()
-        rho_s, a, zmax = (params['rho_s'], params['a'], params['zmax'])
-        nz, ny = (60, 40)
-        z1 = np.linspace(-zmax, zmax, nz)
-        y1 = np.linspace(-1.2 * a, 1.2 * a, ny)
-        Z2, Y2 = np.meshgrid(z1, y1)
-        root = np.sqrt(a ** 2 + Z2 ** 2 + Y2 ** 2)
-        Ey2 = rho_s / (2 * EPS0) * (-(1 / math.pi) * (np.log(np.abs((root + a) / np.maximum(np.abs(Z2), 1e-18))) - a / root))
-        Ez2 = rho_s / (2 * EPS0) * 0.5 * (np.sign(Z2) - Z2 / root)
-        Emag2 = np.sqrt(Ey2 ** 2 + Ez2 ** 2)
-        ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(Y2, Z2, Emag2, cmap='viridis', alpha=0.85, rstride=1, cstride=1)
-        theta = np.linspace(0, np.pi, 200)
-        ax.plot(a * np.sin(theta), np.zeros(200), a * np.cos(theta), color='red', linewidth=2)
-        ax.set_xlabel('y [m]')
-        ax.set_ylabel('z [m]')
-        ax.set_zlabel('|E| [V/m]')
-        ax.set_title('Halvcirkelformad yta: |E| över yz-planet')
-
 class SphericalShellPotential(ProblemBase):
     name = '2.5 Sfäriskt laddat skal'
     description = 'Sfäriskt skal med radie a och laddning Q jämnt fördelad över ytan. Visar radiell elektrisk fältstyrka och potential.'

@@ -4,7 +4,7 @@ matplotlib.use("Agg", force=True)
 from matplotlib.figure import Figure
 import pytest
 
-from em_visualisering.modes import mode_options_for_problem
+from em_visualisering.modes import mode_options_for_problem, supports_3d_view
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
 
@@ -33,17 +33,19 @@ def test_default_matplotlib_rendering(problem, mode):
     problem.draw_geometry(geometry, params)
     assert geometry.axes
 
-    view3d = Figure(figsize=(3, 3), dpi=60)
-    problem.draw_3d(view3d, params, mode)
-    assert view3d.axes
+    if supports_3d_view(problem):
+        view3d = Figure(figsize=(3, 3), dpi=60)
+        problem.draw_3d(view3d, params, mode)
+        assert view3d.axes
 
 
 @pytest.mark.parametrize("problem,mode", CASES, ids=[case_id(case) for case in CASES])
 def test_default_plotly_rendering(problem, mode):
-    figure = make_plotly_3d_figure(problem, problem.defaults(), mode)
-    assert figure is not None
-    assert len(figure.data) > 0
-    figure.to_json(validate=True)
+    if supports_3d_view(problem):
+        figure = make_plotly_3d_figure(problem, problem.defaults(), mode)
+        assert figure is not None
+        assert len(figure.data) > 0
+        figure.to_json(validate=True)
 
 
 @pytest.mark.parametrize("problem,mode", CASES, ids=[case_id(case) for case in CASES])

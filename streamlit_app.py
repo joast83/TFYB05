@@ -25,7 +25,7 @@ from matplotlib.figure import Figure
 
 from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.facit import facit_for_problem
-from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem
+from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
 from em_visualisering.study_content import (
@@ -656,16 +656,17 @@ def _render_explore_mode(problem) -> None:
         "och gränsfall med det du väntade dig?"
     )
 
-    with _problem_expander("Avancerat: visa äldre 3-D-vy", expanded=False):
-        st.caption(
-            "3-D-vyn är inte en standarddel av studiegången. Öppna den bara om den "
-            "hjälper dig att tolka geometrin eller fältstrukturen."
-        )
-        if st.checkbox(
-            "Rendera 3-D-vy",
-            key=f"render-3d:{problem.__class__.__name__}:{mode}",
-        ):
-            _render_3d(problem, params, mode)
+    if supports_3d_view(problem):
+        with _problem_expander("Avancerat: visa äldre 3-D-vy", expanded=False):
+            st.caption(
+                "3-D-vyn är inte en standarddel av studiegången. Öppna den bara om den "
+                "hjälper dig att tolka geometrin eller fältstrukturen."
+            )
+            if st.checkbox(
+                "Rendera 3-D-vy",
+                key=f"render-3d:{problem.__class__.__name__}:{mode}",
+            ):
+                _render_3d(problem, params, mode)
 
 
     with _problem_expander("Avancerat: appens beräkning och interna kontroll", expanded=False):
