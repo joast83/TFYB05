@@ -56,6 +56,12 @@ SUPPORTS_TRUE_MAP = (
 def mode_options_for_problem(problem):
     """Returnerar synliga lägesnamn och motsvarande interna lägen för en uppgift."""
     special_options = (
+        (PermanentMagnetAirGapBHCurve, [('Materialkurva och lastlinje', 'Field')]),
+        (NonlinearIronMagneticCircuit, [('Ampervarvsbalans', 'Field')]),
+        (MagneticBridgeCircuit, [('Bryggflöde mot ström', 'Field')]),
+        (CurrentCarryingMagneticTube, [('Magnetisk fältstyrka H', 'Field'), ('Flödestäthet B', 'Potential'), ('Magnetisering M', 'Map')]),
+        (HorseshoeMagnetAnchorForce, [('Attraktionskraft mot flödesbelopp', 'Field')]),
+        (MagnetizationCurrentsCylinder, [('Volymström och ytström', 'Field')]),
         (ElectronOrbitDipoleMoment, [('Dipolmoment mot hastighet', 'Field'), ('Moment mot radie och hastighet', 'Map')]),
         (CircularLoopTorqueUniformField, [('Momentbidrag runt slingan', 'Field'), ('Moment mot ström och fält', 'Map')]),
         (DipoleDipoleTorque, [('Signerat moment mot vinkel', 'Field'), ('Momentbelopp mot vinkel och avstånd', 'Map')]),

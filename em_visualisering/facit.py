@@ -686,7 +686,9 @@ $$
 B\approx0.22\ \mathrm T.
 $$
 
-Den andra algebraiska roten ger negativ flödestäthet i järnmaterialet och förkastas i facit.
+Den andra algebraiska roten ligger över mättnadsparametern $a$ och ger därför
+$H=bB/(a-B)<0$. Den uppfyller inte den givna materiallagens villkor $H>0$
+och förkastas.
 """,
     "8.4": r"""
 $$
