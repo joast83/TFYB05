@@ -14,3 +14,6 @@ Sidan är ett komplement till kursmaterialet och undervisningen.
 
 Källkontroller mot den ursprungliga problemsamlingen finns dokumenterade i
 [docs/kallgranskning-kapitel2.md](docs/kallgranskning-kapitel2.md).
+
+En systematisk källkontroll av de reviderade uppgifterna i kapitel 2–9
+finns i [originalkontrollen](docs/originalkontroll-reviderade-kapitel.md).
