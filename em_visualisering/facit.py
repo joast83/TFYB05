@@ -565,7 +565,7 @@ $$
 $$
 B(0)=\frac{2\sqrt2\,\mu_0I}{\pi a}
 =3.8\times10^{-6}\ \mathrm{T}.
-$
+$$
 
 **Teckenkonvention:** Originaltexten anger medurs ström sedd från $+z$, vilket ger
 ett fält i $-z$-riktning med högerhandsregeln. Det tryckta facit ovan ger
@@ -651,9 +651,9 @@ $$
 """,
     "7.5": r"""
 Det tryckta facit anger ungefär
-$
+$$
 z=12.2\,a.
-$
+$$
 Vid en strikt tolkning av *mindre än* $1\%$ relativt det exakta fältet fås
 dock $|z|/a>[(1.01)^{2/3}-1]^{-1/2}\approx12.258$.
 Värdet $12.2a$ är alltså facits avrundade värde, inte en gräns
