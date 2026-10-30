@@ -14,7 +14,7 @@ from em_visualisering.problems.ch08 import (
 def test_magnet_interpolated_solution_satisfies_ampere_balance(current):
     p=PermanentMagnetAirGapBHCurve()
     b=p.solve_B(.2,.001,100,current)
-    assert p.Hmat(b)*(.2-.001)+b*.001/MU0 == pytest.approx(100*current, abs=1e-10)
+    assert p.Hmat(b)*.2+b*.001/MU0 == pytest.approx(100*current, abs=1e-10)
 
 
 @pytest.mark.parametrize('current', [-20., 20.])
@@ -145,3 +145,12 @@ def test_cylinder_parameter_surface_is_b_not_h():
     p.draw_3d(fig,p.defaults(),'Map')
     assert fig.axes[0].get_zlabel()=='Bz [T]'
     assert fig.axes[0].get_ylabel()=='Cylinderradie a [m]'
+
+
+def test_original_magnet_length_excludes_gap_and_matches_printed_answers():
+    p = PermanentMagnetAirGapBHCurve()
+    assert 'exkl. gap' in p.parameters[0][1]
+    for current, printed in [(0., .8), (2., .9)]:
+        result = p.solve_B(.2, .001, 100, current)
+        assert result == pytest.approx(printed, abs=.012)
+        assert p.Hmat(result)*.2 + result*.001/MU0 == pytest.approx(100*current, abs=1e-10)
