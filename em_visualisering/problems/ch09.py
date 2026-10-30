@@ -42,11 +42,14 @@ class MutualInductanceParallelWiresSquare(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111)
         d = params['d']
-        s = d / math.sqrt(2)
         ax.plot([-0.2 * d, 1.2 * d], [0, 0], linewidth=2)
         ax.plot([-0.2 * d, 1.2 * d], [d, d], linewidth=2)
         diamond = np.array([[d / 2, 0], [d, d / 2], [d / 2, d], [0, d / 2], [d / 2, 0]])
         ax.plot(diamond[:, 0], diamond[:, 1], linewidth=2)
+        ax.annotate('', xy=(.8*d, 0), xytext=(.2*d, 0), arrowprops=dict(arrowstyle='->', lw=2, color='black'))
+        ax.annotate('', xy=(.2*d, d), xytext=(.8*d, d), arrowprops=dict(arrowstyle='->', lw=2, color='black'))
+        ax.text(.5*d, -.15*d, 'I →; normal +z ut ur bilden', ha='center', fontsize=8)
+        ax.text(-.12*d, .5*d, 'u=y', rotation=90, va='center', fontsize=9)
         ax.set_aspect('equal')
         ax.set_xlim(-0.2 * d, 1.2 * d)
         ax.set_ylim(-0.2 * d, 1.2 * d)
@@ -91,22 +94,25 @@ class MutualInductanceCoaxialLoops(ProblemBase):
         ax.axvline(d, linestyle='--', linewidth=1)
         ax.set_xlabel('d [m]')
         ax.set_ylabel('M [nH]')
-        ax.set_title(f'M = {self.mutual(a, b, d):.3e} H')
+        ax.set_title(f'Approximerat M = {self.mutual(a, b, d):.3e} H')
+        ax.text(.98, .95, f'Kräver a ≪ b och a ≪ d\nValt a/b = {a/b:.2g}; a/d = {a/d:.2g}', transform=ax.transAxes, ha='right', va='top', fontsize=9)
+        ax.axvspan(dd[0], min(a, dd[-1]), color='grey', alpha=.15, label='d ≤ a: utanför fjärrfältsantagandet')
+        ax.legend(fontsize=8)
         ax.grid(True, alpha=0.3)
 
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        a, b, d = (params['a'], params['b'], params['d'])
-        ax.add_patch(Circle((0, 0), b, fill=False, linewidth=2))
-        ax.add_patch(Circle((d, 0), a, fill=False, linewidth=2))
-        ax.plot([0, d], [0, 0], linestyle='--')
-        ax.text(d / 2, 0.08 * max(b, d), 'd', ha='center')
-        ax.set_aspect('equal')
-        ax.set_xlim(-1.2 * b, d + 1.5 * a)
-        ax.set_ylim(-1.2 * b, 1.2 * b)
-        ax.set_axis_off()
-        ax.set_title('Tvärsnitt av koaxiella slingor')
+        a, b, d = params['a'], params['b'], params['d']
+        ax.plot([0, 0], [-b, b], lw=3, color='steelblue', label='Stor slinga (radie b)')
+        ax.plot([d, d], [-a, a], lw=3, color='darkorange', label='Liten slinga (radie a)')
+        ax.axhline(0, ls=':', color='grey', lw=1)
+        span = max(a, b)
+        ax.annotate('', xy=(d, -.7*span), xytext=(0, -.7*span), arrowprops=dict(arrowstyle='<->'))
+        ax.text(d/2, -.9*span, 'd', ha='center')
+        ax.set(xlim=(-.3*span, d+.3*span), ylim=(-1.4*span, 1.4*span), aspect='equal', xlabel='Gemensam axel z [m]', ylabel='Tvärkoordinat [m]')
+        ax.legend(loc='upper center', fontsize=8)
+        ax.set_title('Axialsnitt — slingorna sedda från sidan')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
@@ -123,11 +129,13 @@ class MutualInductanceCoaxialLoops(ProblemBase):
 class OpenSecondaryTransformerVoltage(ProblemBase):
     name = '9.6 Tomgångsspänning i transformatorns sekundärlindning'
     description = 'Tomgångsspänning i sekundärlindningen inducerad av i1(t)=I0 cos(ωt) i en linjär järnkärna.'
-    parameters = [('N1', 'Primärvarv N1', 100.0), ('N2', 'Sekundärvarv N2', 800.0), ('I0', 'Primärströmmens amplitud I0 [A]', 1.0), ('omega', 'Vinkelfrekvens ω [rad/s]', 2 * math.pi * 50), ('ell', 'Magnetisk väglängd ℓ [m]', 0.4), ('S', 'Kärnans tvärsnitt S [m²]', 0.00063), ('mu_r', 'Relativ permeabilitet µr', 2000.0)]
+    parameters = [('N1', 'Primärvarv N1', 100.0), ('N2', 'Sekundärvarv N2', 800.0), ('I0', 'Signerad strömkoefficient I0 [A]', 1.0), ('omega', 'Vinkelfrekvens ω [rad/s]', 2 * math.pi * 50), ('ell', 'Magnetisk väglängd ℓ [m]', 0.4), ('S', 'Kärnans tvärsnitt S [m²]', 0.00063), ('mu_r', 'Relativ permeabilitet µr', 2000.0)]
 
     def validate(self, params):
-        if min(params['N1'], params['N2'], params['omega'], params['ell'], params['S'], params['mu_r']) <= 0:
-            return 'Varvtal, ω, ℓ, S och µr måste vara positiva.'
+        if min(params['N1'], params['N2'], params['ell'], params['S'], params['mu_r']) <= 0:
+            return 'Varvtal, ℓ, S och µr måste vara positiva.'
+        if params['omega'] < 0:
+            return 'ω måste vara icke-negativ.'
         return None
 
     @staticmethod
@@ -138,13 +146,15 @@ class OpenSecondaryTransformerVoltage(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111)
         N1, N2, I0, w, L, S, mur = (params['N1'], params['N2'], params['I0'], params['omega'], params['ell'], params['S'], params['mu_r'])
-        T = 2 * math.pi / w
+        T = 2 * math.pi / w if w else .02
         t = np.linspace(0, 2 * T, 600)
         u = self.amp(N1, N2, I0, w, L, S, mur) * np.sin(w * t)
         ax.plot(t * 1000.0, u)
         ax.set_xlabel('t [ms]')
         ax.set_ylabel('u2 [V]')
-        ax.set_title(f'Spänningsamplitud = {np.max(np.abs(u)):.3g} V')
+        ax.set_title(f'Spänningsamplitud = {abs(self.amp(N1, N2, I0, w, L, S, mur)):.3g} V')
+        if w == 0:
+            ax.text(.03, .85, 'Konstant primärström: ingen inducerad spänning', transform=ax.transAxes, fontsize=9)
         ax.grid(True, alpha=0.3)
 
     def draw_geometry(self, fig, params):
@@ -163,10 +173,10 @@ class OpenSecondaryTransformerVoltage(ProblemBase):
         fig.clear()
         ax = fig.add_subplot(111, projection='3d')
         N1, N2, I0, w, L, S = (params['N1'], params['N2'], params['I0'], params['omega'], params['ell'], params['S'])
-        mur = np.linspace(100, 3000, 50)
-        freq = np.linspace(10, 200, 50)
+        mur = np.linspace(.1*params['mu_r'], 1.5*params['mu_r'], 50)
+        freq = np.linspace(0, max(200, 1.5*w/(2*math.pi)), 50)
         MU, F = np.meshgrid(mur, freq)
-        U = self.amp(N1, N2, I0, 2 * math.pi * F, L, S, MU)
+        U = np.abs(self.amp(N1, N2, I0, 2 * math.pi * F, L, S, MU))
         ax.plot_surface(MU, F, U, cmap='viridis', alpha=0.9)
         ax.set_xlabel('µr')
         ax.set_ylabel('f [Hz]')
@@ -184,26 +194,41 @@ class MovingLoopFieldWork(ProblemBase):
         return None
 
     @staticmethod
-    def work(B, a, v, R):
-        return 2 * B * B * a ** 3 * v / R
+    def work(B, a, v, R, ell=None):
+        """Complete passage; negligible self-inductance, v is a positive speed."""
+        active_length = a if ell is None else min(a, ell)
+        return 2 * B * B * a * a * v * active_length / R
+
+    @staticmethod
+    def passage(x, B, a, v, R, ell):
+        """Front-edge position x; overlap length, signed emf, power and work."""
+        x = np.asarray(x, dtype=float)
+        overlap = np.clip(x, 0, ell) - np.clip(x-a, 0, ell)
+        slope = ((x > 0) & (x < ell)).astype(float) - ((x > a) & (x < ell+a)).astype(float)
+        emf = -B*a*v*slope
+        power = emf**2/R
+        active_length = min(a, ell)
+        distance = np.clip(x, 0, active_length) + np.clip(x-max(a, ell), 0, active_length)
+        work = (B*a*v)**2/R/v * distance
+        return overlap, emf, power, work
 
     def plot(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111)
-        B, a, v, R, L = (params['B'], params['a'], params['v'], params['R_ohm'], params['ell'])
-        x = np.linspace(-a, L + a, 800)
-        overlap = np.clip(x + a, 0, a) - np.clip(x - L, 0, a)
-        P = np.where((x > -a) & (x < 0) | (x > L - a) & (x < L), (B * a * v) ** 2 / R, 0.0)
-        Wcum = np.cumsum(P) * (x[1] - x[0]) / v
+        B, a, v, R, L = (params[k] for k in ['B', 'a', 'v', 'R_ohm', 'ell'])
+        # Sample either side of every sharp boundary without grid-dependent work.
+        breaks = np.unique([0, a, L, L+a])
+        x = np.unique(np.r_[np.linspace(-.2*a, L+1.2*a, 800), np.nextafter(breaks, -np.inf), np.nextafter(breaks, np.inf)])
+        overlap, emf, power, work = self.passage(x, B, a, v, R, L)
         if mode == 'Map':
-            ax.plot(x, Wcum)
-            ax.set_ylabel('kumulativt W [J]')
+            ax.plot(x, work)
+            ax.set_ylabel('Ackumulerat arbete W [J]')
         else:
-            ax.plot(x, P)
-            ax.set_ylabel('mekanisk effekt [W]')
-        ax.set_xlabel('främre kantens läge x [m]')
-        ax.set_title(f'Totalt arbete W = {self.work(B, a, v, R):.3g} J')
-        ax.grid(True, alpha=0.3)
+            ax.plot(x, power)
+            ax.set_ylabel('Mekanisk effekt P [W]')
+        ax.set_xlabel('Främre kantens läge x [m]')
+        ax.set_title(f'Totalt arbete W = {self.work(B, a, v, R, L):.3g} J')
+        ax.grid(True, alpha=.3)
 
     def draw_geometry(self, fig, params):
         fig.clear()
@@ -217,18 +242,18 @@ class MovingLoopFieldWork(ProblemBase):
         ax.set_xlim(-1.5 * a, L + 0.5 * a)
         ax.set_ylim(-0.8 * a, 0.9 * a)
         ax.set_axis_off()
-        ax.set_title('Slinga går in i/ut ur fältet')
+        ax.set_title('Främre kant x; slingan sträcker sig till x−a')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111, projection='3d')
         B, a, v, R = (params['B'], params['a'], params['v'], params['R_ohm'])
-        bb = np.linspace(0, 2 * max(B, 0.1), 50)
+        bb = np.linspace(0, 2 * max(abs(B), 0.1), 50)
         vv = np.linspace(0.1, 2 * v, 50)
         BB, VV = np.meshgrid(bb, vv)
-        W = self.work(BB, a, VV, R)
+        W = self.work(BB, a, VV, R, params['ell'])
         ax.plot_surface(BB, VV, W, cmap='plasma', alpha=0.9)
-        ax.set_xlabel('B [T]')
+        ax.set_xlabel('|B| [T]')
         ax.set_ylabel('v [m/s]')
         ax.set_zlabel('W [J]')
         ax.set_title('Arbetets skalning')
@@ -256,28 +281,35 @@ class MovingLoopDipoleEmf(ProblemBase):
         ax.plot(z, eps)
         ax.set_xlabel('z [m]')
         ax.set_ylabel('εemf [V]')
-        ax.set_title('Rörelse- och transformatorberäkning ger samma EMS')
+        ax.set_title('Samma emk från flödesändring och rörelseintegral')
+        ax.text(.98, .95, f'Kräver a ≪ z\na/zmin = {a/z0:.2g}', transform=ax.transAxes, ha='right', va='top', fontsize=9)
         ax.grid(True, alpha=0.3)
 
     def draw_geometry(self, fig, params):
         fig.clear()
         ax = fig.add_subplot(111)
-        z0, z1, a = (params['zmin'], params['zmax'], params['a'])
-        ax.arrow(0, 0, 0, 0.3 * z1, head_width=0.04 * z1, length_includes_head=True)
-        ax.text(0.03 * z1, 0.15 * z1, 'm', va='center')
-        ax.add_patch(Circle((0, z0), 3 * a, fill=False))
-        ax.arrow(0, z0, 0, 0.2 * (z1 - z0), head_width=0.03 * z1, length_includes_head=True)
-        ax.text(0.05 * z1, z0, 'loop', va='center')
-        ax.set_aspect('equal')
-        ax.set_xlim(-0.2 * z1, 0.3 * z1)
-        ax.set_ylim(-0.1 * z1, 1.1 * z1)
+        a, z, m, v = (params[k] for k in ['a', 'zmin', 'm', 'v'])
+        scale = max(z, 2*a)
+        ax.axvline(0, color='grey', ls=':', lw=1)
+        ax.scatter([0], [0], color='black', s=20)
+        if m:
+            ax.annotate('', xy=(0, np.sign(m)*.25*scale), xytext=(0, 0), arrowprops=dict(arrowstyle='->', color='steelblue', lw=2))
+        ax.text(.08*scale, 0, f'm = {m:g}', color='steelblue', fontsize=9)
+        ax.plot([-a, a], [z, z], lw=3, color='black')
+        if v:
+            ax.annotate('', xy=(a+.15*scale, z+np.sign(v)*.25*scale), xytext=(a+.15*scale, z), arrowprops=dict(arrowstyle='->', color='darkorange', lw=2))
+        ax.text(a+.2*scale, z, f'v = {v:g}', color='darkorange', fontsize=9)
+        ax.set(xlim=(-max(1.3*a,.35*scale), max(1.3*a,.7*scale)), ylim=(-.35*scale,z+.4*scale), aspect='equal')
         ax.set_axis_off()
-        ax.set_title('Dipolaxel')
+        ax.set_title('Sidovy: slingan vinkelrät mot z-axeln')
 
     def draw_3d(self, fig, params, mode):
         fig.clear()
         ax = fig.add_subplot(111, projection='3d')
-        m, a, v, z0, z1 = (params['m'], params['a'], params['v'], params['zmin'], params['zmax'])
-        z = np.linspace(z0, z1, 100)
-        eps = self.emf(m, a, v, z)
-        _surface_of_revolution(ax, 0.2 * a * np.ones_like(z), z, eps, title='EMS mot axiellt läge', zlabel='z [m]')
+        z = np.linspace(params['zmin'], params['zmax'], 160)
+        emf = self.emf(params['m'], params['a'], params['v'], z)
+        ax.plot(z, np.zeros_like(z), emf, color='steelblue')
+        ax.set_xlabel('z [m]')
+        ax.set_ylabel('Profilplan')
+        ax.set_zlabel('Emk [V]')
+        ax.set_title('Emk för hela slingan — inte ett lokalt fält')
