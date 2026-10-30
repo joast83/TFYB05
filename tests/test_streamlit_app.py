@@ -253,3 +253,15 @@ def test_all_chapter_eight_problems_show_their_specific_targeted_help():
             next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
             assert not app.exception
             assert any(expected in message.value for message in app.info)
+
+
+def test_chapter_2_4_has_no_obsolete_3d_visualization(monkeypatch):
+    monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
+    app = _run_app()
+    problem_name = next(name for name in app.selectbox(key="selected-problem").options if name.startswith("2.4 "))
+    app.selectbox(key="selected-problem").set_value(problem_name).run()
+    _radio(app, "Arbetssätt").set_value("Utforska").run()
+    next(button for button in app.button if button.label == "Visa figur").click().run()
+    assert not app.exception, [exception.value for exception in app.exception]
+    assert not any(expander.label == "Avancerat: visa äldre 3-D-vy" for expander in app.expander)
+    assert not any(checkbox.label == "Rendera 3-D-vy" for checkbox in app.checkbox)
