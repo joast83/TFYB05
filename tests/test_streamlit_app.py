@@ -82,16 +82,12 @@ def test_theory_page_runs_without_streamlit_exception(monkeypatch):
     assert any(selectbox.label == "Teoriavsnitt" for selectbox in app.selectbox)
 
 
-def test_targeted_help_uses_problem_specific_hints_and_keeps_legacy_fallback():
+def test_targeted_help_uses_problem_specific_hints_including_final_chapter():
     from em_visualisering.guidance import guidance_for_problem
     from em_visualisering.registry import PROBLEMS
 
     app = _run_app()
-    # Keep a real legacy fallback case as successive chapters are reviewed.
-    legacy = next(p for p in PROBLEMS
-                  if not guidance_for_problem(p).setup_hint
-                  and not guidance_for_problem(p).geometry_hint)
-    for pid in ("2.1", "2.8", legacy.name.split()[0]):
+    for pid in ("2.1", "2.8", "10.2", "10.3"):
         app.selectbox(key="selected-chapter").set_value(int(pid.split(".")[0])).run()
         problem = next(p for p in PROBLEMS if p.name.split()[0] == pid)
         guidance = guidance_for_problem(problem)
@@ -261,6 +257,7 @@ def test_chapter_2_4_has_no_obsolete_3d_visualization(monkeypatch):
     problem_name = next(name for name in app.selectbox(key="selected-problem").options if name.startswith("2.4 "))
     app.selectbox(key="selected-problem").set_value(problem_name).run()
     _radio(app, "Arbetssätt").set_value("Utforska").run()
+    next(c for c in app.checkbox if c.label == "Visa den äldre visualiseringen ändå").check().run()
     next(button for button in app.button if button.label == "Visa figur").click().run()
     assert not app.exception, [exception.value for exception in app.exception]
     assert not any(expander.label == "Avancerat: visa äldre 3-D-vy" for expander in app.expander)

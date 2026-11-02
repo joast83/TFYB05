@@ -66,19 +66,19 @@ class RadialChargeExpansionMaxwellTest(ProblemBase):
     def validate(self, params):
         if params['s0'] <= 0 or params['rmax'] <= 0:
             return 's0 och rmax måste vara positiva.'
+        if params['s0'] + params['v']*params['t'] <= 0:
+            return 'Bredden s0 + v·t måste vara positiv.'
         return None
 
     @staticmethod
     def profiles(r, rho0, s0, v, t):
+        r = np.asarray(r, dtype=float)
         s = s0 + v * t
+        if s <= 0:
+            raise ValueError('Bredden s0 + v·t måste vara positiv.')
         rho = rho0 * (s0 / s) ** 3 * np.exp(-(r / s) ** 2)
-        drhodt = rho * v * (-3 / s + 2 * r * r / s ** 3)
-        integrand = drhodt * r * r
-        integ = np.zeros_like(r)
-        if len(r) > 1:
-            integ[1:] = np.cumsum(0.5 * (integrand[1:] + integrand[:-1]) * np.diff(r))
-        J = -integ / np.maximum(r * r, 1e-30)
-        J[0] = 0.0
+        # Charge-conserving homologous expansion has radial velocity v*r/s.
+        J = rho * v * r / s
         return (rho, J, -J)
 
     def plot(self, fig, params, mode):
