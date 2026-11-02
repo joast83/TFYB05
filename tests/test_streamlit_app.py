@@ -177,3 +177,20 @@ def test_chapter_2_4_has_no_obsolete_3d_visualization(monkeypatch):
     assert not app.exception, [exception.value for exception in app.exception]
     assert not any(expander.label == "Avancerat: visa äldre 3-D-vy" for expander in app.expander)
     assert not any(checkbox.label == "Rendera 3-D-vy" for checkbox in app.checkbox)
+
+
+def test_chapter_2_3_hides_old_geometry_in_solve_and_explore(monkeypatch):
+    monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
+    app = _run_app()
+    problem_name = next(name for name in app.selectbox(key="selected-problem").options
+                        if name.startswith("2.3 "))
+    app.selectbox(key="selected-problem").set_value(problem_name).run()
+    assert not app.exception
+    assert not any(e.label == "Geometriskiss till uppgiften" for e in app.expander)
+
+    _radio(app, "Arbetssätt").set_value("Utforska").run()
+    next(c for c in app.checkbox if c.label == "Visa den äldre visualiseringen ändå").check().run()
+    next(b for b in app.button if b.label == "Visa figur").click().run()
+    assert not app.exception, [exception.value for exception in app.exception]
+    assert not any(m.value == "#### Geometriskiss" for m in app.markdown)
+    assert any(m.value == "#### Huvudvisualisering" for m in app.markdown)
