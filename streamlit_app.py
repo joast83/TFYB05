@@ -25,7 +25,7 @@ from matplotlib.figure import Figure
 
 from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.facit import facit_for_problem
-from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view
+from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view, supports_geometry_view
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
 from em_visualisering.study_content import (
@@ -333,7 +333,7 @@ def _render_problem_statement(problem) -> str:
 
 
 def _render_geometry_if_needed(problem, statement: str) -> None:
-    if "figur" not in statement.lower():
+    if not supports_geometry_view(problem) or "figur" not in statement.lower():
         return
 
     with _problem_expander("Geometriskiss till uppgiften", expanded=True):
@@ -642,11 +642,14 @@ def _render_explore_mode(problem) -> None:
     )
     dpi = {"Snabb": 82, "Normal": 110, "Hög": 145}[quality]
 
-    col1, col2 = st.columns([3, 2])
-    with col1:
+    if supports_geometry_view(problem):
+        col1, col2 = st.columns([3, 2])
+        with col1:
+            _render_main_graph(problem, params, mode, dpi)
+        with col2:
+            _render_geometry(problem, params, mode, dpi)
+    else:
         _render_main_graph(problem, params, mode, dpi)
-    with col2:
-        _render_geometry(problem, params, mode, dpi)
 
     st.caption(
         "Jämför nu figuren med din förutsägelse: stämde tecken, symmetri, nollställen "

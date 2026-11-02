@@ -101,6 +101,11 @@ def mode_options_for_problem(problem):
     return options
 
 
+def supports_geometry_view(problem):
+    """Hoppa över 2.3:s oanvändbara skiss; trådens läge finns i uppgiften."""
+    return not isinstance(problem, FiniteLineCharge2D)
+
+
 def supports_3d_view(problem):
     """Det gamla off-axis-3D-fältet i 2.4 saknar fysikaliskt stöd."""
     return not isinstance(problem, SemiCircularSurfaceAxis)

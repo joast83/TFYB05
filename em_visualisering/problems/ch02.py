@@ -217,18 +217,6 @@ class FiniteLineCharge2D(ProblemBase):
         ax.set_ylabel('z [m]')
         ax.grid(True, alpha=0.2)
 
-    def draw_geometry(self, fig, params):
-        fig.clear()
-        ax = fig.add_subplot(111)
-        a, b = (params['a'], params['b'])
-        xmax = params['xmax']
-        ax.plot([0, 0], [-b, a], linewidth=4)
-        ax.set_title('Geometriskiss')
-        ax.set_aspect('equal')
-        ax.set_xlim(-xmax, xmax)
-        ax.set_ylim(-b * 1.2, a * 1.2)
-        ax.set_axis_off()
-
     def draw_3d(self, fig, params, mode):
         """
         3-D-quiverdiagram av hela E-vektorfältet på ett glest xyz-rutnät.

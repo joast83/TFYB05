@@ -138,7 +138,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
  '2.3': 'En smal tråd har belagts med en konstant linjeladdningstäthet ρℓ . Dimensionen hos ρℓ är C/m. Tråden är rak '
         'med en total längd av a + b där a och b är positiva storheter. Det omgivande mediet är vakuum. '
         'Koordinatsystemets origo ligger på avstånd b från vänster ändpunkt och a från höger ändpunkt. ẑ-axeln går '
-        'längs tråden och är positiv mot höger. Se figur nedan.\n'
+        'längs tråden och är positiv mot höger. \n'
         '\n'
         '(a) Beräkna det elektriska fältet E i punkten xx̂. Det vill säga i punkten (x, 0, 0).\n'
         '\n'
