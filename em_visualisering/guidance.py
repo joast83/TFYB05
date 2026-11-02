@@ -1252,6 +1252,8 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
     # ------------------------------------------------------------------
     "DisplacementCurrentCapacitor": G(
         problem_id="10.2",
+        setup_hint="Välj normalen från den positivt laddade plattan mot den negativa. Skriv D_n=Q/A och i=dQ/dt med samma teckenkonvention. Derivera vid fast A: J_F,n=i/A. En konstant begynnelseladdning bidrar inte till tidsderivatan.",
+        geometry_hint="Förskjutningsströmmen går normalt genom hela plattarean. I vakuum passerar inga fria laddningar genom gapet; J_F beskriver det föränderliga elektriska fältet. Avståndet d påverkar spänningen men förkortas bort ur J_F vid given tillförd ström.",
         learning_goal="Se varför en tidsvarierande kondensatorström motsvaras av samma förskjutningsström genom gapet.",
         concepts=("förskjutningsström", "D-fält", "laddningskontinuitet"),
         start_here="Koppla den tillförda strömmen till hur snabbt plattladdningen Q(t) ändras. Därefter kan D-fältet mellan stora plattor skrivas direkt från Q(t).",
@@ -1268,6 +1270,8 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
     ),
     "RadialChargeExpansionMaxwellTest": G(
         problem_id="10.3",
+        setup_hint="Integrera ∂(r²J_r)/∂r=−r²∂ρ/∂t från 0 till r. Regularitet i centrum tar bort integrationskonstanten. Derivera sedan D_r=r⁻²∫₀ʳρ(r′,t)r′²dr′ vid fast observationsradie r, inte längs en laddnings bana.",
+        geometry_hint="Rita en sfär med centrum i laddningsmolnet. J och J_F är radiella och motriktade. Symmetrin gäller hela fördelningen, inte bara en enskild laddning. Appens expanderande Gaussprofil är ett exempel med bevarad total laddning, inte en lösning för partiklarnas Coulombdrivna rörelse.",
         learning_goal="Använd sfärisk symmetri och kontinuitet för att förstå hur ledningsström och förskjutningsström kan ta ut varandra i Ampère–Maxwells lag.",
         concepts=("sfärisk symmetri", "kontinuitetsekvationen", "Ampère–Maxwells lag"),
         start_here=(
