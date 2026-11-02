@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from streamlit.testing.v1 import AppTest
 
 
@@ -8,7 +10,6 @@ def _run_app() -> AppTest:
     app.run()
     assert not app.exception, [exception.value for exception in app.exception]
     return app
-
 
 
 def _radio(app: AppTest, label: str):
@@ -82,25 +83,36 @@ def test_theory_page_runs_without_streamlit_exception(monkeypatch):
     assert any(selectbox.label == "Teoriavsnitt" for selectbox in app.selectbox)
 
 
-def test_targeted_help_uses_problem_specific_hints_including_final_chapter():
+@pytest.mark.parametrize("chapter", range(2, 11))
+def test_all_problems_show_specific_help_and_reset_on_navigation(chapter):
     from em_visualisering.guidance import guidance_for_problem
     from em_visualisering.registry import PROBLEMS
+    from em_visualisering.study_content import method_meta_for_problem
 
     app = _run_app()
-    for pid in ("2.1", "2.8", "10.2", "10.3"):
-        app.selectbox(key="selected-chapter").set_value(int(pid.split(".")[0])).run()
-        problem = next(p for p in PROBLEMS if p.name.split()[0] == pid)
+    app.selectbox(key="selected-chapter").set_value(chapter).run()
+    for problem in (p for p in PROBLEMS if p.name.startswith(f"{chapter}.")):
+        app.selectbox(key="selected-problem").set_value(problem.name).run()
         guidance = guidance_for_problem(problem)
-        next(w for w in app.selectbox if w.label == "Uppgift").set_value(problem.name).run()
-        for choice, expected in (
-            ("Jag vet vilken idé jag vill använda men får inte upp matematiken",
-             guidance.setup_hint or guidance.hints[0]),
-            ("Jag fastnar på vektorer eller geometri",
-             guidance.geometry_hint or guidance.hints[1]),
-        ):
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").set_value(choice).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
+        key = f"stuck:{problem.__class__.__name__}"
+        assert app.selectbox(key=key).value is None
+        for index, expected in enumerate((
+            guidance.start_here, guidance.setup_hint,
+            guidance.geometry_hint, guidance.self_checks[0],
+        )):
+            app.selectbox(key=key).select_index(index).run()
+            assert not app.exception, problem.name
+            # The targeted message must contain this exercise's content itself;
+            # the always-visible "Börja här" message cannot satisfy this check.
+            assert expected in app.info[-1].value, (problem.name, index)
+            if index == 0:
+                assert method_meta_for_problem(problem).label in app.info[-1].value
+            assert all(not e.proto.expanded for e in app.expander
+                       if e.label.startswith(("Ledtråd", "Kontroll", "Visa facit")))
+        # Clearing a choice must also remove its answer, without navigation.
+        app.selectbox(key=key).set_value(None).run()
+        assert len(app.info) == 1
+        app.selectbox(key=key).select_index(3).run()
 
 
 def test_navigation_resets_disclosures_and_help_but_not_ordinary_reruns():
@@ -138,39 +150,6 @@ def test_navigation_hides_previously_revealed_figures(monkeypatch):
     assert "visualization-revealed:ChargedRingAxis:Field" not in app.session_state
 
 
-
-def test_all_chapter_four_problems_show_their_specific_targeted_help():
-    from em_visualisering.guidance import guidance_for_problem
-    from em_visualisering.registry import PROBLEMS
-
-    app = _run_app()
-    app.selectbox(key="selected-chapter").set_value(4).run()
-    for problem in (p for p in PROBLEMS if p.name.startswith("4.")):
-        app.selectbox(key="selected-problem").set_value(problem.name).run()
-        guidance = guidance_for_problem(problem)
-        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
-            assert expected
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
-
-
-def test_all_chapter_five_problems_show_their_specific_targeted_help():
-    from em_visualisering.guidance import guidance_for_problem
-    from em_visualisering.registry import PROBLEMS
-
-    app = _run_app()
-    app.selectbox(key="selected-chapter").set_value(5).run()
-    for problem in (p for p in PROBLEMS if p.name.startswith("5.")):
-        app.selectbox(key="selected-problem").set_value(problem.name).run()
-        guidance = guidance_for_problem(problem)
-        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
-            assert expected
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
-
-
 def test_variable_conductivity_explore_views_are_named_and_renderable(monkeypatch):
     monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
     app = _run_app()
@@ -185,70 +164,6 @@ def test_variable_conductivity_explore_views_are_named_and_renderable(monkeypatc
         next(b for b in app.button if b.label == "Visa figur").click().run()
         assert not app.exception
         assert not any("kunde inte" in warning.value for warning in app.warning)
-
-
-def test_all_chapter_six_problems_show_their_specific_targeted_help():
-    from em_visualisering.guidance import guidance_for_problem
-    from em_visualisering.registry import PROBLEMS
-
-    app = _run_app()
-    app.selectbox(key="selected-chapter").set_value(6).run()
-    for problem in (p for p in PROBLEMS if p.name.startswith("6.")):
-        app.selectbox(key="selected-problem").set_value(problem.name).run()
-        guidance = guidance_for_problem(problem)
-        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
-            assert expected
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
-
-
-def test_all_chapter_nine_problems_show_their_specific_targeted_help():
-    from em_visualisering.guidance import guidance_for_problem
-    from em_visualisering.registry import PROBLEMS
-
-    app = _run_app()
-    app.selectbox(key="selected-chapter").set_value(9).run()
-    for problem in (p for p in PROBLEMS if p.name.startswith("9.")):
-        app.selectbox(key="selected-problem").set_value(problem.name).run()
-        guidance = guidance_for_problem(problem)
-        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
-            assert expected
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
-
-
-def test_all_chapter_seven_problems_show_their_specific_targeted_help():
-    from em_visualisering.guidance import guidance_for_problem
-    from em_visualisering.registry import PROBLEMS
-
-    app = _run_app()
-    app.selectbox(key="selected-chapter").set_value(7).run()
-    for problem in (p for p in PROBLEMS if p.name.startswith("7.")):
-        app.selectbox(key="selected-problem").set_value(problem.name).run()
-        guidance = guidance_for_problem(problem)
-        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
-            assert expected
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
-
-
-def test_all_chapter_eight_problems_show_their_specific_targeted_help():
-    from em_visualisering.guidance import guidance_for_problem
-    from em_visualisering.registry import PROBLEMS
-
-    app = _run_app()
-    app.selectbox(key="selected-chapter").set_value(8).run()
-    for problem in (p for p in PROBLEMS if p.name.startswith("8.")):
-        app.selectbox(key="selected-problem").set_value(problem.name).run()
-        guidance = guidance_for_problem(problem)
-        for index, expected in ((1, guidance.setup_hint), (2, guidance.geometry_hint)):
-            assert expected
-            next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").select_index(index).run()
-            assert not app.exception
-            assert any(expected in message.value for message in app.info)
 
 
 def test_chapter_2_4_has_no_obsolete_3d_visualization(monkeypatch):

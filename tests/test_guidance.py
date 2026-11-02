@@ -28,3 +28,11 @@ def test_guidance_entries_have_progressive_structure():
         assert len(guidance.self_checks) >= 2, class_name
         assert all(text.strip() for text in guidance.hints), class_name
         assert all(text.strip() for text in guidance.self_checks), class_name
+
+
+def test_every_exercise_has_dedicated_targeted_help():
+    # Do not silently substitute an unrelated progressive hint for missing help.
+    for class_name, guidance in GUIDANCE_BY_CLASS.items():
+        assert guidance.setup_hint.strip(), class_name
+        assert guidance.geometry_hint.strip(), class_name
+        assert guidance.setup_hint != guidance.geometry_hint, class_name
