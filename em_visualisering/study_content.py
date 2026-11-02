@@ -28,23 +28,26 @@ CHAPTER_TITLES = {2: 'Coulombs lag, elektrisk fältstyrka och potential',
  10: 'Förskjutningsströmmar'}
 
 METHOD_META = {    'force_balance': MethodMeta('Kraftjämvikt och vektorkomponenter', 'Identifiera alla krafter, välj axlar och projicera vektorer innan du sätter in fältformler.', 'Vektoruppdelning, projektioner, tecken och eventuella småparameterapproximationer.'),
-    'direct_field_integral': MethodMeta('Direkt fältintegral / Biot–Coulomb-superposition', 'Parametrisera källan, skriv vektorn från källelementet till fältpunkten och integrera komponentvis.', 'Källkoordinat, separationsvektor, dℓ/dS/dV och komponentvis vektorintegral.'),
+    'direct_field_integral': MethodMeta('Coulombs lag: direkt fältintegral', 'Parametrisera källan, skriv vektorn från källelementet till fältpunkten och integrera komponentvis.', 'Källkoordinat, separationsvektor, dℓ/dS/dV och komponentvis vektorintegral.'),
     'potential': MethodMeta('Potential först', 'Utnyttja att potentialen är en skalär: summera/integrera potentialbidrag och ta gradient först om E behövs.', 'Skalär integral, styckvisa uttryck, referensnivå och sambandet E = −∇V.'),
     'gauss': MethodMeta('Gauss lag och symmetri', 'Välj en sluten yta som följer problemets symmetri och håll noga reda på innesluten laddning eller fri laddning.', 'Ytnormaler, flödesintegral, symmetriargument och styckvis innesluten källa.'),
-    'poisson_gauss': MethodMeta('Gauss/Poisson med randvillkor', 'Skriv fältekvationen i den naturliga koordinaten, integrera och bestäm integrationskonstanter från randvillkoren.', 'Divergens, en-dimensionell differentialekvation, integrationskonstanter och randvillkor.'),
+    'poisson_gauss': MethodMeta('Gauss lag och Poissons ekvation med randvillkor', 'Skriv fältekvationen i den naturliga koordinaten, integrera och bestäm integrationskonstanter från randvillkoren.', 'Divergens, en-dimensionell differentialekvation, integrationskonstanter och randvillkor.'),
     'superposition': MethodMeta('Superposition och geometrisk uppdelning', 'Bygg den verkliga källan som en summa av enklare källor vars fält eller potential du redan kan bestämma.', 'Geometrisk decomposition, vektorsumma/skalarsumma och konsekvent koordinatsystem.'),
     'optimization': MethodMeta('Dimensionering och optimering', 'Skriv först den fysikaliska begränsningen, eliminera en beroende storhet och optimera sedan den återstående funktionen.', 'Bivillkor, funktionsoptimering, derivata och kontroll av randfall.'),
     'dielectric_boundaries': MethodMeta('Randvillkor för E, D och material', 'Dela upp fälten i normal- och tangentialkomponenter och använd rätt kontinuitets- eller språngvillkor.', 'Normal-/tangentialuppdelning, skalärprodukter, enhetsnormaler och styckvisa materialrelationer.'),
-    'energy_capacitance': MethodMeta('Energi, kapacitans och fälttryck', 'Bestäm först vad som hålls konstant (Q eller V) och uttryck energin eller trycket i den geometriska parameter som ändras.', 'Differentiation med avseende på geometri, energibalans och tydlig hantering av konstanta storheter.'),
+    'energy_capacitance': MethodMeta('Kapacitans, elektrostatisk energi och kraft', 'Bestäm först vad som hålls konstant (Q eller V) och uttryck energin eller trycket i den geometriska parameter som ändras.', 'Differentiation med avseende på geometri, energibalans och tydlig hantering av konstanta storheter.'),
     'image_charge': MethodMeta('Spegelladdningsmetoden', 'Ersätt ledarrandvillkoret med en fiktiv laddningskonfiguration som ger rätt potential på ledarytan.', 'Spegling i geometri, superposition och separationsvektorer till verkliga och fiktiva källor.'),
     'stationary_current': MethodMeta('Stationär ström: J = σE och kontinuitet', 'Utgå från att samma stationära ström måste passera relevanta ytor och koppla J till E via materialets konduktivitet.', 'Flödesintegral av J, differentialresistans, radial geometri och kontinuitet.'),
+    'ampere_magnetostatics': MethodMeta('Ampères cirkulationslag (magnetostatik)', 'Använd kretsens symmetri och den inneslutna fria strömmen för att bestämma B eller H där cirkulationslagen förenklar uppgiften.', 'Slutna integrationskurvor, symmetri och innesluten ström.'),
+    'vector_potential': MethodMeta('Magnetisk vektorpotential A', 'Bestäm först vektorpotentialen från en strömfördelning och beräkna sedan B = ∇ × A.', 'Vektorpotential, rotation och val av koordinatsystem.'),
+    'dipole_approximation': MethodMeta('Magnetisk dipolapproximation', 'Jämför det exakta magnetfältet med dess fjärrfältsutveckling och definiera ett relativt fel.', 'Dimensionslösa kvoter, asymptotiska approximationer och felvillkor.'),
     'biot_savart': MethodMeta('Biot–Savarts lag', 'Parametrisera ledaren eller strömfördelningen och skriv dℓ × R-vektorn innan du integrerar.', 'Korsprodukt, parametrisering av kurva/yta, separationsvektor och komponentsymmetri.'),
-    'magnetic_moment': MethodMeta('Magnetiskt moment och kraftmoment', 'Identifiera eller bygg det magnetiska momentet och koppla det till B-fältet och relevant korsprodukt.', 'Korsprodukter, vektorvinklar, riktning enligt högerhandsregeln och dipolapproximation.'),
+    'magnetic_moment': MethodMeta('Magnetiskt dipolmoment och vridmoment', 'Identifiera eller bygg det magnetiska momentet och koppla det till B-fältet och relevant korsprodukt.', 'Korsprodukter, vektorvinklar, riktning enligt högerhandsregeln och dipolapproximation.'),
     'magnetic_flux': MethodMeta('Magnetiskt flöde', 'Välj en lämplig yta och beräkna B·dS; byt yta om ∇·B = 0 gör en annan yta enklare.', 'Ytparametrisering, normalvektor, skalärprodukt och eventuella ytsubstitutioner.'),
-    'magnetic_circuit': MethodMeta('Magnetisk krets / reluktans', 'Översätt geometrin till magnetomotorisk spänning, reluktanser och gemensamma eller förgrenade flöden.', 'Serie-/parallellkoppling, flödeskontinuitet och vid behov lösning av en icke-linjär algebraisk ekvation.'),
+    'magnetic_circuit': MethodMeta('Magnetisk krets och reluktans', 'Översätt geometrin till magnetomotorisk spänning, reluktanser och gemensamma eller förgrenade flöden.', 'Serie-/parallellkoppling, flödeskontinuitet och vid behov lösning av en icke-linjär algebraisk ekvation.'),
     'ampere_material': MethodMeta('Ampères lag för H och materialrelationer', 'Bestäm H från fri ström först; använd sedan materialrelationerna för att få B och M styckvis.', 'Cirkulationsintegral, styckvisa radialområden och separation mellan H, B och M.'),
     'magnetic_pressure': MethodMeta('Magnetiskt tryck och kraft', 'Gå från magnetiskt flöde till B i luftgapet och använd fältets energitäthet/tryck för den mekaniska kraften.', 'Area, flödestäthet, energitäthet och kraft som tryck gånger area.'),
-    'magnetization_currents': MethodMeta('Magnetisering som bundna strömmar', 'Översätt M till volym- och ytmagnetiseringsströmmar eller använd B = μ0(H+M) där det är enklare.', 'Curl av M, korsprodukt M×n och orientering av cylindriska/sfäriska basvektorer.'),
+    'magnetization_currents': MethodMeta('Magnetisering och bundna strömmar', 'Översätt M till volym- och ytmagnetiseringsströmmar eller använd B = μ0(H+M) där det är enklare.', 'Curl av M, korsprodukt M×n och orientering av cylindriska/sfäriska basvektorer.'),
     'mutual_inductance': MethodMeta('Ömsesidig induktans via flöde', 'Bestäm B från den ena kretsen, integrera flödet genom den andra och dividera flödeskopplingen med strömmen.', 'Ytintegral, geometri/projektion och definitionen M = Φ/I.'),
     'faraday_transformer': MethodMeta('Faradays lag och flödeskoppling', 'Bestäm först magnetiskt flöde från primärströmmen och derivera sedan NΦ med avseende på tiden.', 'Kedjeregel, tidsderivata, sinus/cosinus-fas och flödeskoppling.'),
     'motional_emf': MethodMeta('Rörelse-emk / Faradays lag / Lenz', 'Bestäm hur flödet ändras under rörelsen eller integrera v×B längs den rörliga ledaren; använd Lenz lag för riktningen.', 'Tidsberoende geometri, kedjeregel, linjeintegral av v×B och teckenkonvention.'),
@@ -98,7 +101,7 @@ METHOD_BY_ID = {'2.1': 'force_balance',
  '7.1': 'magnetic_moment',
  '7.2': 'magnetic_moment',
  '7.3': 'magnetic_moment',
- '7.5': 'magnetic_moment',
+ '7.5': 'dipole_approximation',
  '7.6': 'magnetic_flux',
  '7.7': 'force_balance',
  '7.10': 'magnetic_flux',
@@ -121,8 +124,8 @@ CHAPTER_METHOD_KEYS = {2: ['direct_field_integral', 'gauss', 'potential', 'super
  3: ['dielectric_boundaries', 'gauss', 'superposition', 'optimization'],
  4: ['energy_capacitance', 'image_charge', 'force_balance', 'gauss'],
  5: ['stationary_current', 'dielectric_boundaries', 'gauss', 'energy_capacitance'],
- 6: ['biot_savart', 'gauss', 'superposition', 'direct_field_integral'],
- 7: ['magnetic_moment', 'magnetic_flux', 'force_balance', 'biot_savart'],
+ 6: ['biot_savart', 'ampere_magnetostatics', 'vector_potential', 'superposition'],
+ 7: ['magnetic_moment', 'dipole_approximation', 'magnetic_flux', 'force_balance', 'biot_savart'],
  8: ['magnetic_circuit', 'ampere_material', 'magnetization_currents', 'magnetic_pressure'],
  9: ['mutual_inductance', 'faraday_transformer', 'motional_emf', 'magnetic_flux'],
  10: ['ampere_maxwell', 'gauss', 'stationary_current', 'magnetic_flux']}
@@ -395,13 +398,14 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
          'trådslinga, som består av ett varv, är belägen i planet z = c. Rektangeln har utsträckningen a i x-led och b '
          'i y-led. Rektangelns hörn ligger alltså i punkterna (0, 0, c), (a, 0, c), (a, b, c) och (0, b, c). Beräkna '
          'det magnetiska flöde som strömmen I orsakar genom slingan.',
- '8.1': 'En permanentmagnet med längd ℓ = 20 cm har böjts så att den bildar en praktiskt taget sluten ring. Luftgapets '
-        'längd är d = 1 mm. Magnetmaterialets egenskaper beskrivs av tabellen. H( A/m) -5000 -4000 -3000 -2000\n'
-        '\n'
-        '(a) Hur stor magnetisk flödestäthet bör man få i luftgapet? Läckage försummas.\n'
-        '\n'
-        '(b) För att förstärka magnetiska flödestätheten i luftgapet lindar man en spole med 100 varv på '
-        'permanentmagneten. Vilken flödestäthet bör man få om strömmen',
+ '8.1': ('En permanentmagnet med längd ℓ = 20 cm har böjts så att den bildar en praktiskt taget sluten ring. '
+         'Luftgapets längd är d = 1 mm. Magnetmaterialets egenskaper beskrivs av tabellen.\n\n'
+         '| B (Vs/m²) | 0,00 | 0,60 | 0,83 | 1,00 | 1,20 |\n'
+         '|:--|--:|--:|--:|--:|--:|\n'
+         '| H (A/m) | −5000 | −4000 | −3000 | −2000 | 0 |\n\n'
+         '(a) Hur stor magnetisk flödestäthet bör man få i luftgapet? Läckage försummas.\n\n'
+         '(b) För att förstärka den magnetiska flödestätheten i luftgapet lindar man en spole '
+         'med 100 varv på permanentmagneten. Vilken flödestäthet bör man få om strömmen är 2,0 A?'),
  '8.2': 'En magnetisk krets, se figur, är tillverkad av ett järnämne med tvärsnitt S = 2 cm² och total längd ℓ = 0,5 '
         'm. Luftgapets längd d = 1 mm. Genom lindningen, N = 100 varv, går strömmen I = 2,0 A. Sambandet mellan B-fält '
         'och H-fält ges av B = aH/(b + H), som gäller för H > 0, där a = 2,0 T och b = 400 A/m med B och H i '
@@ -411,7 +415,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
         'finns en spole med 160 varv som för strömmen 2,00 mA. Järnmaterialets relativa permeabilitet är 150. Beräkna '
         'hur stort magnetiskt flöde som går genom bryggan.',
  '8.5': 'Ett cylindriskt rör, med innerradie a och ytterradie b, för strömmen I i längdriktningen. Beräkna '
-        'magnetiseringen M , magnetiska fä1tstyrkan H samt magnetiska flödestätheten B på olika avstånd, R, från '
+        'magnetiseringen M , magnetiska fältstyrkan H samt magnetiska flödestätheten B på olika avstånd, R, från '
         'rörets symmetriaxel.\n'
         '\n'
         '(a) Röret består av koppar som är omagnetiskt.\n'
@@ -431,7 +435,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
          '\n'
          '(c) Vad blir de approximativa uttrycken för B och H då a blir mycket stor?',
  '8.13': 'Figuren illustrerar en lång cylindrisk ledare som för strömmen I i positiv z-riktning. Radien är a och '
-         'strömmen antas jämnt fördelad över ledarens tvärsnitt. Metallmaterialets magnetiska ϕ̂ egenskaper beskrivs '
+         'strömmen antas jämnt fördelad över ledarens tvärsnitt. Metallmaterialets magnetiska egenskaper beskrivs '
          'av en konstant relativ permeabilitet µr .\n'
          '\n'
          '(a) Beräkna de magnetiseringsströmtätheter som uppträder i ledaren och på dess yta.\n'
@@ -439,7 +443,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
          '(b) Visa att den totala magnetiseringsström som uppträder i z-riktningen är noll.',
  '9.2': 'Figuren till höger illustrerar två slingor. Slinga 1 består av två parallella oändliga räta ledare. Eftersom '
         'dessa tänkes bilda en sluten krets bör de föra samma ström men i motsatta riktningar. Avståndet mellan '
-        'ledarna är d. Slinga 2 utgörs av omkretsen √ till en kvadrat, med sidan d/ 2, som är orienterad enligt '
+        'ledarna är d. Slinga 2 utgörs av omkretsen till en kvadrat, med sidan d/√2, som är orienterad enligt '
         'figuren. Kvadratens hörn tangerar alltså slinga 1 men utan att det bildas elektrisk kontakt. Beräkna den '
         'ömsesidiga induktansen mellan slingorna.',
  '9.4': 'Figuren illustrerar två envarviga cirkulära strömslingor som har en gemensam axel. Slingornas radier är a '
@@ -454,9 +458,10 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
         'öppen, har N2 varv. Vad blir spänningen över den senare lindningens ändar om strömmen i den första lindningen '
         'är i1 (t) = I0 cos(ωt)? Järnkretsens medellängd är ℓ och dess tvärsnitt S. Materialets relativa permeabilitet '
         'är µr .',
- '9.13': 'Hur stort arbete, W , krävs för att flytta den kvadratiska slingan med konstant hastighet, v = 10 m/s, från '
-         'läge A till läge C? Förflyttningen sker genom område B där vi har ett konstant magnetfält, B = 1 T. Slingans '
-         'resistans är RΩ = 0,05 Ω. ℓ = 30 cm a = 10 cm',
+ '9.13': ('Hur stort arbete, W, krävs för att flytta den kvadratiska slingan med konstant hastighet '
+          'v = 10 m/s från läge A till läge C? Förflyttningen sker genom område B, där vi har '
+          'ett konstant magnetfält B = 1 T. Slingans resistans är RΩ = 0,05 Ω. '
+          'Slingans sidlängd är a = 10 cm och fältområdets bredd är ℓ = 30 cm. Se figur.'),
  '9.14': 'En magnetisk dipol m = mẑ är belägen i origo. På stort avstånd, z > 0, från dipolen rör sig en liten '
          'cirkulär slinga med hastigheten v längs z-axeln. Slingans radie är a ≪ z och dess plan har ẑ som '
          'normalriktning. (Slingans centrum ligger hela tiden på z-axeln och hastigheten v räknas positiv då slingan '

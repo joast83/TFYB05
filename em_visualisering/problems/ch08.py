@@ -16,13 +16,13 @@ from ..core import *
 class PermanentMagnetAirGapBHCurve(ProblemBase):
     name = '8.1 Permanentmagnetisk ring med luftgap'
     description = 'Löser arbetspunkten som skärningen mellan materialkurva och lastlinje för en permanentmagnetisk ring med litet luftgap, eventuellt med spole.'
-    parameters = [('ell', 'Total magnetväg ℓ (inkl. gap) [m]', 0.2), ('d', 'Luftgap d [m]', 0.001), ('N', 'Spolvarv N', 100.0), ('I', 'Spolström I [A]', 0.0)]
+    parameters = [('ell', 'Magnetlängd ℓ (exkl. gap) [m]', 0.2), ('d', 'Luftgap d [m]', 0.001), ('N', 'Spolvarv N', 100.0), ('I', 'Spolström I [A]', 0.0)]
     Btab = np.array([0.0, 0.6, 0.83, 1.0, 1.2])
     Htab = np.array([-5000, -4000, -3000, -2000, 0.0])
 
     def validate(self, params):
-        if params['ell'] <= params['d'] or params['d'] <= 0:
-            return 'Kräver ℓ > d > 0.'
+        if params['ell'] <= 0 or params['d'] <= 0:
+            return 'Kräver ℓ > 0 och d > 0.'
         if params['N'] < 0:
             return 'N måste vara icke-negativt.'
         try:
@@ -37,10 +37,10 @@ class PermanentMagnetAirGapBHCurve(ProblemBase):
 
     @classmethod
     def solve_B(cls, ell, d, N, I):
-        if not ell > d > 0:
-            raise ValueError('Kräver ℓ > d > 0.')
+        if ell <= 0 or d <= 0:
+            raise ValueError('Kräver ℓ > 0 och d > 0.')
         # On each table segment the magnetic-circuit residual is linear in B.
-        required = cls.Htab * (ell - d) + cls.Btab * d / MU0
+        required = cls.Htab * ell + cls.Btab * d / MU0
         if not required[0] <= N * I <= required[-1]:
             raise ValueError('Ingen arbetspunkt inom den lagrade B–H-tabellen. Fler materialdata behövs.')
         return float(np.interp(N * I, required, cls.Btab))
@@ -50,7 +50,7 @@ class PermanentMagnetAirGapBHCurve(ProblemBase):
         ax = fig.add_subplot(111)
         ell, d, N, I = (params['ell'], params['d'], params['N'], params['I'])
         B = np.linspace(0, 1.2, 400)
-        Hload = (N * I - B * d / MU0) / (ell - d)
+        Hload = (N * I - B * d / MU0) / ell
         B0 = self.solve_B(ell, d, N, I)
         ax.plot(self.Htab, self.Btab, 'o-', label='materialkurva')
         ax.plot(Hload, B, label='lastlinje')
@@ -79,7 +79,7 @@ class PermanentMagnetAirGapBHCurve(ProblemBase):
         ax = fig.add_subplot(111, projection='3d')
         ell, d, N = params['ell'], params['d'], params['N']
         currents = np.linspace(min(0, params['I']), max(3, params['I']), 60)
-        gaps = np.linspace(.2*d, min(3*d, .99*ell), 60)
+        gaps = np.linspace(.2*d, 3*d, 60)
         IG, DG = np.meshgrid(currents, gaps)
         B = np.full_like(IG, np.nan)
         for idx in np.ndindex(B.shape):

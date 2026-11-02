@@ -1026,7 +1026,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="8.1",
         learning_goal="Bestäm arbetspunkten för en permanentmagnet genom skärningen mellan materialets B–H-kurva och magnetkretsens lastlinje.",
         concepts=("B–H-kurva", "magnetisk krets", "luftgap"),
-        start_here='Börja med flödeskontinuitet och Ampères lag. Utan läckage och med samma tvärsnitt är B samma i magnet och gap, men H är olika. Den lagrade uppgiftstextens tabell och sista mening i del (b) är ofullständiga; appens tabell kan användas för utforskning men måste kontrolleras mot kursoriginalet.',
+        start_here='Börja med flödeskontinuitet och Ampères lag. Utan läckage och med samma tvärsnitt är B samma i magnet och gap, men H är olika. Kursoriginalets fullständiga B–H-tabell och spolström i del (b) finns nu i uppgiftstexten.',
         hints=(
             'Skriv H_g=B/μ0 i luftgapet och använd materialtabellen för H_m(B). Magnetens H kan vara negativt även när B är positivt.',
             'Utan spolström gäller H_mℓ_m+Bd/μ0=0. Rita lastlinjen H_m=−Bd/(μ0ℓ_m) och sök skärningen med materialkurvan.',
@@ -1036,9 +1036,9 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
             'Vid I=0 ska magnetens negativa H-bidrag balansera gapets positiva bidrag. Kontrollera residualen H_mℓ_m+Bd/μ0−NI, inte bara hur nära kurvorna ser ut att ligga.',
             'Ökad förstärkande NI höjer B inom tabellens giltiga intervall. En tabelländpunkt är inte automatiskt en lösning om lastlinjen missar kurvan.',
         ),
-        common_pitfall='Att använda en konstant permeabilitet för permanentmagneten eller extrapolera den tabellerade grenen utan stöd. Kontrollera också om ℓ betecknar magnetlängd eller hela magnetvägen inklusive gap.',
+        common_pitfall='Att använda en konstant permeabilitet för permanentmagneten eller extrapolera den tabellerade grenen utan stöd. Originalets ℓ är magnetens längd, medan luftgapet d tillkommer.',
         visualization_note="Just här är en B–H-graf med lastlinje pedagogiskt relevant eftersom lösningen bokstavligen är deras skärningspunkt.",
-        setup_hint='Appens befintliga kretsmodell använder ℓ som total magnetväg och ℓ_m=ℓ−d. Sätt denna magnetlängd i H_m(B)ℓ_m+Bd/μ0=NI. Om kursfiguren definierar ℓ som enbart magnetlängden ska den användas direkt i stället.',
+        setup_hint='Originaluppgiften definierar ℓ som permanentmagnetens längd, alltså ℓ_m=ℓ. Använd H_m(B)ℓ+Bd/μ0=NI där d är luftgapet, utan att dra av d från ℓ.',
         geometry_hint='Följ en sluten medellinje genom magnet och luftgap. Samma flöde passerar båda; gapet är en seriedel. Spolens tecken bestäms av om dess magnetomotoriska spänning hjälper eller motverkar magneten.',
     ),
     "NonlinearIronMagneticCircuit": G(
