@@ -25,7 +25,7 @@ from matplotlib.figure import Figure
 
 from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.facit import facit_for_problem
-from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view, supports_geometry_view
+from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view
 from em_visualisering.plotly_bridge import make_plotly_3d_figure
 from em_visualisering.registry import PROBLEMS
 from em_visualisering.study_content import (
@@ -81,9 +81,6 @@ def _render_matplotlib_png(
     if view == "main":
         fig = Figure(figsize=(7.0, 5.6), dpi=dpi)
         problem.plot(fig, params, mode)
-    elif view == "geometry":
-        fig = Figure(figsize=(4.4, 4.6), dpi=dpi)
-        problem.draw_geometry(fig, params)
     elif view == "3d":
         fig = Figure(figsize=(5.0, 5.6), dpi=dpi)
         problem.draw_3d(fig, params, mode)
@@ -332,29 +329,6 @@ def _render_problem_statement(problem) -> str:
     return statement
 
 
-def _render_geometry_if_needed(problem, statement: str) -> None:
-    if not supports_geometry_view(problem) or "figur" not in statement.lower():
-        return
-
-    with _problem_expander("Geometriskiss till uppgiften", expanded=True):
-        try:
-            params = _default_params(problem)
-            png = _render_matplotlib_png(
-                problem.__class__.__name__,
-                _params_items(params),
-                _default_mode(problem),
-                "geometry",
-                95,
-            )
-            st.image(png, width="stretch")
-            st.caption(
-                "Skissen är appens rena geometrivisning. Själva uppgiftstexten ovan "
-                "är hämtad från problemsamlingen."
-            )
-        except Exception as exc:
-            st.warning(f"Geometriskissen kunde inte visas: {exc}")
-
-
 def _render_training_focus(problem, guidance) -> None:
     meta = method_meta_for_problem(problem)
     st.markdown("### Det här tränar du")
@@ -458,8 +432,7 @@ def _render_facit(problem) -> None:
 def _render_solve_mode(problem) -> None:
     guidance = guidance_for_problem(problem)
     st.subheader(problem.name)
-    statement = _render_problem_statement(problem)
-    _render_geometry_if_needed(problem, statement)
+    _render_problem_statement(problem)
 
     if guidance is None:
         st.warning("Specifik progressiv vägledning saknas för den här uppgiften.")
@@ -551,17 +524,6 @@ def _render_main_graph(problem, params, mode, dpi) -> None:
         st.error(f"Huvudvisualiseringen kunde inte visas: {exc}")
 
 
-def _render_geometry(problem, params, mode, dpi) -> None:
-    try:
-        png = _render_matplotlib_png(
-            problem.__class__.__name__, _params_items(params), mode, "geometry", dpi
-        )
-        st.markdown("#### Geometriskiss")
-        st.image(png, width="stretch")
-    except Exception as exc:
-        st.error(f"Geometriskissen kunde inte visas: {exc}")
-
-
 def _render_3d(problem, params, mode) -> None:
     try:
         fig = pio.from_json(
@@ -642,14 +604,7 @@ def _render_explore_mode(problem) -> None:
     )
     dpi = {"Snabb": 82, "Normal": 110, "Hög": 145}[quality]
 
-    if supports_geometry_view(problem):
-        col1, col2 = st.columns([3, 2])
-        with col1:
-            _render_main_graph(problem, params, mode, dpi)
-        with col2:
-            _render_geometry(problem, params, mode, dpi)
-    else:
-        _render_main_graph(problem, params, mode, dpi)
+    _render_main_graph(problem, params, mode, dpi)
 
     st.caption(
         "Jämför nu figuren med din förutsägelse: stämde tecken, symmetri, nollställen "
