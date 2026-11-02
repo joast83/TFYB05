@@ -93,6 +93,7 @@ def test_all_problems_show_specific_help_and_reset_on_navigation(chapter):
     app.selectbox(key="selected-chapter").set_value(chapter).run()
     for problem in (p for p in PROBLEMS if p.name.startswith(f"{chapter}.")):
         app.selectbox(key="selected-problem").set_value(problem.name).run()
+        assert not any(e.label == "Geometriskiss till uppgiften" for e in app.expander)
         guidance = guidance_for_problem(problem)
         key = f"stuck:{problem.__class__.__name__}"
         assert app.selectbox(key=key).value is None
@@ -179,17 +180,21 @@ def test_chapter_2_4_has_no_obsolete_3d_visualization(monkeypatch):
     assert not any(checkbox.label == "Rendera 3-D-vy" for checkbox in app.checkbox)
 
 
-def test_chapter_2_3_hides_old_geometry_in_solve_and_explore(monkeypatch):
+@pytest.mark.parametrize("pid", ["2.3", "2.4", "3.9", "9.13"])
+def test_geometry_panels_are_hidden_but_main_plots_remain(monkeypatch, pid):
     monkeypatch.setenv("TFYB05_ENABLE_UNFINISHED_MODES", "1")
     app = _run_app()
+    app.selectbox(key="selected-chapter").set_value(int(pid.split(".")[0])).run()
     problem_name = next(name for name in app.selectbox(key="selected-problem").options
-                        if name.startswith("2.3 "))
+                        if name.startswith(pid + " "))
     app.selectbox(key="selected-problem").set_value(problem_name).run()
     assert not app.exception
     assert not any(e.label == "Geometriskiss till uppgiften" for e in app.expander)
 
     _radio(app, "Arbetssätt").set_value("Utforska").run()
-    next(c for c in app.checkbox if c.label == "Visa den äldre visualiseringen ändå").check().run()
+    override = next((c for c in app.checkbox if c.label == "Visa den äldre visualiseringen ändå"), None)
+    if override is not None:
+        override.check().run()
     next(b for b in app.button if b.label == "Visa figur").click().run()
     assert not app.exception, [exception.value for exception in app.exception]
     assert not any(m.value == "#### Geometriskiss" for m in app.markdown)
