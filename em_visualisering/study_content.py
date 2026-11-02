@@ -120,7 +120,8 @@ METHOD_BY_ID = {'2.1': 'force_balance',
  '10.2': 'ampere_maxwell',
  '10.3': 'ampere_maxwell'}
 
-CHAPTER_METHOD_KEYS = {2: ['direct_field_integral', 'gauss', 'potential', 'superposition', 'optimization'],
+CHAPTER_METHOD_KEYS = {2: ['direct_field_integral', 'gauss', 'potential', 'superposition', 'optimization',
+                         'force_balance', 'poisson_gauss', 'energy_capacitance'],
  3: ['dielectric_boundaries', 'gauss', 'superposition', 'optimization'],
  4: ['energy_capacitance', 'image_charge', 'force_balance', 'gauss'],
  5: ['stationary_current', 'dielectric_boundaries', 'gauss', 'energy_capacitance'],

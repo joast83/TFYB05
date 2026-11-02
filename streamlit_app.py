@@ -395,26 +395,23 @@ def _render_targeted_help(problem, guidance) -> None:
         st.info(
             f"**En naturlig huvudmetod här är {meta.label}.**\n\n"
             f"{meta.rationale}\n\n"
-            f"Försök sedan använda frågan under **Börja här** för att sätta igång "
-            "lösningen utan att läsa nästa ledtråd direkt."
+            f"**I den här uppgiften:** {guidance.start_here}"
         )
     elif stuck == "Jag vet vilken idé jag vill använda men får inte upp matematiken":
         st.info(
             f"**Matematisk rörelse:** {meta.math_focus}\n\n"
-            f"{guidance.setup_hint or guidance.hints[0]}"
+            f"{guidance.setup_hint}"
         )
     elif stuck == "Jag fastnar på vektorer eller geometri":
-        hint = guidance.geometry_hint or (guidance.hints[1] if len(guidance.hints) > 1 else guidance.hints[0])
         st.info(
-            f"**Fokusera på representationen:** {meta.math_focus}\n\n"
-            f"{hint}"
+            f"**Vektorer och geometri i den här uppgiften:**\n\n"
+            f"{guidance.geometry_hint}"
         )
     else:
         st.info(
-            "Använd kontrollpunkterna längre ned på sidan. Försök först själv tänka på "
-            "symmetri, tecken, enheter eller ett enkelt gränsfall och öppna sedan en "
-            "kontroll i taget."
+            f"**En första kontroll av ditt resultat:**\n\n{guidance.self_checks[0]}"
         )
+        st.caption("Fler kontroller finns under Kontrollera ditt resultat. Öppna en i taget.")
 
 
 def _render_progressive_hints(problem, guidance) -> None:
