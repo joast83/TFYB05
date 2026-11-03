@@ -87,7 +87,6 @@ def test_theory_page_runs_without_streamlit_exception(monkeypatch):
 def test_all_problems_show_specific_help_and_reset_on_navigation(chapter):
     from em_visualisering.guidance import guidance_for_problem
     from em_visualisering.registry import PROBLEMS
-    from em_visualisering.study_content import method_meta_for_problem
 
     app = _run_app()
     app.selectbox(key="selected-chapter").set_value(chapter).run()
@@ -97,40 +96,43 @@ def test_all_problems_show_specific_help_and_reset_on_navigation(chapter):
         guidance = guidance_for_problem(problem)
         key = f"stuck:{problem.__class__.__name__}"
         assert app.selectbox(key=key).value is None
+        panel = next(e for e in app.expander if e.label == "Visa startlagen och hur du börjar")
+        assert not panel.proto.expanded and panel.latex
         for index, expected in enumerate((
-            guidance.start_here, guidance.setup_hint,
+            guidance.setup_hint,
             guidance.geometry_hint, guidance.self_checks[0],
         )):
             app.selectbox(key=key).select_index(index).run()
             assert not app.exception, problem.name
-            # The targeted message must contain this exercise's content itself;
-            # the always-visible "Börja här" message cannot satisfy this check.
             assert expected in app.info[-1].value, (problem.name, index)
-            if index == 0:
-                assert method_meta_for_problem(problem).label in app.info[-1].value
             assert all(not e.proto.expanded for e in app.expander
                        if e.label.startswith(("Ledtråd", "Kontroll", "Visa facit")))
         # Clearing a choice must also remove its answer, without navigation.
         app.selectbox(key=key).set_value(None).run()
-        assert len(app.info) == 1
-        app.selectbox(key=key).select_index(3).run()
+        assert not app.info
+        app.selectbox(key=key).select_index(2).run()
 
 
 def test_navigation_resets_disclosures_and_help_but_not_ordinary_reruns():
     app = _run_app()
     first_name = app.selectbox(key="selected-problem").value
-    first_panel = next(e for e in app.expander if e.label == "Ledtråd 1")._block_id
+    def law_panel():
+        return next(e for e in app.expander if e.label == "Visa startlagen och hur du börjar")
+
+    first_law = law_panel()._block_id
+    first_panel = next(e for e in app.expander if e.label.startswith("Ledtråd 1 ·"))._block_id
     help_box = next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?")
     help_box.select_index(2).run()
-    assert next(e for e in app.expander if e.label == "Ledtråd 1")._block_id == first_panel
+    assert next(e for e in app.expander if e.label.startswith("Ledtråd 1 ·"))._block_id == first_panel
 
     app.selectbox(key="selected-problem").select_index(1).run()
-    second_panel = next(e for e in app.expander if e.label == "Ledtråd 1")._block_id
+    second_panel = next(e for e in app.expander if e.label.startswith("Ledtråd 1 ·"))._block_id
+    assert law_panel()._block_id != first_law and not law_panel().proto.expanded
     assert second_panel != first_panel
     assert next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").value is None
 
     app.selectbox(key="selected-problem").set_value(first_name).run()
-    assert next(e for e in app.expander if e.label == "Ledtråd 1")._block_id not in (first_panel, second_panel)
+    assert next(e for e in app.expander if e.label.startswith("Ledtråd 1 ·"))._block_id not in (first_panel, second_panel)
     assert next(w for w in app.selectbox if w.label == "Vad behöver du hjälp med?").value is None
     app.selectbox(key="selected-chapter").set_value(3).run()
     assert not app.exception
