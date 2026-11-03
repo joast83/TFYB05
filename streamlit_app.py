@@ -23,6 +23,7 @@ import plotly.io as pio
 import streamlit as st
 from matplotlib.figure import Figure
 
+from em_visualisering.starting_laws import LAWS
 from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.facit import facit_for_problem
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view
@@ -31,7 +32,6 @@ from em_visualisering.registry import PROBLEMS
 from em_visualisering.study_content import (
     CHAPTER_TITLES,
     chapter_number,
-    method_meta_for_problem,
     problem_id_from_name,
     statement_for_problem,
 )
@@ -329,29 +329,14 @@ def _render_problem_statement(problem) -> str:
     return statement
 
 
-def _render_training_focus(problem, guidance) -> None:
-    meta = method_meta_for_problem(problem)
-    st.markdown("### Det här tränar du")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Fysik**")
-        st.write(" · ".join(guidance.concepts))
-        st.caption(guidance.learning_goal)
-    with col2:
-        st.markdown("**Matematisk rörelse**")
-        st.write(meta.math_focus)
-
-
 def _render_targeted_help(problem, guidance) -> None:
     st.markdown("### Om du sitter fast")
     st.caption(
-        "Välj bara den typ av hjälp du behöver. Du behöver inte klassificera uppgiften "
-        "eller välja en metod innan du börjar."
+        "Välj vad du vill ha hjälp med."
     )
     stuck = st.selectbox(
         "Vad behöver du hjälp med?",
         [
-            "Jag vet inte vilken metod som passar",
             "Jag vet vilken idé jag vill använda men får inte upp matematiken",
             "Jag fastnar på vektorer eller geometri",
             "Jag vill kontrollera om mitt svar verkar rimligt",
@@ -363,19 +348,8 @@ def _render_targeted_help(problem, guidance) -> None:
     if stuck is None:
         return
 
-    meta = method_meta_for_problem(problem)
-
-    if stuck == "Jag vet inte vilken metod som passar":
-        st.info(
-            f"**En naturlig huvudmetod här är {meta.label}.**\n\n"
-            f"{meta.rationale}\n\n"
-            f"**I den här uppgiften:** {guidance.start_here}"
-        )
-    elif stuck == "Jag vet vilken idé jag vill använda men får inte upp matematiken":
-        st.info(
-            f"**Matematisk rörelse:** {meta.math_focus}\n\n"
-            f"{guidance.setup_hint}"
-        )
+    if stuck == "Jag vet vilken idé jag vill använda men får inte upp matematiken":
+        st.info(guidance.setup_hint)
     elif stuck == "Jag fastnar på vektorer eller geometri":
         st.info(
             f"**Vektorer och geometri i den här uppgiften:**\n\n"
@@ -391,11 +365,10 @@ def _render_targeted_help(problem, guidance) -> None:
 def _render_progressive_hints(problem, guidance) -> None:
     st.markdown("#### Progressiva ledtrådar")
     st.caption(
-        "Öppna endast nästa nivå när du inte kommer vidare. Målet är att behålla så "
-        "mycket av lösningsarbetet som möjligt hos dig."
+        "Öppna den ledtråd som motsvarar steget där du fastnar."
     )
-    for index, hint in enumerate(guidance.hints, start=1):
-        with _problem_expander(f"Ledtråd {index}", expanded=False):
+    for index, (title, hint) in enumerate(zip(guidance.hint_titles, guidance.hints, strict=True), start=1):
+        with _problem_expander(f"Ledtråd {index} · {title}", expanded=False):
             st.write(hint)
 
     if guidance.common_pitfall:
@@ -406,8 +379,7 @@ def _render_progressive_hints(problem, guidance) -> None:
 def _render_solution_checks(problem, guidance) -> None:
     st.markdown("### Kontrollera ditt resultat")
     st.caption(
-        "Det här är extra ledtrådar för att testa din färdiga eller nästan färdiga "
-        "lösning. Försök själv tänka igenom kontrollen innan du öppnar den."
+        "Testa ditt svar med en kontroll i taget."
     )
 
     for index, check in enumerate(guidance.self_checks, start=1):
@@ -440,13 +412,17 @@ def _render_solve_mode(problem) -> None:
             st.write(problem.pedagogical_note())
         return
 
-    _render_training_focus(problem, guidance)
+    st.markdown("### Steg 1 · Välj en startlag")
+    st.caption("Osäker på vilken lag du ska använda? Öppna rutan nedan. "
+               "Har du redan en idé kan du börja räkna direkt.")
+    with _problem_expander("Visa startlagen och hur du börjar"):
+        name, equation, prompt = LAWS[guidance.problem_id]
+        st.markdown(f"**{name}**")
+        st.latex(equation)
+        st.write(prompt)
 
-    st.markdown("### Börja här")
-    st.info(guidance.start_here)
-
-    _render_targeted_help(problem, guidance)
     _render_progressive_hints(problem, guidance)
+    _render_targeted_help(problem, guidance)
     _render_solution_checks(problem, guidance)
     _render_facit(problem)
 
