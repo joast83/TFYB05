@@ -369,7 +369,7 @@ def _render_progressive_hints(problem, guidance) -> None:
     )
     for index, (title, hint) in enumerate(zip(guidance.hint_titles, guidance.hints, strict=True), start=1):
         with _problem_expander(f"Ledtråd {index} · {title}", expanded=False):
-            st.write(hint)
+            st.markdown(hint)
 
     if guidance.common_pitfall:
         with _problem_expander("Vanlig fallgrop", expanded=False):
@@ -384,7 +384,7 @@ def _render_solution_checks(problem, guidance) -> None:
 
     for index, check in enumerate(guidance.self_checks, start=1):
         with _problem_expander(f"Kontroll {index}", expanded=False):
-            st.write(check)
+            st.markdown(check)
 
 
 def _render_facit(problem) -> None:
