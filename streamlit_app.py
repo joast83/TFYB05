@@ -617,7 +617,13 @@ def _render_explore_mode(problem) -> None:
 
 def _exercise_page() -> None:
     st.title("EM-studiehjälp")
-    st.caption("Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan.")
+    st.markdown(
+        "**Så använder du studiehjälpen:** Ha problemsamlingen framför dig, "
+        "digitalt eller på papper, och försök lösa uppgiften själv först. "
+        "Använd originalfigurerna för att förstå geometrin och symmetrierna. "
+        "Om du fastnar kan du öppna ledtrådarna stegvis. "
+        "Formelbladet finns också här på hemsidan."
+    )
 
 
     with st.sidebar:

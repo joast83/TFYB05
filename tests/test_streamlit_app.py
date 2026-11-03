@@ -19,6 +19,12 @@ def _radio(app: AppTest, label: str):
 def test_default_page_is_clean_solve_mode():
     app = _run_app()
     assert app.title[0].value == "EM-studiehjälp"
+    intro = [m.value for m in app.markdown if "**Så använder du studiehjälpen:**" in m.value]
+    assert len(intro) == 1
+    assert "problemsamlingen framför dig" in intro[0]
+    assert "originalfigurerna" in intro[0]
+    assert "Formelbladet" in intro[0]
+    assert not any(e.label == "Så använder du studiehjälpen" for e in app.expander)
     assert not any(widget.label == "Arbetssätt" for widget in app.radio)
     assert not any(widget.label == "Teoriavsnitt" for widget in app.selectbox)
     assert any(selectbox.label == "Kapitel" for selectbox in app.selectbox)
