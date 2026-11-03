@@ -615,54 +615,61 @@ def _render_explore_mode(problem) -> None:
             st.warning(f"Den interna kontrollen kunde inte utföras: {exc}")
 
 
-st.title("EM-studiehjälp")
-st.caption("Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan.")
+def _exercise_page() -> None:
+    st.title("EM-studiehjälp")
+    st.caption("Lös först. Be om minsta möjliga ledtråd. Kontrollera sedan.")
 
 
-with st.sidebar:
-    # Hide unfinished sections from students without removing their implementation.
-    # Set the environment variable to 1 to enable the full navigation for development.
-    if os.environ.get("TFYB05_ENABLE_UNFINISHED_MODES") == "1":
-        work_mode = st.radio(
-            "Arbetssätt",
-            ["Lös uppgift", "Utforska", "Teori"],
-            index=0,
-        )
-    else:
-        work_mode = "Lös uppgift"
+    with st.sidebar:
+        # Hide unfinished sections from students without removing their implementation.
+        # Set the environment variable to 1 to enable the full navigation for development.
+        if os.environ.get("TFYB05_ENABLE_UNFINISHED_MODES") == "1":
+            work_mode = st.radio(
+                "Arbetssätt",
+                ["Lös uppgift", "Utforska", "Teori"],
+                index=0,
+            )
+        else:
+            work_mode = "Lös uppgift"
+
+        if work_mode == "Teori":
+            theory_title = st.selectbox(
+                "Teoriavsnitt",
+                [page.title for page in THEORY_PAGES],
+                index=0,
+            )
+            theory_page = theory_lookup[theory_title]
+            st.caption(theory_page.short_description)
+        else:
+            chapters = sorted(PROBLEMS_BY_CHAPTER)
+            selected_chapter = st.selectbox(
+                "Kapitel",
+                chapters,
+                format_func=lambda ch: f"Kapitel {ch} – {CHAPTER_TITLES.get(ch, '')}",
+                key="selected-chapter",
+            )
+            chapter_problems = PROBLEMS_BY_CHAPTER[selected_chapter]
+            selected_problem_name = st.selectbox(
+                "Uppgift",
+                [problem.name for problem in chapter_problems],
+                key="selected-problem",
+            )
+            problem = next(
+                p for p in chapter_problems if p.name == selected_problem_name
+            )
+
 
     if work_mode == "Teori":
-        theory_title = st.selectbox(
-            "Teoriavsnitt",
-            [page.title for page in THEORY_PAGES],
-            index=0,
-        )
-        theory_page = theory_lookup[theory_title]
-        st.caption(theory_page.short_description)
+        render_theory_page(theory_page)
     else:
-        chapters = sorted(PROBLEMS_BY_CHAPTER)
-        selected_chapter = st.selectbox(
-            "Kapitel",
-            chapters,
-            format_func=lambda ch: f"Kapitel {ch} – {CHAPTER_TITLES.get(ch, '')}",
-            key="selected-chapter",
-        )
-        chapter_problems = PROBLEMS_BY_CHAPTER[selected_chapter]
-        selected_problem_name = st.selectbox(
-            "Uppgift",
-            [problem.name for problem in chapter_problems],
-            key="selected-problem",
-        )
-        problem = next(
-            p for p in chapter_problems if p.name == selected_problem_name
-        )
+        _begin_problem_visit(problem)
+        if work_mode == "Utforska":
+            _render_explore_mode(problem)
+        else:
+            _render_solve_mode(problem)
 
 
-if work_mode == "Teori":
-    render_theory_page(theory_page)
-else:
-    _begin_problem_visit(problem)
-    if work_mode == "Utforska":
-        _render_explore_mode(problem)
-    else:
-        _render_solve_mode(problem)
+st.navigation([
+    st.Page(_exercise_page, title="Lös uppgift", default=True),
+    st.Page("formelblad.py", title="Formelblad", url_path="formelblad"),
+]).run()
