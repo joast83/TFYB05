@@ -201,3 +201,12 @@ def test_geometry_panels_are_hidden_but_main_plots_remain(monkeypatch, pid):
     assert not app.exception, [exception.value for exception in app.exception]
     assert not any(m.value == "#### Geometriskiss" for m in app.markdown)
     assert any(m.value == "#### Huvudvisualisering" for m in app.markdown)
+
+
+def test_formula_sheet_is_a_public_page_with_three_pages_and_download():
+    app = _run_app()
+    app.switch_page("formelblad.py").run()
+    assert not app.exception
+    assert app.title[0].value == "Formelblad"
+    assert len(app.get("image")) == 3
+    assert app.get("download_button")[0].label == "Ladda ner formelbladet (PDF)"
