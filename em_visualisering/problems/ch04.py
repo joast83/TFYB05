@@ -237,7 +237,7 @@ class ThundercloudEnergyEstimate(ProblemBase):
             ax.set_xlabel('Höjd z [m]  (mark = 0, molnbas = h)')
             ax.set_ylabel('E [kV/m]')
             ax.set_title('Åskmolnsmodell: elektriskt fält i gapet')
-            ax.text(0.02, 0.98, f'|Q| = {Q:.3g} C\nσ = {sigma:.3e} C/m²\nC = {C:.3e} F', transform=ax.transAxes, va='top', fontsize=9)
+            ax.text(0.02, 0.98, f'|Q| = {Q:.3g} C\n|ρs| = {sigma:.3e} C/m²\nC = {C:.3e} F', transform=ax.transAxes, va='top', fontsize=9)
             ax.legend(fontsize=8)
             ax.grid(True, alpha=0.3)
         else:
