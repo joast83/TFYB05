@@ -47,7 +47,16 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hint_titles=('Rita krafterna', 'Eliminera trådspänningen', 'Använd små vinklar'),
         hints=(
             r'Krafterna är tyngden mg nedåt, trådspänningen T längs tråden och den elektriska repulsionen horisontellt. Sätt $\theta=\alpha/2$. Geometrin ger $R=2\ell\sin\theta$.',
-            r'Projicera $\sum_i\overline F_i=0$: $T\sin\theta=F_{\mathrm{el}}$ och $T\cos\theta=mg$. Dividera ekvationerna och sätt in Coulombkraften med $R=2\ell\sin\theta$.',
+            r"""Projicera kraftjämvikten i horisontell och vertikal riktning:
+
+$$
+\begin{aligned}
+T\sin\theta &= F_{\mathrm{el}},\\
+T\cos\theta &= mg.
+\end{aligned}
+$$
+
+Dividera ekvationerna och sätt in Coulombkraften med $R=2\ell\sin\theta$.""",
             r'Du har nu $\tan\theta=\frac{Q^2}{4\pi\varepsilon_0 mg(2\ell\sin\theta)^2}$. Använd $\sin\theta\simeq\theta$ och $\tan\theta\simeq\theta$ i radianer, lös efter θ och byt sist tillbaka till $\alpha=2\theta$.',
         ),
         self_checks=(
@@ -65,9 +74,43 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Utgå från det allmänna uttrycket $\overline E(\overline r)=\frac{1}{4\pi\varepsilon_0}\int\frac{\overline r-\overline r^{\prime}}{|\overline r-\overline r^{\prime}|^3}\,\mathrm dQ^{\prime}$ över källan. Identifiera först observationspunkten r, källpunkten r′ och laddningselementet dQ′ för hela ringen. Vilken koordinat är lämplig att integrera över?',
         hint_titles=('Laddningen på en liten båge', 'Vektorn från bågen till fältpunkten', 'Integrera ett helt varv'),
         hints=(
-            r'Låt $\overline r=(0,0,z)$ och $\overline r^{\prime}(\phi)=(a\cos\phi,a\sin\phi,0)$, där $0\leq\phi\leq2\pi$. Eftersom $\rho_{\ell}=\frac{Q}{2\pi a}$ och $\mathrm d\ell=a\,\mathrm d\phi$ blir $\mathrm dQ^{\prime}=\rho_{\ell}a\,\mathrm d\phi=\frac{Q}{2\pi}\,\mathrm d\phi$.',
-            r'Beräkna $\overline r-\overline r^{\prime}=(-a\cos\phi,-a\sin\phi,z)$ och $|\overline r-\overline r^{\prime}|=\sqrt{a^2+z^2}$. Sätt först nu in dessa uttryck tillsammans med dQ′ i den allmänna fältintegralen.',
-            r'Enhetsvektorn $\hat R(\phi)=\cos\phi\,\hat x+\sin\phi\,\hat y$ ändrar riktning runt ringen. Skriv därför bidragen i en fast bas innan du integrerar komponenterna. Bidragen med cosφ och sinφ försvinner över ett helt varv, medan z-komponenten återstår. Kontrollera att detta följer av integralen, utan att ersätta ringen med två punktladdningar.',
+            r"""Välj observationspunkten och parametrisera ringens källpunkt:
+
+$$
+\begin{aligned}
+\overline r&=(0,0,z),\\
+\overline r^{\prime}(\phi)&=(a\cos\phi,a\sin\phi,0), \qquad 0\leq\phi\leq2\pi.
+\end{aligned}
+$$
+
+Med $\rho_\ell=Q/(2\pi a)$ och bågelementet $\mathrm d\ell=a\,\mathrm d\phi$ blir laddningselementet
+
+$$
+\mathrm dQ^{\prime}=\rho_\ell a\,\mathrm d\phi
+=\frac{Q}{2\pi}\,\mathrm d\phi.
+$$
+""",
+            r"""Beräkna vektorn från källpunkten till observationspunkten:
+
+$$
+\overline r-\overline r^{\prime}
+=(-a\cos\phi,-a\sin\phi,z).
+$$
+
+Dess belopp är
+
+$$
+|\overline r-\overline r^{\prime}|=\sqrt{a^2+z^2}.
+$$
+
+Sätt först nu in dessa uttryck tillsammans med $dQ^{\prime}$ i den allmänna fältintegralen.""",
+            r"""Enhetsvektorn som anger ringens radiella riktning i källplanet är
+
+$$
+\hat R(\phi)=\cos\phi\,\hat x+\sin\phi\,\hat y.
+$$
+
+Den ändrar riktning runt ringen. Skriv därför bidragen i en fast kartesisk bas innan du integrerar komponenterna. Bidragen med $\cos\phi$ och $\sin\phi$ försvinner över ett helt varv, medan z-komponenten återstår. Kontrollera detta direkt i integralen, utan att ersätta ringen med två punktladdningar.""",
         ),
         self_checks=(
             r'Fältet ska vara noll vid $z=0$ och $E_z$ ska byta tecken när z byter tecken. Rotationssymmetrin kring z-axeln bekräftar att tvärkomponenterna ska försvinna.',
@@ -85,9 +128,41 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Skriv den allmänna Coulombintegralen $\overline E(\overline r)=\frac{1}{4\pi\varepsilon_0}\int\frac{\overline r-\overline r^{\prime}}{|\overline r-\overline r^{\prime}|^3}\,\mathrm dQ^{\prime}$. Låt sedan r vara den fasta observationspunkten (x,0,0) och låt r′ löpa längs tråden. Bestäm vilka gränser och vilket dQ′ som hör till källan.',
         hint_titles=('Välj källkoordinat och gränser', 'Skriv de två fältkomponenterna', 'Ta gränsen för en lång tråd'),
         hints=(
-            r'Välj $\overline r^{\prime}=(0,0,z^{\prime})$ med $-b\leq z^{\prime}\leq a$. Trådens konstanta linjeladdningstäthet ger $\mathrm dQ^{\prime}=\rho_{\ell}\,\mathrm dz^{\prime}$. Här är z′ integrationsvariabeln medan x hålls konstant.',
-            r'Identifiera $\overline r-\overline r^{\prime}=(x,0,-z^{\prime})$ och $|\overline r-\overline r^{\prime}|=\sqrt{x^2+z^{\prime2}}$. Sätt in dQ′ och båda dessa uttryck i Coulombintegralen innan du delar upp den i x- och z-komponenter.',
-            r'Beräkna de två komponentintegralerna över $-b\leq z^{\prime}\leq a$. I del (b) låter du därefter a och b gå mot oändligheten oberoende av varandra; kontrollera att z-komponenten försvinner och att det återstående fältet avtar som $1/|x|$.',
+            r"""Låt källpunkten löpa längs tråden medan observationspunkten hålls fast:
+
+$$
+\begin{aligned}
+\overline r&=(x,0,0),\\
+\overline r^{\prime}&=(0,0,z^{\prime}),\qquad -b\leq z^{\prime}\leq a.
+\end{aligned}
+$$
+
+Trådens konstanta linjeladdningstäthet ger laddningselementet
+
+$$
+\mathrm dQ^{\prime}=\rho_\ell\,\mathrm dz^{\prime}.
+$$
+""",
+            r"""Identifiera separationsvektorn
+
+$$
+\overline r-\overline r^{\prime}=(x,0,-z^{\prime})
+$$
+
+och dess belopp
+
+$$
+|\overline r-\overline r^{\prime}|=\sqrt{x^2+(z^{\prime})^2}.
+$$
+
+Sätt in dessa uttryck och $dQ^{\prime}$ i Coulombintegralen. Dela därefter upp integralen i x- och z-komponenter.""",
+            r"""Beräkna de två komponentintegralerna med gränserna
+
+$$
+-b\leq z^{\prime}\leq a.
+$$
+
+I del (b) låter du därefter $a$ och $b$ gå mot oändligheten oberoende av varandra. Kontrollera att z-komponenten försvinner och att det återstående fältet avtar som $1/|x|$.""",
         ),
         self_checks=(
             r'Om $a=b$ ska $E_z$ försvinna. Om $a>b$ och $\rho_{\ell}$>0 ska $E_z$ vara negativ vid (x,0,0), eftersom mer positiv laddning ligger på +z-sidan.',
@@ -104,9 +179,45 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Börja med $\overline E(\overline r)=\frac{1}{4\pi\varepsilon_0}\int\frac{\overline r-\overline r^{\prime}}{|\overline r-\overline r^{\prime}|^3}\,\mathrm dQ^{\prime}$ över den laddade ytan. Identifiera observationspunkten, välj två koordinater för källpunkten på halvcirkelskivan och bestäm dQ′ från ytladdningstätheten.',
         hint_titles=('Ytelementet på halvskivan', 'Avstånd och riktning till fältpunkten', 'Vilken komponent försvinner?'),
         hints=(
-            r'Välj $\overline r=(0,0,z)$ och $\overline r^{\prime}=(R\cos\phi,R\sin\phi,0)$, där $0\leq R\leq a$ och $0\leq\phi\leq\pi$ eftersom skivan ligger på sidan $y\geq0$. Ytelementet är $\mathrm dS^{\prime}=R\,\mathrm dR\,\mathrm d\phi$ och $\mathrm dQ^{\prime}=\rho_s R\,\mathrm dR\,\mathrm d\phi$.',
-            r'Beräkna $\overline r-\overline r^{\prime}=(-R\cos\phi,-R\sin\phi,z)$ och $|\overline r-\overline r^{\prime}|=\sqrt{R^2+z^2}$. Sätt in dQ′, separationsvektorn och dess belopp i Coulombintegralen med de två integrationsgränserna.',
-            r'Skriv $\hat R(\phi)=\cos\phi\,\hat x+\sin\phi\,\hat y$ i en fast bas innan du integrerar över φ. x-komponenten blir noll, men y-komponenten försvinner inte för en halvcirkelskiva. Genomför därefter radialintegralerna.',
+            r"""Välj observationspunkten och parametrisera källpunkten på halvskivan:
+
+$$
+\begin{aligned}
+\overline r&=(0,0,z),\\
+\overline r^{\prime}&=(R\cos\phi,R\sin\phi,0),\\
+0\leq R\leq a,\quad &0\leq\phi\leq\pi.
+\end{aligned}
+$$
+
+Ytan ligger på sidan $y\geq0$. Det polära ytelementet och laddningselementet är
+
+$$
+\mathrm dS^{\prime}=R\,\mathrm dR\,\mathrm d\phi,
+\qquad
+\mathrm dQ^{\prime}=\rho_s R\,\mathrm dR\,\mathrm d\phi.
+$$
+""",
+            r"""Beräkna först vektorn från källpunkten till observationspunkten:
+
+$$
+\overline r-\overline r^{\prime}
+=(-R\cos\phi,-R\sin\phi,z).
+$$
+
+Dess belopp är
+
+$$
+|\overline r-\overline r^{\prime}|=\sqrt{R^2+z^2}.
+$$
+
+Sätt in dessa uttryck och $dQ^{\prime}$ i Coulombintegralen med båda integrationsgränserna.""",
+            r"""Skriv källpunktens radiella enhetsvektor i en fast kartesisk bas:
+
+$$
+\hat R(\phi)=\cos\phi\,\hat x+\sin\phi\,\hat y.
+$$
+
+Integrera sedan över $\phi$. x-komponenten blir noll, men y-komponenten försvinner inte för en halvcirkelskiva. Genomför därefter radialintegralerna.""",
         ),
         self_checks=(
             r'För $\rho_s>0$ och z>0 ska $E_x=0$, $E_y<0$ och $E_z>0$. Kontrollera riktningarna mot den valda halvcirkeln.',
@@ -123,9 +234,45 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Utgå från potentialintegralen i originaluppgiften: $V(\overline r)=\frac{1}{4\pi\varepsilon_0}\int\frac{\mathrm dQ^{\prime}}{|\overline r-\overline r^{\prime}|}$ över källområdet. Här är källområdet det laddade sfärskalets yta, inte dess volym. Identifiera dQ′, $\overline r-\overline r^{\prime}$ och $|\overline r-\overline r^{\prime}|$ innan du integrerar.',
         hint_titles=('Laddningselementet på skalet', 'Avståndet till observationspunkten', 'Dela upp svaret vid skalradien'),
         hints=(
-            r'Placera den fasta observationspunkten på z-axeln: $\overline r=(0,0,r)$. Beskriv en källpunkt på skalet med $\overline r^{\prime}=a(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta)$. För jämn ytladdning är $\rho_s=\frac{Q}{4\pi a^2}$ och $\mathrm dQ^{\prime}=\rho_s a^2\sin\theta\,\mathrm d\theta\,\mathrm d\phi$.',
-            r'Bilda $\overline r-\overline r^{\prime}=(-a\sin\theta\cos\phi,-a\sin\theta\sin\phi,r-a\cos\theta)$. Dess belopp är $|\overline r-\overline r^{\prime}|=\sqrt{r^2+a^2-2ar\cos\theta}$. Sätt nu in detta avstånd och dQ′ i originalets potentialintegral.',
-            r'Integrera först över φ och använd sedan $u=\cos\theta$. Vid gränserna dyker $r+a$ och $|r-a|$ upp; behandla därför $r<a$ och $r>a$ var för sig. Fallet $r=0$ kan kontrolleras direkt utan division med r.',
+            r"""Placera observationspunkten på z-axeln och beskriv källpunkten på sfärskalet:
+
+$$
+\begin{aligned}
+\overline r&=(0,0,r),\\
+\overline r^{\prime}
+&=a(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta).
+\end{aligned}
+$$
+
+För jämn ytladdning är $\rho_s=Q/(4\pi a^2)$, så
+
+$$
+\mathrm dQ^{\prime}
+=\rho_s a^2\sin\theta\,\mathrm d\theta\,\mathrm d\phi.
+$$
+""",
+            r"""Bilda separationsvektorn:
+
+$$
+\overline r-\overline r^{\prime}
+=(-a\sin\theta\cos\phi,-a\sin\theta\sin\phi,r-a\cos\theta).
+$$
+
+Avståndet mellan källan och fältpunkten är
+
+$$
+|\overline r-\overline r^{\prime}|
+=\sqrt{r^2+a^2-2ar\cos\theta}.
+$$
+
+Sätt nu in avståndet och $dQ^{\prime}$ i originaluppgiftens potentialintegral.""",
+            r"""Integrera först över $\phi$ och använd sedan substitutionen
+
+$$
+u=\cos\theta.
+$$
+
+Vid integrationsgränserna dyker $r+a$ och $|r-a|$ upp. Behandla därför $r<a$ och $r>a$ var för sig. Fallet $r=0$ kan kontrolleras direkt utan division med $r$.""",
         ),
         self_checks=(
             r'V ska vara kontinuerlig vid $r=a$ och gå mot noll när $r\to\infty$.',
@@ -148,7 +295,13 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hints=(
             r'Cylindersymmetrin ger $\overline E=E_R(R)\,\hat R$. Välj en koaxial Gauss-cylinder med radie R och längd L. På manteln är $\overline E\cdot\hat n=E_R$ och arean $2\pi RL$; på ändytorna är $\overline E\cdot\hat n=0$.',
             r'Beräkna $Q_{\mathrm{in}}$ från de verkliga laddade ytornas areor. För $R<a$ är den noll, för $a<R<b$ är den $\rho_{s,a}\,2\pi aL$ och för $R>b$ tillkommer $\rho_{s,b}\,2\pi bL$.',
-            r'Sätt in varje laddningsuttryck i $E_R\,2\pi RL=\frac{Q_{\mathrm{in}}}{\varepsilon_0}$ och lös efter $E_R$ i respektive område. Multiplicera med R̂ för vektorfältet och behåll laddningarnas tecken.',
+            r"""Sätt in den inneslutna laddningen i Gauss lag för varje radialområde:
+
+$$
+E_R\,2\pi RL=\frac{Q_{\mathrm{in}}}{\varepsilon_0}.
+$$
+
+Lös efter $E_R$ i respektive område. Multiplicera med $\hat R$ för att få vektorfältet och behåll laddningarnas tecken.""",
         ),
         self_checks=(
             r'För $R<a$ är fältet noll. Utanför båda cylindrarna ska det också bli noll om $a\rho_{s,a}+b\rho_{s,b}=0$, även om vardera cylindern är laddad.',
@@ -170,7 +323,13 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hint_titles=('Fältet i gapet', 'Laddningsgränsen vid ytan', 'Optimera spänningen'),
         hints=(
             r'Sfärisk symmetri ger $\overline E=E_r(r)\,\hat r$. En sfärisk Gaussyta i $a<r<b$ omsluter innerledarens laddning Q, så $4\pi r^2E_r=Q/\varepsilon_0$. Lös efter E_r innan du söker fältmaximum.',
-            r'Fältbeloppet avtar som $1/r^2$ och är störst vid a. Sätt $|E(a)|=E_{\max}$ och bestäm $|Q|_{\max}(a)$. När a varieras i optimeringen varierar alltså även den tillåtna laddningen.',
+            r"""Fältbeloppet avtar som $1/r^2$ och är störst vid $r=a$. Sätt därför
+
+$$
+|E(a)|=E_{\max}
+$$
+
+och bestäm $|Q|_{\max}(a)$. När $a$ varieras i optimeringen varierar alltså även den tillåtna laddningen.""",
             r'Sätt in $|Q|_{\max}(a)$ i $U_{\max}(a)=\int_a^b|E_r|\,\mathrm dr$. Derivera med avseende på a med b och $E_{\max}$ konstanta. Lös det stationära villkoret i $0<a<b$ och jämför med randgränserna.',
         ),
         self_checks=(
@@ -194,7 +353,16 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hints=(
             r'Sfärisk symmetri gör fältet radiellt och lika stort över Gaussytan: $4\pi r^2 E_r=Q_{\mathrm{in}}/\varepsilon_0$. $Q_{\mathrm{in}}$ är 0 för $r<a$, Qa för $a<r<b$ och $Q_a+Q_b$ för $r>b$. Lös efter E_r i varje område.',
             r'Integrera från observationsradien till oändligheten. För $a<r<b$ delas vägen vid b; för $r<a$ tillkommer ett område med $E=0$. Behåll bidragen från alla passerade områden så att potentialen får samma referens överallt.',
-            r'I del (b) betecknas slutladdningarna qa och qb. Skriv $q_a+q_b=Q_a+Q_b$ och $V(a)-V(b)=\int_a^bE_r\,\mathrm dr=0$ under förbindelsen. Sätt in gapfältet med qa och lös sedan laddningsfördelningen.',
+            r"""I del (b) betecknas slutladdningarna $q_a$ och $q_b$. Använd laddningsbevarande och samma potential på de sammankopplade skalen:
+
+$$
+\begin{aligned}
+q_a+q_b&=Q_a+Q_b,\\
+V(a)-V(b)&=\int_a^b E_r\,\mathrm dr=0.
+\end{aligned}
+$$
+
+Sätt in gapfältet med $q_a$ och lös sedan laddningsfördelningen.""",
         ),
         self_checks=(
             'Potentialen ska vara kontinuerlig vid a och b och närma sig noll vid oändligheten. Utanför b beror den bara på den sammanlagda laddningen.',
@@ -212,7 +380,14 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hint_titles=('Välj riktning och yta', 'Tecknen på topp och botten', 'Från laddning till medeltäthet'),
         hints=(
             r'Välj z uppåt: $E_z(0)=-300\,\mathrm{V/m}$ och $E_z(h)=-20\,\mathrm{V/m}$, $h=1400\,\mathrm m$. Använd en vertikal cylinder med tvärsnittsarea S och höjd h. Det vertikala fältet ger inget flöde genom manteln.',
-            r'Toppen har normal +ẑ och botten −ẑ. Därför blir $\oint_S\overline{E}\cdot\mathrm d\overline{S}=S E_z(h)-S E_z(0)$. Sätt detta lika med $Q_{\mathrm{in}}/\varepsilon_0$.',
+            r"""Toppen har utåtnormal $+\hat z$ och botten $-\hat z$. Därför blir flödet
+
+$$
+\oint_S\overline E\cdot\mathrm d\overline S
+=S E_z(h)-S E_z(0).
+$$
+
+Sätt detta lika med $Q_{\mathrm{in}}/\varepsilon_0$.""",
             r'Lös efter $Q_{\mathrm{in}}$ och dividera med volymen Sh. Du får en medeltäthet; två fältvärden räcker inte för att bestämma den lokala funktionen ρ(z).',
         ),
         self_checks=(
@@ -230,7 +405,15 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Skriv superpositionen $\overline E=\overline E_{\mathrm{stor}}+\overline E_{\text{hål}}$ och Gauss lag $\oint_S\overline{E}\cdot\mathrm d\overline{S}=\frac{Q_{\mathrm{in}}}{\varepsilon_0}$ för varje sfäriskt symmetrisk hjälpfördelning. Identifiera dess laddning och avståndet från dess eget centrum till observationspunkten.',
         hint_titles=('Bygg hålrummet av två klot', 'Fältet från varje klot', 'Mät från rätt centrum'),
         hints=(
-            r'Beskriv materialet som ett helt klot med täthet ρ plus ett mindre klot med täthet −ρ i hålrummet. Laddningarna är $Q_{\mathrm{stor}}=\frac{4\pi\rho b^3}{3}$ och $Q_{\text{hål}}=-\frac{4\pi\rho a^3}{3}$.',
+            r"""Beskriv materialet som ett helt klot med täthet $\rho$ plus ett mindre klot med täthet $-\rho$ i hålrummet. De två hjälpfördelningarnas laddningar är
+
+$$
+\begin{aligned}
+Q_{\mathrm{stor}}&=\frac{4\pi\rho b^3}{3},\\
+Q_{\text{hål}}&=-\frac{4\pi\rho a^3}{3}.
+\end{aligned}
+$$
+""",
             r'För varje klot ger sfärisk symmetri och en Gaussyta utanför klotet $4\pi s^2 E_s=\frac{Q}{\varepsilon_0}$, där s mäts från just det klotets centrum. Punkterna $x>b$ ligger utanför båda hjälpfördelningarna.',
             r'Hålrummets centrum ligger vid $x=-d$ enligt originalets geometri. Avstånden är x respektive $x+d$ och båda radiella enhetsvektorerna pekar längs $+x$ här. Sätt in dessa i de två fälten och summera deras signerade x-komponenter.',
         ),
@@ -250,7 +433,19 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hint_titles=('Flöde genom manteln', 'Bestäm konstanten från spänningen', 'Var ligger mittpunkten?'),
         hints=(
             r'Försumma ändeffekter och välj en koaxial Gauss-cylinder med radie a<R<b och längd L. Inför innerledarens laddning per längd $\rho_{\ell}$. E är radiellt, så $E_R\,2\pi RL=\rho_{\ell}L/\varepsilon_0$.',
-            r'Lös efter E_R. För fältbeloppet kan du skriva $|E_R|=K/R$ med $K=|\rho_{\ell}|/(2\pi\varepsilon_0)$. Sätt detta i $U=\int_a^b|E_R|\,\mathrm dR$ och bestäm $K$ från $U=K\ln(b/a)$.',
+            r"""Lös efter $E_R$. För fältbeloppet kan du skriva
+
+$$
+|E_R|=\frac{K}{R},
+\qquad K=\frac{|\rho_\ell|}{2\pi\varepsilon_0}.
+$$
+
+Bestäm sedan $K$ ur spänningsintegralen
+
+$$
+U=\int_a^b |E_R|\,\mathrm dR=K\ln(b/a).
+$$
+""",
             r'Mittemellan ytorna är observationsradien $R=a+\frac{b-a}{2}=\frac{a+b}{2}$. Sätt in den först när fältfunktionen är bestämd.',
         ),
         self_checks=(
@@ -269,7 +464,13 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         hint_titles=('Fältet utanför sfären', 'Var nås genomslagsgränsen?', 'Potentialen relativt oändligheten'),
         hints=(
             r'Välj en sfärisk Gaussyta med $r>a$. Fältet är radiellt och konstant över ytan, så $4\pi r^2E_r=\frac{Q}{\varepsilon_0}$. Lös efter E_r; inne i metallen är $\overline E=0$.',
-            r'Det yttre fältbeloppet avtar med r och är störst precis utanför $r=a$. Sätt $\frac{|Q|}{4\pi\varepsilon_0 a^2}=E_{\max}$ och lös efter den största tillåtna laddningens belopp.',
+            r"""Det yttre fältbeloppet avtar med $r$ och är störst precis utanför $r=a$. Sätt
+
+$$
+\frac{|Q|}{4\pi\varepsilon_0a^2}=E_{\max}
+$$
+
+och lös efter den största tillåtna laddningens belopp.""",
             r'Integrera $E_r$ från $a$ till $\infty$ för att få ytpotentialen med $V(\infty)=0$. Sätt in laddningsgränsen och därefter $a=0{,}10\,\mathrm m$ och $E_{\max}=3\cdot10^6\,\mathrm{V/m}$ i del (b).',
         ),
         self_checks=(
@@ -287,7 +488,18 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Skriv Gauss lag $\nabla\cdot\overline E=\frac{\rho}{\varepsilon_0}$ och $V(b)-V(a)=-\int_a^b\overline E\cdot\mathrm d\overline\ell$. Identifiera den konstanta, okända tätheten ρ, cylindersymmetrin och randvillkoren $E_R(a)=0$, $V(a)=0$ och $V(b)=U$.',
         hint_titles=('Förenkla divergensen', 'Använd fältvillkoret vid katoden', 'Bestäm molnets totala laddning'),
         hints=(
-            r'Cylindersymmetri och försummade ändeffekter ger $\overline E=E_R(R)\hat R$. Då blir Gauss lag $\frac1R\frac{\mathrm d(RE_R)}{\mathrm dR}=\frac{\rho}{\varepsilon_0}$. Integrera med avseende på R: $E_R=\frac{\rho R}{2\varepsilon_0}+\frac C R$.',
+            r"""Cylindersymmetri och försummade ändeffekter ger $\overline E=E_R(R)\hat R$. Gauss lag blir då
+
+$$
+\frac{1}{R}\frac{\mathrm d(RE_R)}{\mathrm dR}=\frac{\rho}{\varepsilon_0}.
+$$
+
+Integrera med avseende på $R$:
+
+$$
+E_R=\frac{\rho R}{2\varepsilon_0}+\frac{C}{R}.
+$$
+""",
             r'Sätt in $E_R(a)=0$ för att bestämma C. Detta ger fältet i gapet som funktion av den ännu okända tätheten ρ.',
             r'Sätt fältet i $U=-\int_a^b E_R\,\mathrm dR$ och lös efter ρ. Den totala molnladdningen är sedan $Q=\rho\pi(b^2-a^2)\ell$. Omvandla radier och längd till meter.',
         ),
@@ -306,7 +518,23 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Skriv $V(\overline r)=\frac{1}{4\pi\varepsilon_0}\int\frac{\mathrm dQ^{\prime}}{|\overline r-\overline r^{\prime}|}$ med $V(\infty)=0$. Observationspunkten är $\overline r=0$. Identifiera $\mathrm dQ^{\prime}=\rho(\overline r^{\prime})\,\mathrm dV^{\prime}$, separationsvektorn $\overline r-\overline r^{\prime}$ och dess belopp för den givna volymladdningen.',
         hint_titles=('Volymelementet', 'Avståndet till centrum', 'Radialintegralen'),
         hints=(
-            r'Använd sfäriska källkoordinater: $\overline r^{\prime}=s(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta)$, $0\leq s\leq a$, $0\leq\theta\leq\pi$ och $0\leq\phi\leq2\pi$. Då är $\mathrm dQ^{\prime}=A(a-s)s^2\sin\theta\,\mathrm ds\,\mathrm d\theta\,\mathrm d\phi$.',
+            r"""Använd sfäriska källkoordinater med
+
+$$
+\begin{aligned}
+\overline r^{\prime}
+&=s(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta),\\
+0\leq s\leq a,\quad &0\leq\theta\leq\pi,\quad0\leq\phi\leq2\pi.
+\end{aligned}
+$$
+
+Laddningselementet blir
+
+$$
+\mathrm dQ^{\prime}
+=A(a-s)s^2\sin\theta\,\mathrm ds\,\mathrm d\theta\,\mathrm d\phi.
+$$
+""",
             r'I centrum är $\overline r-\overline r^{\prime}=-\overline r^{\prime}$ och $|\overline r-\overline r^{\prime}|=s$. Sätt in detta och dQ′ i potentialintegralen. Vinkelintegralerna ger 4π eftersom återstoden är oberoende av vinklarna.',
             r'Det återstår $V(0)=\frac{1}{\varepsilon_0}\int_0^a A(a-s)s\,\mathrm ds$. Integrera de två potenstermerna. Utanför a är tätheten noll, så inget ytterligare källbidrag ska adderas.',
         ),
@@ -325,7 +553,14 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Skriv Gauss lag $\oint_S\overline{E}\cdot\mathrm d\overline{S}=\frac{Q_{\mathrm{in}}}{\varepsilon_0}$ och potentialskillnaden $\Delta V=-\int\overline E\cdot\mathrm d\overline\ell$. Identifiera plattladdningen, fältets riktning och de delar av gapet där fältet finns. Batteriet kopplas bort efter uppladdningen, så Q är därefter bevarad.',
         hint_titles=('Laddningen före frånkoppling', 'Spänningsfallet med metallplattan', 'Det alternativa försöket'),
         hints=(
-            r'Utan kanteffekter är fältet normalt mot plattorna och homogent i luftgapet. En Gaussbox från metallens inre till gapet ger $EA=Q/\varepsilon_0$ för beloppen. Spänningen i del (a) är $U=Ed_0$; kombinera ekvationerna för att bestämma Q.',
+            r"""Utan kanteffekter är fältet normalt mot plattorna och homogent i luftgapet. Gauss lag och spänningsintegralen ger, för beloppen,
+
+$$
+EA=\frac{Q}{\varepsilon_0},
+\qquad U=E\,d_0.
+$$
+
+Kombinera ekvationerna för att bestämma $Q$.""",
             r'I del (b) behålls Q från (a), så luftfältet är oförändrat. Inuti den införda metallen är $E=0$. Beräkna spänningsintegralen över de två luftgapen, vars sammanlagda tjocklek är $d_0-d_1$.',
             r'I del (c) görs ett separat försök utan metallplattan. Behåll samma Q och integrera luftfältet över det nya avståndet d2. Plattorna bär $+Q$ och $-Q$ i alla tre fallen.',
         ),
@@ -344,7 +579,18 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here=r'Skriv Gauss lag $\nabla\cdot\overline E=\frac{\rho_0}{\varepsilon_0}$ och $V(d)-V(0)=-\int_0^dE_x\,\mathrm dx$. Välj $x=0$ vid plattan med V0 och $x=d$ vid jord. Plansymmetrin ger $\overline E=E_x(x)\,\hat x$; bestäm denna funktion innan du söker dess nollställe.',
         hint_titles=('Fältets lutning', 'Bestäm integrationskonstanten', 'Ligger nollstället i gapet?'),
         hints=(
-            r'Gauss lag reduceras till $\frac{\mathrm dE_x}{\mathrm dx}=\frac{\rho_0}{\varepsilon_0}$ eftersom fältet bara varierar tvärs plattorna. Integrera till $E_x=\frac{\rho_0x}{\varepsilon_0}+C$.',
+            r"""Eftersom fältet endast varierar tvärs plattorna reduceras Gauss lag till
+
+$$
+\frac{\mathrm dE_x}{\mathrm dx}=\frac{\rho_0}{\varepsilon_0}.
+$$
+
+Integrera för att få fältet som funktion av positionen:
+
+$$
+E_x=\frac{\rho_0x}{\varepsilon_0}+C.
+$$
+""",
             r'Sätt in $V(0)=V_0$ och $V(d)=0$ i potentialskillnaden: $\int_0^dE_x\,\mathrm dx=V_0$. Bestäm C ur denna ekvation; tätheten ensam bestämmer inte hela fältet.',
             r'För $\rho_0\neq0$, lös $E_x(x_0)=0$. Kräv därefter $0<x_0<d$ för ett nollställe strikt mellan plattorna; $x_0=0$ eller d är gränsfall på ytorna. Hantera $\rho_0=0$ separat.',
         ),
