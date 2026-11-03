@@ -65,7 +65,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here='Utgå från det allmänna uttrycket E(r)=(1/4πε₀)∫[(r−r′)/|r−r′|³] dQ′ över källan. Identifiera först observationspunkten r, källpunkten r′ och laddningselementet dQ′ för hela ringen. Vilken koordinat är lämplig att integrera över?',
         hint_titles=('Laddningen på en liten båge', 'Vektorn från bågen till fältpunkten', 'Integrera ett helt varv'),
         hints=(
-            'Låt r=(0,0,z) och r′(φ)=(a cosφ,a sinφ,0), där 0≤φ≤2π. Eftersom λ=Q/(2πa) och dℓ=a dφ blir dQ′=λa dφ=Q dφ/(2π).',
+            'Låt r=(0,0,z) och r′(φ)=(a cosφ,a sinφ,0), där 0≤φ≤2π. Eftersom ρℓ=Q/(2πa) och dℓ=a dφ blir dQ′=ρℓa dφ=Q dφ/(2π).',
             'Beräkna r−r′=(−a cosφ,−a sinφ,z) och |r−r′|=√(a²+z²). Sätt först nu in dessa uttryck tillsammans med dQ′ i den allmänna fältintegralen.',
             'Enhetsvektorn R̂(φ)=cosφ x̂+sinφ ŷ ändrar riktning runt ringen. Skriv därför bidragen i en fast bas innan du integrerar komponenterna. Bidragen med cosφ och sinφ försvinner över ett helt varv, medan z-komponenten återstår. Kontrollera att detta följer av integralen, utan att ersätta ringen med två punktladdningar.',
         ),
@@ -73,7 +73,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
             'Fältet ska vara noll vid z=0 och E_z ska byta tecken när z byter tecken. Rotationssymmetrin kring z-axeln bekräftar att tvärkomponenterna ska försvinna.',
             'För |z|≫a ska fältet närma sig punktladdningsfältet. För Q>0 ska det peka bort från ringen på båda sidor.',
         ),
-        common_pitfall='Att glömma bågfaktorn a i dQ′=λa dφ eller integrera fältets belopp i stället för dess komponenter. Symmetri kan användas för att kontrollera komponentintegralerna.',
+        common_pitfall='Att glömma bågfaktorn a i dQ′=ρℓa dφ eller integrera fältets belopp i stället för dess komponenter. Symmetri kan användas för att kontrollera komponentintegralerna.',
         visualization_note='En axelgraf är användbar först efter härledningen, framför allt för att kontrollera z=0 och fjärrfältet.',
         setup_hint='Starta med E(r)=(1/4πε₀)∫[(r−r′)/|r−r′|³] dQ′. Använd r=(0,0,z), r′=(a cosφ,a sinφ,0), dQ′=Q dφ/(2π) och integrationsgränserna 0 till 2π; integrera sedan komponentvis.',
         geometry_hint='φ beskriver källpunktens position på hela ringen, medan observationspunkten r=(0,0,z) hålls fast. Vektorn r−r′ pekar från laddningselementet mot observationspunkten och har samma längd för alla φ.',
@@ -249,8 +249,8 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         start_here='Skriv ∮_S E·n dS=Q_in/ε₀ och V(a)−V(b)=∫_a^b E_R dR. Cylindersymmetrin bestämmer hur fältet beror på R; den givna spänningen bestämmer därefter dess storlek.',
         hint_titles=('Flöde genom manteln', 'Bestäm konstanten från spänningen', 'Var ligger mittpunkten?'),
         hints=(
-            'Försumma ändeffekter och välj en koaxial Gauss-cylinder med radie a<R<b och längd L. Inför innerledarens laddning per längd λ. E är radiellt, så E_R·2πRL=λL/ε₀.',
-            'Lös efter E_R. För fältbeloppet kan du skriva |E_R|=K/R med K=|λ|/(2πε₀). Sätt detta i U=∫_a^b |E_R| dR och bestäm K från U=K ln(b/a).',
+            'Försumma ändeffekter och välj en koaxial Gauss-cylinder med radie a<R<b och längd L. Inför innerledarens laddning per längd ρℓ. E är radiellt, så E_R·2πRL=ρℓL/ε₀.',
+            'Lös efter E_R. För fältbeloppet kan du skriva |E_R|=K/R med K=|ρℓ|/(2πε₀). Sätt detta i U=∫_a^b |E_R| dR och bestäm K från U=K ln(b/a).',
             'Mittemellan ytorna är observationsradien R=a+(b−a)/2=(a+b)/2. Sätt in den först när fältfunktionen är bestämd.',
         ),
         self_checks=(
@@ -259,7 +259,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         ),
         common_pitfall="Att anta ett homogent fält U/(b−a), vilket inte gäller för cylindrisk geometri.",
         geometry_hint='R mäts från den gemensamma axeln, inte från innerledarens yta. Halva gapbredden (b−a)/2 måste därför läggas till a.',
-        setup_hint='Identifiera mantelarean 2πRL och Q_in=λL i Gauss lag. Lös sedan U=∫_a^b |λ|/(2πε₀R) dR efter |λ|, eller efter K=|λ|/(2πε₀), och beräkna fältbeloppet vid R=(a+b)/2.',
+        setup_hint='Identifiera mantelarean 2πRL och Q_in=ρℓL i Gauss lag. Lös sedan U=∫_a^b |ρℓ|/(2πε₀R) dR efter |ρℓ|, eller efter K=|ρℓ|/(2πε₀), och beräkna fältbeloppet vid R=(a+b)/2.',
     ),
     "SphericalConductorBreakdown": G(
         problem_id="2.12",
@@ -478,12 +478,12 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="3.12",
         learning_goal="Bygga kapacitansen för två koaxiella dielektriska skikt genom att summera potentialfall.",
         concepts=("koaxial kondensator", "D-fält", "seriekopplade dielektrika"),
-        start_here='Skriv ∮_S D·n dS=Q_fri,in, D_i=ε₀ε_iE_i, U=∫_a^c E_R dR och C/L=λ/U. Identifiera cylindersymmetrin, laddningen per längd λ och materialgränsen mellan de två lika tjocka isolationslagren.',
+        start_here='Skriv ∮_S D·n dS=Q_fri,in, D_i=ε₀ε_iE_i, U=∫_a^c E_R dR och C/L=ρℓ/U. Identifiera cylindersymmetrin, laddningen per längd ρℓ och materialgränsen mellan de två lika tjocka isolationslagren.',
         hint_titles=('Gaussytan och materialgränsen', 'Två potentialintegraler', 'Kapacitans per längd'),
         hints=(
-            'Lika radiell tjocklek ger b=(a+c)/2. Välj en koaxial Gauss-cylinder med radie R och längd L. D är radiellt, ändytornas flöde är noll och Q_fri,in=λL, så D_R·2πRL=λL.',
+            'Lika radiell tjocklek ger b=(a+c)/2. Välj en koaxial Gauss-cylinder med radie R och längd L. D är radiellt, ändytornas flöde är noll och Q_fri,in=ρℓL, så D_R·2πRL=ρℓL.',
             'Lös efter D_R och använd E_i=D_R/(ε₀ε_i). Sätt upp spänningsintegralen som ∫_a^b E_1R dR+∫_b^c E_2R dR; varje del ger en logaritm av en radiekvot.',
-            'Bilda C/L=λ/U med den beräknade spänningen. λ ska förkortas bort. Sätt in a=0,020 m, c=0,050 m, ε1=4 och ε2=3 först när uttrycket är klart.',
+            'Bilda C/L=ρℓ/U med den beräknade spänningen. ρℓ ska förkortas bort. Sätt in a=0,020 m, c=0,050 m, ε1=4 och ε2=3 först när uttrycket är klart.',
         ),
         self_checks=(
             'Om ε1=ε2=εr ska logaritmerna summeras till ln(c/a), vilket ger den vanliga koaxialkapacitansen per längd.',
@@ -491,7 +491,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         ),
         common_pitfall='Att förväxla kapacitans C med kapacitans per längdenhet C/L, eller använda det geometriska medelvärdet √(ac) för två lika tjocka lager.',
         geometry_hint='R mäts från cylinderaxeln. Material 1 fyller a<R<b och material 2 fyller b<R<c. Fältet passerar materialen i följd och är normalt mot deras cylindriska gränsyta.',
-        setup_hint='Gauss lag ger D_R=λ/(2πR). Insättning i de två potentialintegralerna ger U=λ[ln(b/a)/ε1+ln(c/b)/ε2]/(2πε₀). Använd sedan definitionen C/L=λ/U.',
+        setup_hint='Gauss lag ger D_R=ρℓ/(2πR). Insättning i de två potentialintegralerna ger U=ρℓ[ln(b/a)/ε1+ln(c/b)/ε2]/(2πε₀). Använd sedan definitionen C/L=ρℓ/U.',
     ),
     "BreakdownVoltageCases": G(
         problem_id="3.13",
@@ -516,12 +516,12 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="3.14",
         learning_goal="Knyta ihop D-kontinuitet, spänningsfall, fri ytladdning och polarisationsladdning.",
         concepts=("D-fält", "polarisation", "randvillkor"),
-        start_here='Skriv ∮_S D·n dS=Q_fri,in, D=εE och ΔV=−∫E·dl. För bundna laddningar behövs dessutom P=ε₀(εr−1)E och σ_b=P·n. Identifiera skikten och deras normaler; välj z uppåt från jord till plattan med V0>0.',
+        start_here='Skriv ∮_S D·n dS=Q_fri,in, D=εE och ΔV=−∫E·dl. För bundna laddningar behövs dessutom P=ε₀(εr−1)E och ρ_sp=P·n. Identifiera skikten och deras normaler; välj z uppåt från jord till plattan med V0>0.',
         hint_titles=('Fälten i skikten', 'Fri laddning på metallen', 'Bunden laddning på dielektrikumet'),
         hints=(
             'I den plana modellen ger en Gaussbox utan fri gränsladdning samma D_n i luft och dielektrikum. Fälten pekar nedåt. För beloppen gäller E_luft=D/ε₀ och E_diel=D/(ε₀εr). Sätt in tjocklekarna i V0=E_luft·0,2d+E_diel·0,8d och lös D.',
-            'En Gaussbox från metallens inre till gapet ger σ_f=D·n, där n pekar från metallen ut i gapet. Använd det beräknade D-fältet: den övre plattans fria laddning är positiv och den undres negativ.',
-            'Beräkna P som vektor i dielektrikumet och använd σ_b=P·n med normalen ut ur just dielektrikumet. Dess övre normal är +ẑ och den undre −ẑ. Använd inte metallens normal i detta steg.',
+            'En Gaussbox från metallens inre till gapet ger ρ_s=D·n, där n pekar från metallen ut i gapet. Använd det beräknade D-fältet: den övre plattans fria laddning är positiv och den undres negativ.',
+            'Beräkna P som vektor i dielektrikumet och använd ρ_sp=P·n med normalen ut ur just dielektrikumet. Dess övre normal är +ẑ och den undre −ẑ. Använd inte metallens normal i detta steg.',
         ),
         self_checks=(
             'För εr=1 ska E=V0/d i hela gapet och den bundna laddningen försvinna. D är kontinuerligt genom materialgränsen även när E har ett språng.',
@@ -529,27 +529,27 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         ),
         common_pitfall='Att använda metallens normal när du räknar dielektrikumets bundna laddning, eller blanda ihop fältbelopp med den negativa z-komponenten.',
         geometry_hint='Dielektrikumet fyller 0<z<0,8d. Dess övre normal är +ẑ och dess undre −ẑ. På den övre metallplattans undersida är normalriktningen i stället −ẑ.',
-        setup_hint='Lös D ur V0=Dd[0,2/ε₀+0,8/(ε₀εr)]. Sätt E_z=−E och P_z=−ε₀(εr−1)E_diel. Beräkna sedan σ_f=D·n på metallen och σ_b=P·n på dielektrikumet med respektive utåtnormal.',
+        setup_hint='Lös D ur V0=Dd[0,2/ε₀+0,8/(ε₀εr)]. Sätt E_z=−E och P_z=−ε₀(εr−1)E_diel. Beräkna sedan ρ_s=D·n på metallen och ρ_sp=P·n på dielektrikumet med respektive utåtnormal.',
     ),
     "ElectretCylinderAxis": G(
         problem_id="3.18",
         learning_goal="Ersätta en homogen polarisation med dess bundna laddningar och sedan använda superposition.",
         concepts=("elektret", "bunden laddning", "fält från skiva"),
-        start_here='Skriv ρ_b=−∇·P och σ_b=P·n för att bestämma källaddningarna. Använd sedan E(r)=(1/4πε₀)∫[(r−r′)/|r−r′|³] dQ′ och D=ε₀E+P. Identifiera dQ′ och separationsvektorn från den givna polarisationen P=Pẑ.',
+        start_here='Skriv ρ_p=−∇·P och ρ_sp=P·n för att bestämma källaddningarna. Använd sedan E(r)=(1/4πε₀)∫[(r−r′)/|r−r′|³] dQ′ och D=ε₀E+P. Identifiera dQ′ och separationsvektorn från den givna polarisationen P=Pẑ.',
         hint_titles=('Vilka ytor bär laddning?', 'Parametrisera varje skiva', 'Addera de axiella fälten', 'Jämför elektret och fria laddningar'),
         hints=(
-            'Konstant P ger ρ_b=0. Mantelns normal är vinkelrät mot P, så σ_b=0 där. Botten vid z=0 har normal −ẑ och σ_b=−P; toppen vid z=h har normal +ẑ och σ_b=+P.',
-            'För vardera skivan vid z0=0 eller h: välj r=(0,0,z), r′=(R cosφ,R sinφ,z0), dQ′=σ_b R dR dφ. Då är r−r′=(−R cosφ,−R sinφ,z−z0) och |r−r′|=√(R²+(z−z0)²). Integrera över 0≤R≤a och 0≤φ≤2π och addera skivbidragen.',
-            'Vinkelintegrationen tar bort tvärkomponenterna. Radialintegralen ger E_skiva,z=σ_b[sgn(z−z0)−(z−z0)/√((z−z0)²+a²)]/(2ε₀), utanför skivytan. Summera med rätt σ_b och z0; skriv resultatet i områdena z<0, 0<z<h och z>h.',
+            'Konstant P ger ρ_p=0. Mantelns normal är vinkelrät mot P, så ρ_sp=0 där. Botten vid z=0 har normal −ẑ och ρ_sp=−P; toppen vid z=h har normal +ẑ och ρ_sp=+P.',
+            'För vardera skivan vid z0=0 eller h: välj r=(0,0,z), r′=(R cosφ,R sinφ,z0), dQ′=ρ_sp R dR dφ. Då är r−r′=(−R cosφ,−R sinφ,z−z0) och |r−r′|=√(R²+(z−z0)²). Integrera över 0≤R≤a och 0≤φ≤2π och addera skivbidragen.',
+            'Vinkelintegrationen tar bort tvärkomponenterna. Radialintegralen ger E_skiva,z=ρ_sp[sgn(z−z0)−(z−z0)/√((z−z0)²+a²)]/(2ε₀), utanför skivytan. Summera med rätt ρ_sp och z0; skriv resultatet i områdena z<0, 0<z<h och z>h.',
             'Använd D=ε₀E+Pẑ inne i elektreten och D=ε₀E utanför. Ta därefter den plana gränsen a≫h nära ändytornas centrala delar. I del (d) är ±P fria skivladdningar, inte materialpolarisation, så där används D=ε₀E överallt.',
         ),
         self_checks=(
-            'E_z ska ha rätt språng σ_b/ε0 över varje ändyta, medan D_z är kontinuerligt eftersom det inte finns fri ytladdning. Använd ensidiga gränsvärden på ytorna.',
+            'E_z ska ha rätt språng ρ_sp/ε0 över varje ändyta, medan D_z är kontinuerligt eftersom det inte finns fri ytladdning. Använd ensidiga gränsvärden på ytorna.',
             'I den plana gränsen är E≈−Pẑ/ε0 inne och ungefär noll utanför, medan D≈0 för elektreten. Fria skivladdningar ger samma E men D=ε0E, alltså D≈−Pẑ mellan skivorna.',
         ),
         common_pitfall='Att anta D=0 överallt för en ändlig elektret bara för att fri laddning saknas. ∇·D=0 innebär inte att D är noll; den plana approximationen gäller inte godtyckligt långt från en ändlig cylinder.',
         geometry_hint='Rita utåtnormal −ẑ på botten och +ẑ på toppen. Vid z=0 och h är E diskontinuerligt, så ange vilken sida du menar. Villkoret a≫h gör centralområdet ungefär plant, men långt bort måste den ändliga kroppens fält avta.',
-        setup_hint='Beräkna först σ_b=P·n. Sätt sedan E_z(z)=Σ_{z0=0,h} σ_b(z0)/(2ε₀) ∫₀ᵃ R(z−z0)/[R²+(z−z0)²]^(3/2) dR. Summera integralerna innan du använder D=ε₀E+P i rätt område. Vid ändytorna används ensidiga gränsvärden.',
+        setup_hint='Beräkna först ρ_sp=P·n. Sätt sedan E_z(z)=Σ_{z0=0,h} ρ_sp(z0)/(2ε₀) ∫₀ᵃ R(z−z0)/[R²+(z−z0)²]^(3/2) dR. Summera integralerna innan du använder D=ε₀E+P i rätt område. Vid ändytorna används ensidiga gränsvärden.',
     ),
     "ObliqueConductorDielectricBoundary": G(
         problem_id="3.19",
@@ -679,12 +679,12 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         learning_goal="Använd spegelladdningsmetoden både för inducerad ytladdning och för kraften på en punktladdning.",
         concepts=("spegelladdning", "ledarvillkor", "inducerad ytladdning"),
         start_here=(
-            'Skriv V(r)=Σ_i q_i/(4πε₀|r−r_i|), E=−∇V och σ=ε₀E_n omedelbart utanför ledaren. Identifiera en hjälpladdning som gör V=0 på planet; därefter kan ytladningen integreras och kraften beräknas. Välj planet z=0 och den verkliga laddningen q vid z=a. Använd den idealisering med ett oändligt plan på noll potential som ligger bakom appens modell och facit; spegelladdningen är ett hjälpmedel utanför det fysiska området.'
+            'Skriv V(r)=Σ_i q_i/(4πε₀|r−r_i|), E=−∇V och ρ_s=ε₀E_n omedelbart utanför ledaren. Identifiera en hjälpladdning som gör V=0 på planet; därefter kan ytladdningen integreras och kraften beräknas. Välj planet z=0 och den verkliga laddningen q vid z=a. Använd den idealisering med ett oändligt plan på noll potential som ligger bakom appens modell och facit; spegelladdningen är ett hjälpmedel utanför det fysiska området.'
         ),
         hint_titles=('Placera spegelladdningen', 'Bestäm integrationsradien', 'Integrera laddningen och bestäm kraften'),
         hints=(
             'Placera −q vid z=−a. Potentialbidragen tar ut varandra på z=0. Fältet i det övre halvrummet är då den sökta lösningen, men fältet inne i den verkliga ledaren är noll.',
-            'För del (a): b mäts från kulan, inte från dess lodräta projektion på planet. Punkter i planet på avstånd högst b från kulan bildar en skiva med radie R_max=√(b²−a²). Bestäm σ(R)=ε0E_z(R,0⁺) med normal +ẑ.',
+            'För del (a): b mäts från kulan, inte från dess lodräta projektion på planet. Punkter i planet på avstånd högst b från kulan bildar en skiva med radie R_max=√(b²−a²). Bestäm ρ_s(R)=ε0E_z(R,0⁺) med normal +ẑ.',
             'Integrera den inducerade laddningen med ringelement dS=2πR dR från 0 till R_max. Låt sedan b→∞ för del (b). I del (c) används enbart spegelladdningens fält vid q, med avståndet 2a.',
         ),
         self_checks=(
@@ -694,7 +694,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         common_pitfall='Att integrera till radien b i planet, vilket motsvarar ett annat område än uppgiften frågar efter. Förväxla inte heller kraften med energin: kraften fås direkt från bilden, men bildparets fulla Coulombenergi är inte systemets verkliga energi.',
         visualization_note="Här kan en geometrisk bild av verklig laddning, spegelladdning och fältlinjer vara mer pedagogisk än en generell fältkarta.",
         geometry_hint='Rita en rätvinklig triangel med höjden a, sträckan R i planet och hypotenusan b från kulan till skivans kant. Skivan ligger i planet; i ett vertikalt snitt syns den som en sträcka, inte som en cirkel runt origo.',
-        setup_hint='Fältets normaldel ger σ(R)=−qa/[2π(R²+a²)^(3/2)]. Skriv Q_ind=∫₀^√(b²−a²) σ(R)2πR dR och använd u=R²+a². För kraften: använd Coulombs lag mellan q och −q på avstånd 2a, utan extra faktor 2.',
+        setup_hint='Fältets normaldel ger ρ_s(R)=−qa/[2π(R²+a²)^(3/2)]. Skriv Q_ind=∫₀^√(b²−a²) ρ_s(R)2πR dR och använd u=R²+a². För kraften: använd Coulombs lag mellan q och −q på avstånd 2a, utan extra faktor 2.',
     ),
 
     # ------------------------------------------------------------------
@@ -943,7 +943,7 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         learning_goal="Se hur det lokala kraftbidraget på en strömslinga summeras till det globala momentet m×B.",
         concepts=("Lorentzkraft på ledare", "kraftmoment", "magnetiskt moment"),
         start_here='Skriv dF=I dℓ×B och T=∮r×dF. Identifiera linjeelement, hävarm och det givna fältet innan korsprodukterna beräknas. Beräkna först kraften på ett litet strömelement och sedan dess moment kring centrum. Håll isär dℓ, kraften dF och hävarmen r; de är tre olika vektorer.',
-        hint_titles=('Parametrisera kraften', 'Integrera vridmomentet', 'Kontrollera med dipolmomentet'),
+        hint_titles=('Parametrisera kraften', 'Integrera kraftmomentet', 'Kontrollera med dipolmomentet'),
         hints=(
             'Parametrisera r=a(cosφ,sinφ,0) och dℓ=a(−sinφ,cosφ,0)dφ. Med B=B x̂ ger dF=I dℓ×B en kraft i z-led vars tecken beror på cosφ.',
             'Ta dT=r×dF komponentvis. Då fås dT_x=−IBa²sinφ cosφ dφ och dT_y=IBa²cos²φ dφ. Integrera över ett helt varv: x-bidraget tar ut sig.',
@@ -1160,10 +1160,10 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="8.12",
         learning_goal="Ersätta en homogen magnetisering med bundna magnetiseringsströmmar och därefter skilja mellan B och H.",
         concepts=("magnetisering", "magnetiseringsström", "B och H"),
-        start_here='Skriv J_b=∇×M, K_b=M×n och Biot–Savarts lag för de bundna strömmarna. Identifiera magnetiseringens variation och ytornas normaler. Använd sedan H=B/μ₀−M med den lokala magnetiseringen. Använd cylindern 0<z<h och konstant M=Mẑ. Ersätt magnetiseringen med bundna strömmar; ingen fri ström behövs för att skapa magnetens B-fält.',
+        start_here='Skriv J_m=∇×M, J_sm=M×n och Biot–Savarts lag för de bundna strömmarna. Identifiera magnetiseringens variation och ytornas normaler. Använd sedan H=B/μ₀−M med den lokala magnetiseringen. Använd cylindern 0<z<h och konstant M=Mẑ. Ersätt magnetiseringen med bundna strömmar; ingen fri ström behövs för att skapa magnetens B-fält.',
         hint_titles=('Vilka bundna strömmar finns?', 'Manteln som strömslingor', 'Från B till H'),
         hints=(
-            'I volymen är J_m=∇×M=0. På manteln ger K_m=M×R̂=Mφ̂. Ändytorna har normal ±ẑ och därför ingen bunden ytström.',
+            'I volymen är J_m=∇×M=0. På manteln ger J_sm=M×R̂=Mφ̂. Ändytorna har normal ±ẑ och därför ingen bunden ytström.',
             'En mantelremsa med höjd dz′ motsvarar en cirkulär slinga med dI=M dz′. Integrera dess axelfält över 0<z′<h med avståndet z−z′ till observationspunkten.',
             'Använd H=B/μ0−Mẑ inuti och H=B/μ0 utanför. För del (c), låt a växa vid fast h och fast observationspunkt z; då fås gränsen för en oändligt utbredd skiva.',
         ),
@@ -1179,19 +1179,19 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="8.13",
         learning_goal="Härleda både volym- och ytmagnetiseringsströmmar från ett linjärt magnetiserat strömförande material och visa att deras nettoström tar ut sig.",
         concepts=("magnetiseringsström", "M=(μr−1)H", "cylindriska koordinater"),
-        start_here='Skriv ∮H·dl=I_fri,in, M=(μr−1)H, J_b=∇×M och K_b=M×n. Identifiera den inneslutna fria strömmen och materialets utåtnormal före beräkning av de bundna strömmarna. Bestäm H från den fria transportströmmen och sedan M=(μr−1)H inne i ledaren. Beräkna därefter volymström och ytström var för sig; de har olika enheter.',
+        start_here='Skriv ∮H·dl=I_fri,in, M=(μr−1)H, J_m=∇×M och J_sm=M×n. Identifiera den inneslutna fria strömmen och materialets utåtnormal före beräkning av de bundna strömmarna. Bestäm H från den fria transportströmmen och sedan M=(μr−1)H inne i ledaren. Beräkna därefter volymström och ytström var för sig; de har olika enheter.',
         hint_titles=('Magnetiseringen inne i ledaren', 'Volymström och ytström', 'Jämför de integrerade strömmarna'),
         hints=(
             'För R<a är I_fri,innesluten=IR²/a² och H_φ=IR/(2πa²). Därför är M_φ linjär i R.',
-            'Volymströmmen är J_m,z=(1/R)d(RM_φ)/dR. På manteln används K_m=M×R̂; eftersom φ̂×R̂=−ẑ är ytströmmen motsatt volymströmmen när I(μr−1)>0.',
-            'Integrera J_m över tvärsnittet och K_m över mantelytans skärning med tvärsnittet: I_m,vol=J_m,z πa² och I_m,yta=K_m,z 2πa. Addera först dessa strömmar i ampere.',
+            'Volymströmmen är J_m,z=(1/R)d(RM_φ)/dR. På manteln används J_sm=M×R̂; eftersom φ̂×R̂=−ẑ är ytströmmen motsatt volymströmmen när I(μr−1)>0.',
+            'Integrera J_m över tvärsnittet och J_sm över mantelytans skärning med tvärsnittet: I_m,vol=J_m,z πa² och I_m,yta=J_sm,z 2πa. Addera först dessa strömmar i ampere.',
         ),
         self_checks=(
             'Volym- och ytbidragen blir (μr−1)I respektive −(μr−1)I. Deras summa är noll, men den fria transportströmmen I finns fortfarande kvar.',
             'Vid μr=1 eller I=0 försvinner båda magnetiseringsströmmarna. Om I eller tecknet på μr−1 ändras vänder båda riktningarna.',
         ),
-        common_pitfall='Att addera J_m [A/m²] direkt till K_m [A/m], eller tolka noll nettomagnetiseringsström som att strömmarna och deras fält är noll överallt.',
-        setup_hint='Sätt M_φ=(μr−1)IR/(2πa²) i cylindriska curl-formeln. Beräkna K_m från värdet precis innanför R=a. Volymens curl gäller inuti materialet; ytströmmen hanterar hoppet vid gränsen separat.',
+        common_pitfall='Att addera J_m [A/m²] direkt till J_sm [A/m], eller tolka noll nettomagnetiseringsström som att strömmarna och deras fält är noll överallt.',
+        setup_hint='Sätt M_φ=(μr−1)IR/(2πa²) i cylindriska curl-formeln. Beräkna J_sm från värdet precis innanför R=a. Volymens curl gäller inuti materialet; ytströmmen hanterar hoppet vid gränsen separat.',
         geometry_hint='Både volym- och ytström går axiellt, men i motsatta riktningar. Ytströmmen finns på manteln R=a; den är inte en azimutal ström runt tvärsnittets rand.',
     ),
 
@@ -1260,11 +1260,11 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="9.13",
         learning_goal="Koppla mekaniskt arbete vid rörelse genom ett magnetfält till inducerad ström och resistiv värme.",
         concepts=("rörelse-emk", "Lenz lag", "energibalans"),
-        start_here='Skriv Φ=∫B·n dS, emk=−dΦ/dt, I=emk/RΩ och W=∫I²RΩ dt för konstant fart och försumbar självinduktans. Identifiera den överlappande arean som funktion av läget innan du deriverar. Följ flödet genom slingan när dess främre kant flyttas åt +x. Fältområdet är 0<x<ℓ och slingan sträcker sig från x−a till x. Uppgiftens ℓ=30 cm är större än a=10 cm.',
+        start_here='Skriv Φ=∫B·n dS, ε_ems=−dΦ/dt, I=ε_ems/RΩ och W=∫I²RΩ dt för konstant fart och försumbar självinduktans. Identifiera den överlappande arean som funktion av läget innan du deriverar. Följ flödet genom slingan när dess främre kant flyttas åt +x. Fältområdet är 0<x<ℓ och slingan sträcker sig från x−a till x. Uppgiftens ℓ=30 cm är större än a=10 cm.',
         hint_titles=('När ändras arean?', 'Från inducerad ström till effekt', 'Integrera arbetet över tiden'),
         hints=(
             'När ℓ≥a finns en inträdesfas, en fas med hela slingan inne och en utträdesfas. Endast under in- och utträde ändras överlappningsarean; då är |dA/dt|=av.',
-            'Om slingans självinduktans försummas blir i=ε/RΩ, där ε=−dΦ/dt. Lenz lag ger en bromskraft i båda övergångarna. Vid konstant hastighet är den yttre mekaniska effekten lika med i²RΩ.',
+            'Om slingans självinduktans försummas blir i=ε_ems/RΩ, där ε_ems=−dΦ/dt. Lenz lag ger en bromskraft i båda övergångarna. Vid konstant hastighet är den yttre mekaniska effekten lika med i²RΩ.',
             'Varje övergång i uppgiftens geometri varar a/v. Integrera effekten under båda övergångarna. Om du utforskar ℓ<a varar de i stället ℓ/v; när hela fältremsan ligger inuti slingan är flödet åter konstant.',
         ),
         self_checks=(
@@ -1280,11 +1280,11 @@ GUIDANCE_BY_CLASS: dict[str, SolutionGuidance] = {
         problem_id="9.14",
         learning_goal="Visa att tidsvarierande flöde i ett medföljande system och rörelse-emk i ett fast system beskriver samma inducerade spänning.",
         concepts=("Faradays lag", "rörelse-emk", "dipolfält"),
-        start_here='Skriv emk=−dΦ/dt med Φ=∫B·n dS, eller emk=∮(v×B)·dℓ för den rörliga slingan i det stationära fältet. Identifiera samma orientering, hastighet och fältkomponenter i båda metoderna. Välj slingnormal +z och positiv omloppsriktning moturs sedd från +z. Slingan befinner sig vid z>0 och v=dz/dt är signerad. Approximationen kräver a≪z.',
+        start_here='Skriv ε_ems=−dΦ/dt med Φ=∫B·n dS, eller ε_ems=∮(v×B)·dℓ för den rörliga slingan i det stationära fältet. Identifiera samma orientering, hastighet och fältkomponenter i båda metoderna. Välj slingnormal +z och positiv omloppsriktning moturs sedd från +z. Slingan befinner sig vid z>0 och v=dz/dt är signerad. Approximationen kräver a≪z.',
         hint_titles=('Flödet i slingans system', 'Rörelse-emk i dipolens system', 'Jämför tecken och belopp'),
         hints=(
             'I del (a) är flödet genom den lilla slingan ungefär Φ=πa²B_z(z), där dipolens axelfält är B_z=μ0m/(2πz³). Använd kedjeregeln dΦ/dt=(dΦ/dz)v.',
-            'I del (b) beräknas ε=∮(v×B)·dℓ i dipolens stillastående system. På slingans rand behövs det lilla radiella fältet B_R≈3μ0ma/(4πz⁴), inte bara det axiella fältet.',
+            'I del (b) beräknas ε_ems=∮(v×B)·dℓ i dipolens stillastående system. På slingans rand behövs det lilla radiella fältet B_R≈3μ0ma/(4πz⁴), inte bara det axiella fältet.',
             'Eftersom ẑ×R̂=φ̂ bidrar vB_R längs hela omkretsen 2πa. Jämför med −dΦ/dt. För m>0 och v>0 minskar det positiva flödet, så den positiva emk:n försöker bevara det enligt Lenz lag.',
         ),
         self_checks=(

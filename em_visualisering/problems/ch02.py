@@ -162,7 +162,7 @@ class ChargedRingAxis(ProblemBase):
 class FiniteLineCharge2D(ProblemBase):
     name = '2.3 Ändlig linjeladdning (2-D-snitt)'
     description = 'Smal rak tråd med konstant linjeladdningstäthet längs z-axeln från z=-b till z=+a. Visar antingen en 2-D-fältkarta i xz-planet eller potential/equipotentialer.'
-    parameters = [('rho_l', 'Linjeladdningstäthet λ [C/m]', 1e-09), ('a', 'Höger längd a [m]', 0.4), ('b', 'Vänster längd b [m]', 0.3), ('xmax', 'x-utsträckning [m]', 0.4), ('zmax', 'z-utsträckning [m]', 0.5), ('grid_n', 'Rutnätsstorlek N', 81)]
+    parameters = [('rho_l', 'Linjeladdningstäthet ρℓ [C/m]', 1e-09), ('a', 'Höger längd a [m]', 0.4), ('b', 'Vänster längd b [m]', 0.3), ('xmax', 'x-utsträckning [m]', 0.4), ('zmax', 'z-utsträckning [m]', 0.5), ('grid_n', 'Rutnätsstorlek N', 81)]
 
     def validate(self, params):
         if params['a'] <= 0 or params['b'] <= 0 or params['xmax'] <= 0 or (params['zmax'] <= 0):

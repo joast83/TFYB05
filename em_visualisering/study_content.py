@@ -42,7 +42,7 @@ METHOD_META = {    'force_balance': MethodMeta('Kraftjämvikt och vektorkomponen
     'vector_potential': MethodMeta('Magnetisk vektorpotential A', 'Bestäm först vektorpotentialen från en strömfördelning och beräkna sedan B = ∇ × A.', 'Vektorpotential, rotation och val av koordinatsystem.'),
     'dipole_approximation': MethodMeta('Magnetisk dipolapproximation', 'Jämför det exakta magnetfältet med dess fjärrfältsutveckling och definiera ett relativt fel.', 'Dimensionslösa kvoter, asymptotiska approximationer och felvillkor.'),
     'biot_savart': MethodMeta('Biot–Savarts lag', 'Parametrisera ledaren eller strömfördelningen och skriv dℓ × R-vektorn innan du integrerar.', 'Korsprodukt, parametrisering av kurva/yta, separationsvektor och komponentsymmetri.'),
-    'magnetic_moment': MethodMeta('Magnetiskt dipolmoment och vridmoment', 'Identifiera eller bygg det magnetiska momentet och koppla det till B-fältet och relevant korsprodukt.', 'Korsprodukter, vektorvinklar, riktning enligt högerhandsregeln och dipolapproximation.'),
+    'magnetic_moment': MethodMeta('Magnetiskt dipolmoment och kraftmoment', 'Identifiera eller bygg det magnetiska momentet och koppla det till B-fältet och relevant korsprodukt.', 'Korsprodukter, vektorvinklar, riktning enligt högerhandsregeln och dipolapproximation.'),
     'magnetic_flux': MethodMeta('Magnetiskt flöde', 'Välj en lämplig yta och beräkna B·dS; byt yta om ∇·B = 0 gör en annan yta enklare.', 'Ytparametrisering, normalvektor, skalärprodukt och eventuella ytsubstitutioner.'),
     'magnetic_circuit': MethodMeta('Magnetisk krets och reluktans', 'Översätt geometrin till magnetomotorisk spänning, reluktanser och gemensamma eller förgrenade flöden.', 'Serie-/parallellkoppling, flödeskontinuitet och vid behov lösning av en icke-linjär algebraisk ekvation.'),
     'ampere_material': MethodMeta('Ampères lag för H och materialrelationer', 'Bestäm H från fri ström först; använd sedan materialrelationerna för att få B och M styckvis.', 'Cirkulationsintegral, styckvisa radialområden och separation mellan H, B och M.'),
@@ -152,7 +152,7 @@ PROBLEM_STATEMENTS = {'2.1': 'Två små kulor, vardera med massa m och laddning 
         'ytan. Beräkna potentialen på olika avstånd från sfärens centrum. (Referens på '
         'oändligt avstånd.) Uppgiften kan lätt lösas med Gauss sats men det är intressant '
         'att se att vi kommer fram till samma resultat med hjälp av\n\n'
-        '$$V(\\mathbf r)=\\int_{\\text{källområdet}}\\frac{dQ\\prime}{4\\pi\\varepsilon_0\\lvert\\mathbf r-\\mathbf r\\prime\\rvert}.$$\n\n'
+        '$$V(\\overline{r})=\\int_{\\text{källområdet}}\\frac{dQ^{\\prime}}{4\\pi\\varepsilon_0\\lvert\\overline{r}-\\overline{r}^{\\prime}\\rvert}.$$\n\n'
         'Här avser källområdet den laddade ytan. Genomför denna räkning.',
  '2.6': 'Två långa koncentriska cylindrar med radie a respektive b, b > a, ges en ytladdningstäthet ρsa respektive ρsb '
         '. Bestäm elektriska fältstyrkan som funktion av avståndet R från cylindrarnas symmetriaxel.',

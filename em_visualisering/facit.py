@@ -20,36 +20,36 @@ $$
 """,
     "2.2": r"""
 $$
-\mathbf E=
+\overline{E}=
 \frac{Q}{4\pi\varepsilon_0}
-\frac{z}{(z^2+a^2)^{3/2}}\,\hat{\mathbf z}.
+\frac{z}{(z^2+a^2)^{3/2}}\,\hat{z}.
 $$
 """,
     "2.3": r"""
 **(a)**
 $$
-\mathbf E=\frac{\rho_\ell}{4\pi\varepsilon_0}
+\overline{E}=\frac{\rho_\ell}{4\pi\varepsilon_0}
 \left\{
 \frac{1}{x}\left[
 \frac{a}{\sqrt{a^2+x^2}}+
 \frac{b}{\sqrt{b^2+x^2}}
-\right]\hat{\mathbf x}
+\right]\hat{x}
 +
 \left[
 \frac{1}{\sqrt{a^2+x^2}}-
 \frac{1}{\sqrt{b^2+x^2}}
-\right]\hat{\mathbf z}
+\right]\hat{z}
 \right\}.
 $$
 
 **(b)**
 $$
-\mathbf E=\frac{\rho_\ell}{2\pi x\varepsilon_0}\,\hat{\mathbf x}.
+\overline{E}=\frac{\rho_\ell}{2\pi x\varepsilon_0}\,\hat{x}.
 $$
 """,
     "2.4": r"""
 $$
-\mathbf E=\frac{\rho_s}{2\varepsilon_0}
+\overline{E}=\frac{\rho_s}{2\varepsilon_0}
 \left\{
 -\frac{1}{\pi}
 \left[
@@ -57,11 +57,11 @@ $$
 \frac{\sqrt{a^2+z^2}+a}{z}
 \right|
 -\frac{a}{\sqrt{a^2+z^2}}
-\right]\hat{\mathbf y}
+\right]\hat{y}
 +
 \frac12\left[
 \frac{z}{|z|}-\frac{z}{\sqrt{a^2+z^2}}
-\right]\hat{\mathbf z}
+\right]\hat{z}
 \right\}.
 $$
 
@@ -78,11 +78,11 @@ $$
 """,
     "2.6": r"""
 $$
-\mathbf E=
+\overline{E}=
 \begin{cases}
 0, & R<a,\\[4pt]
-\dfrac{\rho_{sa}a}{\varepsilon_0R}\,\hat{\mathbf R}, & a<R<b,\\[8pt]
-\dfrac{\rho_{sa}a+\rho_{sb}b}{\varepsilon_0R}\,\hat{\mathbf R}, & R>b.
+\dfrac{\rho_{sa}a}{\varepsilon_0R}\,\hat{R}, & a<R<b,\\[8pt]
+\dfrac{\rho_{sa}a+\rho_{sb}b}{\varepsilon_0R}\,\hat{R}, & R>b.
 \end{cases}
 $$
 """,
@@ -115,18 +115,18 @@ Facit anger Gauss sats som metod.
 """,
     "2.10": r"""
 $$
-\mathbf E=
+\overline{E}=
 \frac{\rho}{3\varepsilon_0}
 \left[
 \frac{b^3}{x^2}
 -
 \frac{a^3}{(x+d)^2}
-\right]\hat{\mathbf x}.
+\right]\hat{x}.
 $$
 """,
     "2.11": r"""
 $$
-|\mathbf E|=
+|\overline{E}|=
 \frac{2}{a+b}\,
 \frac{U}{\ln(b/a)}.
 $$
@@ -228,15 +228,15 @@ $$
     "3.7": r"""
 För $r>b$:
 $$
-\mathbf E(r)=\frac{\rho_0(b^3-a^3)}{3\varepsilon_0r^2}\hat{\mathbf r},
+\overline{E}(r)=\frac{\rho_0(b^3-a^3)}{3\varepsilon_0r^2}\hat{r},
 \qquad
 V(r)=\frac{\rho_0(b^3-a^3)}{3\varepsilon_0r}.
 $$
 
 För $a<r<b$:
 $$
-\mathbf E(r)=
-\frac{\rho_0(r^3-a^3)}{3\varepsilon_0\varepsilon_rr^2}\hat{\mathbf r},
+\overline{E}(r)=
+\frac{\rho_0(r^3-a^3)}{3\varepsilon_0\varepsilon_rr^2}\hat{r},
 $$
 $$
 V(r)=\frac{\rho_0}{3\varepsilon_0\varepsilon_r}
@@ -250,7 +250,7 @@ $$
 
 För $0\le r<a$:
 $$
-\mathbf E=0,
+\overline{E}=0,
 $$
 $$
 V(r)=\frac{\rho_0}{3\varepsilon_0\varepsilon_r}
@@ -263,23 +263,23 @@ $$
 """,
     "3.9": r"""
 $$
-\mathbf E=
+\overline{E}=
 \frac{Q}{2\pi\varepsilon_0(\varepsilon_1+\varepsilon_2)}
-\frac{\hat{\mathbf r}}{r^2}.
+\frac{\hat{r}}{r^2}.
 $$
 
 I den högra halvan:
 $$
-\mathbf D=
+\overline{D}=
 \frac{\varepsilon_1}{\varepsilon_1+\varepsilon_2}
-\frac{Q\hat{\mathbf r}}{2\pi r^2}.
+\frac{Q\hat{r}}{2\pi r^2}.
 $$
 
 I den vänstra halvan:
 $$
-\mathbf D=
+\overline{D}=
 \frac{\varepsilon_2}{\varepsilon_1+\varepsilon_2}
-\frac{Q\hat{\mathbf r}}{2\pi r^2}.
+\frac{Q\hat{r}}{2\pi r^2}.
 $$
 """,
     "3.11": r"""
@@ -341,61 +341,61 @@ med negativt tecken på dielektrikumets övre yta.
     "3.18": r"""
 **(a)** För $z<0$ och $z>h$:
 $$
-\mathbf E=
+\overline{E}=
 \frac{P}{2\varepsilon_0}
 \left[
 \frac{z}{\sqrt{a^2+z^2}}
 -
 \frac{z-h}{\sqrt{a^2+(z-h)^2}}
-\right]\hat{\mathbf z}.
+\right]\hat{z}.
 $$
 För $0<z<h$:
 $$
-\mathbf E=
+\overline{E}=
 \frac{P}{2\varepsilon_0}
 \left[
 -2+
 \frac{z}{\sqrt{a^2+z^2}}
 -
 \frac{z-h}{\sqrt{a^2+(z-h)^2}}
-\right]\hat{\mathbf z}.
+\right]\hat{z}.
 $$
 
 **(b)** För alla $z$:
 $$
-\mathbf D=
+\overline{D}=
 \frac{P}{2}
 \left[
 \frac{z}{\sqrt{a^2+z^2}}
 -
 \frac{z-h}{\sqrt{a^2+(z-h)^2}}
-\right]\hat{\mathbf z}.
+\right]\hat{z}.
 $$
 $D$ är kontinuerligt.
 
 **(c)** När $a\gg h$:
 $$
-\mathbf E=-\frac{P}{\varepsilon_0}\hat{\mathbf z},
+\overline{E}=-\frac{P}{\varepsilon_0}\hat{z},
 \qquad
-\mathbf D=0
+\overline{D}=0
 \quad (0<z<h),
 $$
 och utanför är $E=D=0$.
 
 **(d)** För fria ytladdningar blir
 $$
-\mathbf D=-P\hat{\mathbf z}
+\overline{D}=-P\hat{z}
 \quad (0<z<h).
 $$
 För övrigt är $E$ och $D$ som för elektreten.
 """,
     "3.19": r"""
 $$
-\mathbf D=
+\overline{D}=
 \rho_s\,
-\frac{b\hat{\mathbf x}+a\hat{\mathbf y}}{\sqrt{a^2+b^2}},
+\frac{b\hat{x}+a\hat{y}}{\sqrt{a^2+b^2}},
 \qquad
-\mathbf E=\frac{\mathbf D}{\varepsilon_0\varepsilon_r}.
+\overline{E}=\frac{\overline{D}}{\varepsilon_0\varepsilon_r}.
 $$
 """,
 
@@ -524,41 +524,41 @@ $$
     "6.1": r"""
 **(a)**
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0I}{4\pi R}
 \left[
 \frac{L-z}{\sqrt{(L-z)^2+R^2}}
 +
 \frac{L+z}{\sqrt{(L+z)^2+R^2}}
-\right]\hat{\boldsymbol\phi}.
+\right]\hat{\varphi}.
 $$
 När $L\to\infty$:
 $$
-\mathbf B\to
-\frac{\mu_0I}{2\pi R}\hat{\boldsymbol\phi}.
+\overline{B}\to
+\frac{\mu_0I}{2\pi R}\hat{\varphi}.
 $$
 
 **(b)** För $z=0$:
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0I}{2\pi R}
 \frac{L}{\sqrt{L^2+R^2}}
-\hat{\boldsymbol\phi}.
+\hat{\varphi}.
 $$
 
 **(c)**
 $$
-\mathbf B=
-\frac{\mu_0I}{2\pi R}\hat{\boldsymbol\phi}.
+\overline{B}=
+\frac{\mu_0I}{2\pi R}\hat{\varphi}.
 $$
 """,
     "6.2": r"""
 **(a)**
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0Ia^2}
 {2\pi\left(z^2+a^2/4\right)\sqrt{z^2+a^2/2}}
-\,\hat{\mathbf z}.
+\,\hat{z}.
 $$
 
 **(b)**
@@ -592,34 +592,34 @@ $$
     "6.8": r"""
 **(a)**
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0I}{4\pi}
 \frac{a}{(a^2+z^2)^{3/2}}
 \left(
-z\hat{\mathbf x}
+z\hat{x}
 +
-z\hat{\mathbf y}
+z\hat{y}
 +
-\frac{a\pi}{2}\hat{\mathbf z}
+\frac{a\pi}{2}\hat{z}
 \right).
 $$
 
 **(b)**
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0I}{2}
 \frac{a^2}{(a^2+z^2)^{3/2}}
-\hat{\mathbf z}.
+\hat{z}.
 $$
 """,
     "6.13": r"""
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0\rho_s\omega}{2}
 \left[
 \frac{a^2+2z^2}{\sqrt{a^2+z^2}}
 -2|z|
-\right]\hat{\mathbf z}.
+\right]\hat{z}.
 $$
 """,
 
@@ -627,18 +627,18 @@ $$
     # Kapitel 7
     # ------------------------------------------------------------------
     "7.1": r"""
-Om elektronens rörelse sker i positiv omloppsriktning relativt $\hat{\mathbf z}$:
+Om elektronens rörelse sker i positiv omloppsriktning relativt $\hat{z}$:
 $$
-\mathbf m=-\frac12eva\,\hat{\mathbf z}.
+\overline{m}=-\frac12eva\,\hat{z}.
 $$
 """,
     "7.2": r"""
 **(a)**
 $$
-\mathbf T=\pi IBa^2\,\hat{\mathbf y}.
+\overline{T}=\pi IBa^2\,\hat{y}.
 $$
 
-**(b)** Samma resultat fås från $\mathbf T=\mathbf m\times\mathbf B$.
+**(b)** Samma resultat fås från $\overline{T}=\overline{m}\times\overline{B}$.
 
 **(c)** Riktningen stämmer med magnetnålsbilden.
 """,
@@ -707,19 +707,19 @@ $$
     "8.5": r"""
 För både koppar och järn bestäms $H$ av den fria strömmen:
 $$
-\mathbf H=
+\overline{H}=
 \begin{cases}
 0, & R<a,\\[4pt]
-\dfrac{I(R^2-a^2)}{2\pi R(b^2-a^2)}\,\hat{\boldsymbol\phi},
+\dfrac{I(R^2-a^2)}{2\pi R(b^2-a^2)}\,\hat{\varphi},
 & a<R<b,\\[8pt]
-\dfrac{I}{2\pi R}\,\hat{\boldsymbol\phi},
+\dfrac{I}{2\pi R}\,\hat{\varphi},
 & R>b.
 \end{cases}
 $$
 
 **(a) Koppar**
 $$
-\mathbf B=\mu_0\mathbf H,\qquad \mathbf M=0
+\overline{B}=\mu_0\overline{H},\qquad \overline{M}=0
 $$
 för alla $R$.
 
@@ -727,13 +727,13 @@ för alla $R$.
 
 För $a<R<b$:
 $$
-\mathbf B=\mu_0\mu_r\mathbf H,
+\overline{B}=\mu_0\mu_r\overline{H},
 \qquad
-\mathbf M=(\mu_r-1)\mathbf H.
+\overline{M}=(\mu_r-1)\overline{H}.
 $$
 För $R<a$ och $R>b$:
 $$
-\mathbf B=\mu_0\mathbf H,\qquad \mathbf M=0.
+\overline{B}=\mu_0\overline{H},\qquad \overline{M}=0.
 $$
 """,
     "8.6": r"""
@@ -744,40 +744,40 @@ $$
     "8.12": r"""
 **(a)**
 $$
-\mathbf B=
+\overline{B}=
 \frac{\mu_0M}{2}
 \left[
 \frac{z}{\sqrt{a^2+z^2}}
 -
 \frac{z-h}{\sqrt{a^2+(z-h)^2}}
-\right]\hat{\mathbf z}.
+\right]\hat{z}.
 $$
 
 **(b)**
 $$
-\mathbf H=
+\overline{H}=
 \begin{cases}
-\mathbf B/\mu_0-M\hat{\mathbf z}, & 0<z<h,\\
-\mathbf B/\mu_0, & \text{annars}.
+\overline{B}/\mu_0-M\hat{z}, & 0<z<h,\\
+\overline{B}/\mu_0, & \text{annars}.
 \end{cases}
 $$
 
 **(c)** När $a$ är mycket stor:
 $$
-\mathbf H=-M\hat{\mathbf z}\quad (0<z<h),
+\overline{H}=-M\hat{z}\quad (0<z<h),
 $$
 och för övrigt är alla fält noll; även $B=0$.
 """,
     "8.13": r"""
 **(a)**
 $$
-\mathbf J_m=
-\frac{I}{\pi a^2}(\mu_r-1)\hat{\mathbf z}
+\overline{J}_m=
+\frac{I}{\pi a^2}(\mu_r-1)\hat{z}
 \qquad (R<a),
 $$
 $$
-\mathbf J_{sm}=
--\frac{I}{2\pi a}(\mu_r-1)\hat{\mathbf z}
+\overline{J}_{sm}=
+-\frac{I}{2\pi a}(\mu_r-1)\hat{z}
 \qquad (R=a).
 $$
 
@@ -819,7 +819,7 @@ $$
     "9.14": r"""
 Båda beskrivningssätten ger samma elektromotoriska spänning:
 $$
-\mathcal E=
+\varepsilon_{\mathrm{ems}}=
 \frac{3\mu_0ma^2v}{2z^4}.
 $$
 """,
@@ -829,29 +829,29 @@ $$
     # ------------------------------------------------------------------
     "10.2": r"""
 $$
-\mathbf J_F\equiv\frac{\partial\mathbf D}{\partial t}
+\overline{J}_F\equiv\frac{\partial\overline{D}}{\partial t}
 =
 \frac{I_0}{A}\sin(\omega t).
 $$
 """,
     "10.3": r"""
 $$
-\mathbf J(r,t)=
+\overline{J}(r,t)=
 -\frac{1}{r^2}
 \left[
 \int_0^r
 \frac{\partial\rho(r',t)}{\partial t}(r')^2\,dr'
-\right]\hat{\mathbf r},
+\right]\hat{r},
 $$
 $$
-\mathbf J_F\equiv\frac{\partial\mathbf D}{\partial t}=-\mathbf J.
+\overline{J}_F\equiv\frac{\partial\overline{D}}{\partial t}=-\overline{J}.
 $$
 
 Därför är
 $$
-\mathbf B=0
+\overline{B}=0
 $$
-en lösning trots att $\mathbf J\ne0$.
+en lösning trots att $\overline{J}\ne0$.
 """,
 }
 
