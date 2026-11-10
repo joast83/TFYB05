@@ -55,3 +55,19 @@ Exempel: 2.4 visar hur en källintegral byggs upp; 2.8 visar samma läsordning
 för Gauss lag, innesluten laddning och en styckvis potentialintegral.
 Kontrollera både matematikblock och omgivande text vid ändringar;
 `tests/test_universal_display_math.py` täcker alla 65 uppgifternas hjälpfält.
+
+## Integralform som gemensam utgångspunkt
+
+Startlagar och lösningsvägledning använder Gauss lag som flöde genom en
+sluten yta och Ampères lag som cirkulation längs en sluten kurva. Behåll
+integralformen även när laddnings- eller strömtäthet söks: jämför flödet
+med den inneslutna laddningen, eller cirkulationen med strömmen genom ytan.
+Ange yta/kurva, normalriktningar och symmetri innan integralen förenklas.
+För ett skal bidrar både den yttre och den inre manteln, med motsatta tecken.
+
+Samma arbetssätt gäller bundna laddningar och magnetiseringsströmmar samt
+laddningsbevarande och Ampère–Maxwells lag. Tidsderivator i induktion och
+förskjutningsström behövs fortfarande. Derivator för potentialer (uttryckligen
+begärda i 6.1), geometriska normaler och optimering är separata beräkningssteg;
+de innebär inte att Gauss eller Ampères lag byts till differentialform.
+Originaluppgifter och det reproducerade formelbladet behåller originaltexten.
