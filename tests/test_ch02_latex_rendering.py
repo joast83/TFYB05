@@ -44,6 +44,6 @@ def test_continuous_charge_hints_keep_the_problem_booklets_notation():
         assert r"\overline E(\overline r)" in by_id[pid].start_here
         assert r"\mathrm dQ^{\prime}" in by_id[pid].start_here
     assert r"\frac{\mathrm dQ^{\prime}}" in by_id["2.5"].start_here
-    assert r"\rho_{\ell}" in by_id["2.2"].hints[0]
+    assert r"\rho_\ell" in by_id["2.2"].hints[0]
     assert r"\rho_s" in by_id["2.4"].hints[0]
     assert r"\int_0^d" in by_id["2.19"].start_here

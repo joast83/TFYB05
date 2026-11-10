@@ -25,3 +25,33 @@ matematiksättning används vanliga bokstäver och läsbara index.
 När samlingen använder ε₁ och ε₂ för relativa permittiviteter gäller
 ε = ε₀ εᵣ för den absoluta permittiviteten. Behåll uppgiftens val av U
 eller V för spänning och ange referens/riktning när tecknet spelar roll.
+
+## Matematik i ledtrådar och riktad hjälp
+
+Samma standard gäller för alla kapitel, även uppställningshjälp,
+vektor-/geometrihjälp, resultatkontroller och vanliga fel:
+
+- Skriv matematiska uttryck i LaTeX. Använd `$...$` för korta symboler,
+  komponenter och villkor i en mening. Skriv inte exempelvis `E_r=Q/(4πε0r²)`
+  som vanlig text.
+- Lägg centrala uppställningar, integraler och längre bråk i egna `$$`-block
+  med tomma rader före och efter. Introducera formeln med en kort mening och
+  förklara efteråt vad studenten ska sätta in eller lösa ut.
+- Samla relaterade ekvationer i `aligned`, en ekvation per rad. Använd `cases`
+  för områdesvisa storheter. Dela långa summor och integraler i flera rader
+  i stället för att rada upp allt horisontellt.
+- Behåll uppgiftens symboler. Skilj vektorer från belopp/komponenter och
+  integrationsvariabel från observationskoordinat. Skriv differentialer
+  med `\mathrm d`, funktioner med exempelvis `\sin` och `\ln`, och svenska
+  ord i index med `\text{...}`.
+- Använd råa Python-strängar (`r"""..."""`) för LaTeX så att `\frac`,
+  `\theta` och liknande inte blir kontrolltecken. Lämna ett mellanslag efter
+  kommandon när nästa faktor är en bokstav: `\rho_\ell L`, inte `\rho_\ellL`.
+- Lägg inte in en ekvation bara för att fylla en kvot. En rent geometrisk
+  eller begreppslig ledtråd kan vara vanlig text. Behåll de progressiva
+  stegen och undvik att visa ett senare lösningssteg för tidigt.
+
+Exempel: 2.4 visar hur en källintegral byggs upp; 2.8 visar samma läsordning
+för Gauss lag, innesluten laddning och en styckvis potentialintegral.
+Kontrollera både matematikblock och omgivande text vid ändringar;
+`tests/test_universal_display_math.py` täcker alla 65 uppgifternas hjälpfält.

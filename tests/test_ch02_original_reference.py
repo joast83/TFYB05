@@ -34,4 +34,4 @@ def test_problem_2_19_preserves_v0_boundary_condition():
     question = PROBLEM_STATEMENTS["2.19"]
     assert "V0" in question
     guide = guidance_for_class_name("UniformSpaceChargePlates")
-    assert "0<x0<d" in guide.hints[2]
+    assert "0<x_0<d" in guide.hints[2]
