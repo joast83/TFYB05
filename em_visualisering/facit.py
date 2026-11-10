@@ -189,6 +189,17 @@ där $x$ är avståndet från plattan med potential $V_0$.
 $$
 |V_0|\le \frac{\rho_0d^2}{2\varepsilon_0}.
 $$
+
+**Kommentar till det tryckta facit:** Villkoret ovan förutsätter positiv
+$\rho_0$ och räknar även med nollställen på plattornas ytor. För
+$\rho_0\ne0$ och ett nollställe **strikt mellan plattorna** gäller i stället
+$$
+|V_0|<\frac{|\rho_0|d^2}{2\varepsilon_0}.
+$$
+Likhet placerar nollstället på en av ytorna. Absolutbeloppet gör villkoret
+giltigt även för negativ laddningstäthet. För $\rho_0=0$ kan uttrycket i
+(a) inte användas: då är $E_x=V_0/d$ konstant och noll överallt endast om
+$V_0=0$.
 """,
 
     # ------------------------------------------------------------------
@@ -209,6 +220,15 @@ $$
 \frac{ed}{4\pi\varepsilon_0r_0^3},
 $$
 där $e$ är elementarladdningen.
+
+**Kommentar till det tryckta facit:** Med uppgiftens $d=0{,}218\,\text{Å}$
+och $r_0=10\,\text{Å}$ ger det exakta Coulombfältet längs $z$-axeln
+$$
+|E_z|\approx6{,}28\times10^7\ \mathrm{V/m}.
+$$
+Det avrundas till **$6{,}3\times10^7\ \mathrm{V/m}$** med två värdesiffror,
+inte det tryckta värdet $6{,}2\times10^7\ \mathrm{V/m}$ ovan.
+Värdet längs $y$-axeln, $3{,}1\times10^7\ \mathrm{V/m}$, är korrekt avrundat.
 """,
     "3.3": r"""
 $$
