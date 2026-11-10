@@ -561,7 +561,7 @@ Efter förbindelsen används samma uppställning med de nya laddningarna $q_a$ o
     ),
     "AtmosphericChargeDensity": G(
         problem_id="2.9",
-        learning_goal="Översätta en observerad fältändring till medelladdning via Gauss lag/divergens.",
+        learning_goal=r"""Översätta en observerad fältändring till medelladdning via flödet genom en sluten Gaussyta.""",
         concepts=("Gauss lag", "fältgradient", "teckenkonvention"),
         start_here=r'Skriv Gauss lag $\oint_S\overline{E}\cdot\mathrm d\overline{S}=\frac{Q_{\mathrm{in}}}{\varepsilon_0}$ och medelladdningstätheten $\langle\rho\rangle=Q_{\mathrm{in}}/\text{volym}$. Här är fälten givna och laddningen söks. Identifiera ytornas normaler och fältens signerade komponenter innan de sätts in.',
         hint_titles=('Välj riktning och yta', 'Tecknen på topp och botten', 'Från laddning till medeltäthet'),
@@ -744,23 +744,38 @@ Genomslagsvillkoret gäller belopp, medan potentialen behåller laddningens teck
     ),
     "CoaxialTubeSpaceCharge": G(
         problem_id="2.13",
-        learning_goal="Lösa Poisson/Gauss-problemet i cylindrisk geometri när det finns en konstant rymdladdning.",
+        learning_goal=r"""Använda Gauss lag på ett cylindriskt skal och bestämma rymdladdningen från randvillkoren.""",
         concepts=("rymdladdning", "cylindrisk Gauss lag", "randvillkor"),
-        start_here=r'Skriv Gauss lag $\nabla\cdot\overline E=\frac{\rho}{\varepsilon_0}$ och $V(b)-V(a)=-\int_a^b\overline E\cdot\mathrm d\overline\ell$. Identifiera den konstanta, okända tätheten ρ, cylindersymmetrin och randvillkoren $E_R(a)=0$, $V(a)=0$ och $V(b)=U$.',
-        hint_titles=('Förenkla divergensen', 'Använd fältvillkoret vid katoden', 'Bestäm molnets totala laddning'),
+        start_here=r"""Skriv Gauss lag $\oint_S\overline E\cdot\mathrm d\overline S=Q_{\mathrm{in}}/\varepsilon_0$. Välj en sluten skalformad yta i gapet mellan radierna $a$ och $R$. Använd $E_R(a)=0$ och därefter $V(b)-V(a)=-\int_a^b E_R\,\mathrm dR=U$.""",
+        hint_titles=('Välj en sluten Gaussyta i gapet', 'Använd fältvillkoret vid katoden', 'Bestäm molnets totala laddning'),
         hints=(
-            r"""Cylindersymmetri och försummade ändeffekter ger $\overline E=E_R(R)\hat R$. Gauss lag blir då
+            r"""Välj ett cylindriskt skal med längd $L$, innerradie $a$ och ytterradie $R$, där $a<R<b$. Innergränsen tas precis utanför katoden. Cylindersymmetrin ger $\overline E=E_R(R)\hat R$; ändytorna ger inget flöde.
+
+Gauss lag för den slutna skalytan blir
 
 $$
-\frac{1}{R}\frac{\mathrm d(RE_R)}{\mathrm dR}=\frac{\rho}{\varepsilon_0}.
+\oint_S\overline E\cdot\mathrm d\overline S
+=\frac{Q_{\mathrm{in}}}{\varepsilon_0}.
 $$
 
-Integrera med avseende på $R$:
+Den yttre manteln har normal $+\hat R$, den inre $-\hat R$. Därför får du
 
 $$
-E_R=\frac{\rho R}{2\varepsilon_0}+\frac{C}{R}.
-$$""",
-            r"""Sätt in $E_R(a)=0$ för att bestämma C. Detta ger fältet i gapet som funktion av den ännu okända tätheten $\rho$.""",
+\begin{aligned}
+\oint_S\overline E\cdot\mathrm d\overline S
+&=2\pi RL E_R(R)-2\pi aL E_R(a),\\
+Q_{\mathrm{in}}&=\rho\pi(R^2-a^2)L.
+\end{aligned}
+$$
+
+Ytan omsluter bara molnladdningen i skalet, inte katodens metall.""",
+            r"""Sätt in randvillkoret $E_R(a)=0$ i flödesekvationen:
+
+$$
+2\pi RL E_R(R)=\frac{\rho\pi(R^2-a^2)L}{\varepsilon_0}.
+$$
+
+Förkorta $L$ och lös efter $E_R(R)$. Fältet i gapet är nu uttryckt med den ännu okända laddningstätheten $\rho$.""",
             r"""Sätt fältet i
 
 $$
@@ -781,25 +796,22 @@ Med denna spänning ska $\rho$ och molnets totala laddning vara negativa.""",
         ),
         common_pitfall=r"Att använda det laddningsfria koaxialfältet $C/R$ trots att området innehåller konstant rymdladdning.",
         geometry_hint='R löper från katodens radie a till anodens radie b. Molnet fyller ett cylindriskt skal, så dess volym är skillnaden mellan två cylindervolymer. Modellen försummar ändeffekter.',
-        setup_hint=r"""Börja med
+        setup_hint=r"""Sätt in flödet genom skalytan och dess inneslutna laddning i Gauss lag. Med $E_R(a)=0$ får du
 
 $$
-\frac{\mathrm d(RE_R)}{\mathrm dR}=\frac{\rho R}{\varepsilon_0}.
+\begin{aligned}
+2\pi RL E_R(R)&=\frac{\rho\pi(R^2-a^2)L}{\varepsilon_0},\\
+E_R(R)&=\frac{\rho}{2\varepsilon_0}\left(R-\frac{a^2}{R}\right).
+\end{aligned}
 $$
 
-Efter integration och $E_R(a)=0$ är
+Bestäm sedan $\rho$ ur potentialskillnaden
 
 $$
-E_R=\frac{\rho}{2\varepsilon_0}\left(R-\frac{a^2}{R}\right).
+U=-\int_a^b E_R\,\mathrm dR.
 $$
 
-Bestäm $\rho$ ur
-
-$$
-U=-\int_a^b E_R\,\mathrm dR
-$$
-
-och använd sedan molnets hela volym.""",
+Molnets hela volym är $\pi(b^2-a^2)\ell$. Hjälpytans längd $L$ är godtycklig; $\ell$ är rörets längd i uppgiften.""",
     ),
     "RadialChargeSphere": G(
         problem_id="2.16",
@@ -887,29 +899,35 @@ Kombinera ekvationerna för att bestämma $Q$.""",
     ),
     "UniformSpaceChargePlates": G(
         problem_id="2.19",
-        learning_goal="Kombinera Poissons ekvation med en föreskriven potentialskillnad och sedan lokalisera E=0.",
-        concepts=("Poissons ekvation", "1D-fält", "randvillkor"),
-        start_here=r'Skriv Gauss lag $\nabla\cdot\overline E=\frac{\rho_0}{\varepsilon_0}$ och $V(d)-V(0)=-\int_0^dE_x\,\mathrm dx$. Välj $x=0$ vid plattan med V0 och $x=d$ vid jord. Plansymmetrin ger $\overline E=E_x(x)\,\hat x$; bestäm denna funktion innan du söker dess nollställe.',
-        hint_titles=('Fältets lutning', 'Bestäm integrationskonstanten', 'Ligger nollstället i gapet?'),
+        learning_goal=r"""Kombinera Gauss lag för en sluten box med potentialskillnaden och lokalisera fältets nollställe.""",
+        concepts=('Gauss lag', 'plansymmetri', 'randvillkor'),
+        start_here=r"""Skriv $\oint_S\overline E\cdot\mathrm d\overline S=Q_{\mathrm{in}}/\varepsilon_0$ och $V(d)-V(0)=-\int_0^d E_x\,\mathrm dx$. Välj $x=0$ vid plattan med potential $V_0$. Använd en sluten box i gapet för att bestämma skillnaden mellan fältet vid två positioner.""",
+        hint_titles=('Flödet genom en box i gapet', 'Bestäm fältet vid den första plattan', 'Ligger nollstället i gapet?'),
         hints=(
-            r"""Eftersom fältet endast varierar tvärs plattorna reduceras Gauss lag till
+            r"""Välj en box med tvärsnittsarea $A$ mellan $x=0^+$ och en punkt $x$ i gapet. Låt $C=E_x(0^+)$ vara det okända fältet precis utanför den första plattan. Plansymmetrin gör sidoytornas flöde noll. Gauss lag ger
 
 $$
-\frac{\mathrm dE_x}{\mathrm dx}=\frac{\rho_0}{\varepsilon_0}.
+\begin{aligned}
+\oint_S\overline E\cdot\mathrm d\overline S
+&=A E_x(x)-AC,\\
+Q_{\mathrm{in}}&=\rho_0Ax.
+\end{aligned}
 $$
 
-Integrera för att få fältet som funktion av positionen:
+Sätt flödet lika med $Q_{\mathrm{in}}/\varepsilon_0$ och lös efter fältet:
 
 $$
-E_x=\frac{\rho_0x}{\varepsilon_0}+C.
-$$""",
-            r"""Sätt in $V(0)=V_0$ och $V(d)=0$ i potentialskillnaden:
-
-$$
-\int_0^dE_x\,\mathrm dx=V_0.
+E_x(x)=C+\frac{\rho_0x}{\varepsilon_0}.
 $$
 
-Bestäm C ur denna ekvation; tätheten ensam bestämmer inte hela fältet.""",
+Boxen ligger i gapet och omsluter inte plattans ytladdning.""",
+            r"""Använd potentialerna $V(0)=V_0$ och $V(d)=0$:
+
+$$
+\int_0^d E_x(x)\,\mathrm dx=V_0.
+$$
+
+Sätt in fältet från Gauss lag och bestäm $C=E_x(0^+)$. Molnets täthet bestämmer fältskillnaden; potentialskillnaden bestämmer också fältets nivå.""",
             r'För $\rho_0\neq0$, lös $E_x(x_0)=0$. Kräv därefter $0<x_0<d$ för ett nollställe strikt mellan plattorna; $x_0=0$ eller d är gränsfall på ytorna. Hantera $\rho_0=0$ separat.',
         ),
         self_checks=(
@@ -1481,16 +1499,22 @@ på dielektrikumet med respektive utåtnormal.""",
         problem_id="3.18",
         learning_goal="Ersätta en homogen polarisation med dess bundna laddningar och sedan använda superposition.",
         concepts=("elektret", "bunden laddning", "fält från skiva"),
-        start_here='Skriv ρ_p=−∇·P och ρ_sp=P·n för att bestämma källaddningarna. Använd sedan E(r)=(1/4πε₀)∫[(r−r′)/|r−r′|³] dQ′ och D=ε₀E+P. Identifiera dQ′ och separationsvektorn från den givna polarisationen P=Pẑ.',
+        start_here=r"""Bestäm den bundna laddningen med $Q_{p,\mathrm{in}}=-\oint_S\overline P\cdot\mathrm d\overline S$ och ytladdningen med $\rho_{sp}=\overline P\cdot\hat n$. För homogen polarisation ger varje sluten yta helt inne i materialet noll nettoflöde. Använd sedan Coulombintegralen för ändytornas laddningar och $\overline D=\varepsilon_0\overline E+\overline P$.""",
         hint_titles=('Vilka ytor bär laddning?', 'Parametrisera varje skiva', 'Addera de axiella fälten', 'Jämför elektret och fria laddningar'),
         hints=(
-            r"""För konstant polarisation gäller
+            r"""För en sluten yta helt inne i det homogent polariserade materialet gäller
 
 $$
-\rho_p=-\nabla\cdot\overline P=0.
+Q_{p,\mathrm{in}}=-\oint_S\overline P\cdot\mathrm d\overline S=0.
 $$
 
-Mantelns normal är vinkelrät mot P, så $\rho_{sp}=0$ där. Botten vid $z=0$ har normal $-\hat z$ och $\rho_{sp}=-P$; toppen vid $z=h$ har normal $+\hat z$ och $\rho_{sp}=+P$.""",
+Konstant $\overline P$ ger lika stora, motriktade flödesbidrag. Eftersom detta gäller varje sådan delvolym finns ingen bunden volymladdning. Vid materialets ytor används
+
+$$
+\rho_{sp}=\overline P\cdot\hat n.
+$$
+
+Manteln har noll ytladdning. Botten vid $z=0$ har normal $-\hat z$ och $\rho_{sp}=-P$; toppen vid $z=h$ har normal $+\hat z$ och $\rho_{sp}=+P$.""",
             r"""För vardera skivan vid $z_0=0$ eller $h$: välj $\overline r=(0,0,z)$ och
 
 $$
@@ -1549,7 +1573,7 @@ $$
 
 alltså $\overline D\approx-P\hat z$ mellan skivorna.""",
         ),
-        common_pitfall=r"""Att anta $\overline D=0$ överallt för en ändlig elektret bara för att fri laddning saknas. $\nabla\cdot\overline D=0$ innebär inte att D är noll; den plana approximationen gäller inte godtyckligt långt från en ändlig cylinder.""",
+        common_pitfall=r"""Att anta $\overline D=0$ bara för att fri laddning saknas. Gauss lag ger då $\oint_S\overline D\cdot\mathrm d\overline S=0$: nettoflödet är noll, men fältet behöver inte vara noll. Den plana approximationen gäller inte godtyckligt långt från en ändlig cylinder.""",
         geometry_hint=r"""Rita utåtnormal $-\hat z$ på botten och $+\hat z$ på toppen. Vid $z=0$ och h är E diskontinuerligt, så ange vilken sida du menar. Villkoret $a\gg h$ gör centralområdet ungefär plant, men långt bort måste den ändliga kroppens fält avta.""",
         setup_hint=r"""Beräkna först den bundna ytladdningen på varje ändyta:
 
@@ -2031,10 +2055,10 @@ Resistiviteten $\rho$ i detta problem är inte en laddningstäthet.""",
     ),
     "VariableSigmaCoaxialElectrolyte": G(
         problem_id="5.7",
-        learning_goal="Hantera stationär ström när konduktiviteten varierar i rummet och koppla fältets divergens till fri rymdladdning.",
+        learning_goal=r"""Hantera stationär ström vid varierande konduktivitet och bestämma fri rymdladdning från Gauss lag.""",
         concepts=("kontinuitet", "variabel konduktivitet", "Gauss lag"),
-        start_here='Skriv ∇·J=0, J=σ(R)E, ΔV=−∫E·dl och ρ_fri=∇·D med D=ε₀εrE. Identifiera den givna konduktiviteten och geometrin innan du bestämmer E och laddningstätheten. Börja med stationär strömkonservering. Välj U=V(a)−V(b) och positiv ström utåt, så att tecknet på den fria laddningstätheten kan följas genom beräkningen.',
-        hint_titles=('Hur varierar J och E med radien?', 'Bestäm resistansen', 'Beräkna divergensen'),
+        start_here=r"""Skriv $I=\int_S\overline J\cdot\mathrm d\overline S$, $\overline J=\sigma(R)\overline E$ och $\oint_S\overline D\cdot\mathrm d\overline S=Q_{\mathrm{fri,in}}$. Samma stationära ström passerar varje koaxial cylinderyta. Välj $U=V(a)-V(b)$ och bestäm först fältet från strömmen och potentialintegralen. Använd sedan en sluten skalformad Gaussyta inne i elektrolyten.""",
+        hint_titles=('Hur varierar J och E med radien?', 'Bestäm resistansen', 'Laddningen i ett cylindriskt skal'),
         hints=(
             r"""Samma I passerar varje cylindrisk yta: $J_R=\frac I{2\pi R\ell}$. Sätt därefter
 
@@ -2055,47 +2079,38 @@ och identifiera $R_{\mathrm{el}}=\frac UI$. Du kan också integrera
 $$
 \mathrm dR_{\mathrm{el}}=\frac{\mathrm dR}{\sigma(R)2\pi R\ell}.
 $$""",
-            r"""För del (b) använder du den konstanta permittiviteten
+            r"""För del (b), välj ett slutet cylindriskt skal med radier $R_1,R_2$ helt inne i elektrolyten och längd $L$. Med $\varepsilon=\varepsilon_0\varepsilon_r$ ger Gauss lag
 
 $$
 \begin{aligned}
-\varepsilon&=\varepsilon_0\varepsilon_r,\\
-\rho_{\mathrm{fri}}&=\nabla\cdot\overline D
-=\varepsilon\frac{1}{R}\frac{\mathrm d(RE_R)}{\mathrm dR}.
+Q_{\mathrm{fri,in}}
+&=\oint_S\overline D\cdot\mathrm d\overline S\\
+&=2\pi L\varepsilon\left[R_2E_R(R_2)-R_1E_R(R_1)\right].
 \end{aligned}
 $$
 
-Sätt in $E_R$ uttryckt med U innan du deriverar.""",
+Ändytorna ger inget flöde. Sätt in fältet från (a) och dividera laddningen med skalvolymen $\pi(R_2^2-R_1^2)L$. Om kvoten är densamma för alla skal är den också den lokala laddningstätheten.""",
         ),
         self_checks=(
-            r"""Strömflödet $2\pi R\ell J_R$ ska vara konstant. Den fria volymladdningstätheten blir också konstant här, men av en annan anledning: cylindrisk divergens av ett fält proportionellt mot R.""",
+            r"""Strömmen $2\pi R\ell J_R$ ska vara densamma vid varje radie. Kontrollera också att laddningen från Gauss lag är proportionell mot skalvolymen, så att den fria volymladdningstätheten är konstant.""",
             r"""Med den valda definitionen är $\rho_{\mathrm{fri}}$ positiv för $U>0$ och byter tecken när U vänds. Vid fast U är $\rho_{\mathrm{fri}}$ oberoende av k, medan I är proportionell mot k. k har enheten S·m.""",
         ),
-        common_pitfall=r"""Att sätta laddningstätheten till noll bara för att strömmen är stationär, eller använda
-
-$$
-\frac{\mathrm dE_R}{\mathrm dR}
-$$
-
-i stället för den cylindriska divergensen
-
-$$
-\frac1R\frac{\mathrm d(RE_R)}{\mathrm dR}.
-$$""",
+        common_pitfall=r"""Att sätta laddningstätheten till noll för att strömmen är stationär, eller glömma flödet genom skalets inre mantel. Dess utåtnormal är $-\hat R$, så det bidraget ska subtraheras.""",
         geometry_hint=r"""Observationsradien R löper genom elektrolyten $a<R<b$. Föreställ dig två cylindriska strömytor: den större har större area och därför lägre $J_R$, samtidigt som dess lägre $\sigma$ kräver ett större $E_R$.""",
-        setup_hint=r"""Efter integrationen får du $E_R=\frac{2UR}{b^2-a^2}$. Använd detta i
+        setup_hint=r"""Sätt in fältet från potentialintegralen,
 
 $$
-\rho_{\mathrm{fri}}=\varepsilon_0\varepsilon_r\frac1R\frac{\mathrm d(RE_R)}{\mathrm dR}.
+E_R(R)=\frac{2UR}{b^2-a^2},
 $$
 
-Stationaritet betyder
+i Gauss lag för skalet:
 
 $$
-\frac{\partial\rho_{\mathrm{fri}}}{\partial t}=0
+Q_{\mathrm{fri,in}}=
+\frac{4\pi\varepsilon_0\varepsilon_rUL}{b^2-a^2}(R_2^2-R_1^2).
 $$
 
-och $\nabla\cdot\overline J=0$, inte att $\rho_{\mathrm{fri}}$ måste vara noll.""",
+Dividera med $\pi(R_2^2-R_1^2)L$. Resultatet är oberoende av skalets radier. Stationaritet betyder att lika mycket ström går in som ut ur varje sluten volym, inte att volymen saknar laddning.""",
         visualization_note='Jämför de separata vyerna för E_R, J_R och fri laddningstäthet. Försök förklara hur σ(R)=k/R² kan ge olika radialberoenden för E och J samtidigt som totalströmmen är densamma genom varje cylinderyta.',
     ),
     "SemicylindricalRingResistor": G(
@@ -2692,7 +2707,7 @@ så ström och enheter försvinner.""",
     ),
     "AntarcticIceFlux": G(
         problem_id="7.6",
-        learning_goal="Använd ∇·B=0 för att byta en besvärlig flödesyta mot en enklare sfärisk yta.",
+        learning_goal=r"""Använda noll nettoflöde av magnetfältet genom en sluten yta för att byta till en enklare flödesyta.""",
         concepts=("magnetiskt flöde", "Gauss lag för B", "jordens dipolfält"),
         start_here=(
             'Skriv Φ=∫_S B·n dS och ∮_sluten B·n dS=0. Identifiera den efterfrågade öppna ytan och en kompletterande yta med känd normal och enklare fält. Slut isvolymen med bottenytan mot jorden. Det efterfrågade flödet genom hela is–luft-gränsen omfattar både ovansida och lodrät rand; använd ∮B·dS=0 för att ersätta dessa med bottenytan.'
@@ -2728,7 +2743,7 @@ $$
 blir flödet cirka $9{,}5\times10^8\,\mathrm{Wb}$. När kalotten krymper till sydpolen går flödet mot noll.""",
             'Istjockleken 1000 m faller bort när bottenkalotten är fixerad: ändrad tjocklek omfördelar flödet mellan ovansida och rand men ändrar inte deras summa. Flödet genom hela den slutna isvolymen är fortfarande noll.',
         ),
-        common_pitfall=r"""Att beräkna bara flödet genom isens ovansida, glömma randytan eller använda bottennormalen med fel tecken. $\nabla\cdot\overline B=0$ betyder noll nettoflöde genom en sluten yta, inte noll genom kalotten ensam.""",
+        common_pitfall=r"""Att bara räkna isens ovansida och glömma randytan, eller välja fel bottennormal. Gauss lag för magnetfältet är $\oint_S\overline B\cdot\mathrm d\overline S=0$. Nettoflödet genom hela den slutna ytan är noll; flödet genom en enskild del kan vara skilt från noll.""",
         setup_hint=r"""Skriv
 
 $$
@@ -3041,16 +3056,16 @@ och använd $B=\frac{\Phi_0}S$. Kontrollera att S är arean för en pol, inte su
         problem_id="8.12",
         learning_goal="Ersätta en homogen magnetisering med bundna magnetiseringsströmmar och därefter skilja mellan B och H.",
         concepts=("magnetisering", "magnetiseringsström", "B och H"),
-        start_here='Skriv J_m=∇×M, J_sm=M×n och Biot–Savarts lag för de bundna strömmarna. Identifiera magnetiseringens variation och ytornas normaler. Använd sedan H=B/μ₀−M med den lokala magnetiseringen. Använd cylindern 0<z<h och konstant M=Mẑ. Ersätt magnetiseringen med bundna strömmar; ingen fri ström behövs för att skapa magnetens B-fält.',
+        start_here=r"""Skriv $I_{m,S}=\oint_C\overline M\cdot\mathrm d\overline\ell$, där $C$ begränsar en yta $S$ helt inne i materialet. Använd sedan $\overline J_{sm}=\overline M\times\hat n$ på materialets rand. För konstant $\overline M=M\hat z$ finns ingen bunden volymström, men mantelns ytström ger ett fält som beräknas med Biot–Savarts lag. Bestäm till sist $\overline H=\overline B/\mu_0-\overline M$.""",
         hint_titles=('Vilka bundna strömmar finns?', 'Manteln som strömslingor', 'Från B till H'),
         hints=(
-            r"""I volymen är
+            r"""Välj en sluten kurva $C$ helt inne i materialet och en uppspänd yta $S$ där. Den bundna strömmen genom ytan är
 
 $$
-\overline J_m=\nabla\times\overline M=0.
+I_{m,S}=\oint_C\overline M\cdot\mathrm d\overline\ell=0.
 $$
 
-På manteln ger
+En konstant vektor $\overline M$ ger noll cirkulation runt varje sluten kurva, så det finns ingen bunden volymström. På manteln gäller däremot
 
 $$
 \overline J_{sm}=\overline M\times\hat R=M\hat\phi.
@@ -3096,7 +3111,7 @@ Efter integrationen bestäms H med den lokala magnetiseringen, som är noll utan
         problem_id="8.13",
         learning_goal="Härleda både volym- och ytmagnetiseringsströmmar från ett linjärt magnetiserat strömförande material och visa att deras nettoström tar ut sig.",
         concepts=("magnetiseringsström", "M=(μr−1)H", "cylindriska koordinater"),
-        start_here='Skriv ∮H·dl=I_fri,in, M=(μr−1)H, J_m=∇×M och J_sm=M×n. Identifiera den inneslutna fria strömmen och materialets utåtnormal före beräkning av de bundna strömmarna. Bestäm H från den fria transportströmmen och sedan M=(μr−1)H inne i ledaren. Beräkna därefter volymström och ytström var för sig; de har olika enheter.',
+        start_here=r"""Utgå från Ampères lag $\oint_C\overline H\cdot\mathrm d\overline\ell=I_{\mathrm{fri,in}}$ och $\overline M=(\mu_r-1)\overline H$. Beräkna sedan bunden ström genom en tvärsnittsskiva med $I_{m,S}=\oint_C\overline M\cdot\mathrm d\overline\ell$. På materialets mantel används $\overline J_{sm}=\overline M\times\hat n$. Håll isär volymström och ytström.""",
         hint_titles=('Magnetiseringen inne i ledaren', 'Volymström och ytström', 'Jämför de integrerade strömmarna'),
         hints=(
             r"""För $R<a$ är
@@ -3109,25 +3124,24 @@ H_\phi&=\frac{IR}{2\pi a^2}.
 $$
 
 Därför är $M_\phi$ linjär i R.""",
-            r"""Volymströmmen är
+            r"""Välj en cirkel med radie $R<a$, positiv omloppsriktning moturs sedd från $+z$. Magnetiseringens cirkulation ger den bundna strömmen genom skivan:
 
 $$
-J_{m,z}=\frac1R\frac{\mathrm d(RM_\phi)}{\mathrm dR}.
+\begin{aligned}
+I_{m,S}(R)&=\oint_C\overline M\cdot\mathrm d\overline\ell\\
+&=2\pi R M_\phi(R).
+\end{aligned}
 $$
+
+Sätt in $M_\phi$ från föregående steg. Strömmen är proportionell mot $R^2$, så varje ringskikt har samma ström per tvärsnittsarea. Dividera med $\pi R^2$ för att få den konstanta $J_{m,z}$.
 
 På manteln används
 
 $$
-\overline J_{sm}=\overline M\times\hat R;
+\overline J_{sm}=\overline M\times\hat R.
 $$
 
-eftersom
-
-$$
-\hat\phi\times\hat R=-\hat z
-$$
-
-är ytströmmen motsatt volymströmmen när $I(\mu_r-1)>0$.""",
+Eftersom $\hat\phi\times\hat R=-\hat z$ är ytströmmen motsatt volymströmmen när $I(\mu_r-1)>0$.""",
             r"""Integrera $\overline J_m$ över tvärsnittet och $\overline J_{sm}$ över mantelytans skärning med tvärsnittet:
 
 $$
@@ -3144,13 +3158,17 @@ Addera först dessa strömmar i ampere.""",
             r"""Vid $\mu_r=1$ eller $I=0$ försvinner båda magnetiseringsströmmarna. Om I eller tecknet på $\mu_r-1$ ändras vänder båda riktningarna.""",
         ),
         common_pitfall=r"""Att addera $\overline J_m$ [A/m²] direkt till $\overline J_{sm}$ [A/m], eller tolka noll nettomagnetiseringsström som att strömmarna och deras fält är noll överallt.""",
-        setup_hint=r"""Sätt
+        setup_hint=r"""Sätt in magnetiseringen i cirkulationsintegralen för en cirkel inne i ledaren:
 
 $$
-M_\phi=\frac{(\mu_r-1)IR}{2\pi a^2}
+\begin{aligned}
+M_\phi(R)&=\frac{(\mu_r-1)IR}{2\pi a^2},\\
+I_{m,S}(R)&=2\pi R M_\phi(R)
+=\frac{(\mu_r-1)IR^2}{a^2}.
+\end{aligned}
 $$
 
-i cylindriska curl-formeln. Beräkna $\overline J_{sm}$ från värdet precis innanför $R=a$. Volymens curl gäller inuti materialet; ytströmmen hanterar hoppet vid gränsen separat.""",
+Strömmen per skivarea är konstant. Därför är $J_{m,z}=I_{m,S}(R)/(\pi R^2)$ för $0<R<a$, med samma ändliga gränsvärde på axeln. Beräkna ytströmmen separat från $\overline J_{sm}=\overline M\times\hat R$ precis innanför $R=a$.""",
         geometry_hint=r"""Både volym- och ytström går axiellt, men i motsatta riktningar. Ytströmmen finns på manteln $R=a$; den är inte en azimutal ström runt tvärsnittets rand.""",
     ),
 
@@ -3398,8 +3416,8 @@ med samma teckenkonvention. Derivera vid fast A: $J_{F,n}=\frac iA$. En konstant
         geometry_hint=r"""Förskjutningsströmmen går normalt genom hela plattarean. I vakuum passerar inga fria laddningar genom gapet; $\overline J_F$ beskriver det föränderliga elektriska fältet. Avståndet d påverkar spänningen men förkortas bort ur $\overline J_F$ vid given tillförd ström.""",
         learning_goal="Se varför en tidsvarierande kondensatorström motsvaras av samma förskjutningsström genom gapet.",
         concepts=("förskjutningsström", "D-fält", "laddningskontinuitet"),
-        start_here='Skriv J_F=∂D/∂t, ∮D·n dS=Q_fri,in och i=dQ/dt. Identifiera plattarean och strömmens teckenkonvention; kanteffekter försummas. Koppla den tillförda strömmen till hur snabbt plattladdningen Q(t) ändras. Därefter kan D-fältet mellan stora plattor skrivas direkt från Q(t).',
-        hint_titles=('Ström och plattladdning', 'Bestäm D i gapet', 'Derivera vid fast area'),
+        start_here=r'Skriv $I_F=\frac{\mathrm d}{\mathrm dt}\int_S\overline D\cdot\mathrm d\overline S$ för en fast yta genom gapet. Använd Gauss lag för att koppla D-flödet till plattladdningen och $i=\mathrm dQ/\mathrm dt$ för den tillförda strömmen. För homogent fält ger division med plattarean förskjutningsströmtätheten.',
+        hint_titles=('Ström och plattladdning', 'Bestäm D i gapet', 'Flödets tidsändring per area'),
         hints=(
             r"""Strömmen till en platta ges av
 
@@ -3409,13 +3427,14 @@ $$
 
 Tecknet bestäms av den valda riktningen.""",
             r"""Utan randeffekter är D normalt mot plattorna och homogent. En Gaussbox från metallens inre till gapet ger $D_nA=Q$. Lös efter $D_n$ med samma normal som används för strömmen.""",
-            r"""Derivera D med avseende på tiden:
+            r"""Förskjutningsströmmen genom den fasta plattarean är
 
 $$
-\overline J_F=\frac{\partial\overline D}{\partial t}.
+I_F=\frac{\mathrm d}{\mathrm dt}\int_S\overline D\cdot\mathrm d\overline S
+=\frac{\mathrm dQ}{\mathrm dt}=i(t).
 $$
 
-Lägg märke till att plattavståndet d inte behövs för just denna storhet.""",
+Fältet är homogent, så $J_{F,n}=I_F/A$. Lägg märke till att plattavståndet $d$ inte behövs för just denna storhet.""",
         ),
         self_checks=(
             r"""Integralen av $\overline J_F$ över plattarean ska exakt ge den ledningsström i(t) som kommer fram i ledaren.""",
@@ -3425,53 +3444,59 @@ Lägg märke till att plattavståndet d inte behövs för just denna storhet."""
     ),
     "RadialChargeExpansionMaxwellTest": G(
         problem_id="10.3",
-        setup_hint=r"""Integrera
+        setup_hint=r"""Använd samma inneslutna laddning i laddningsbevarande och Gauss lag:
 
 $$
-\frac{\partial(r^2J_r)}{\partial r}=-r^2\frac{\partial\rho}{\partial t}
+\begin{aligned}
+Q_{\mathrm{in}}(r,t)&=\int_0^r\rho(s,t)\,4\pi s^2\,\mathrm ds,\\
+4\pi r^2J_r&=-\frac{\mathrm dQ_{\mathrm{in}}}{\mathrm dt},\\
+4\pi r^2D_r&=Q_{\mathrm{in}}.
+\end{aligned}
 $$
 
-från 0 till r. Regularitet i centrum tar bort integrationskonstanten. Derivera sedan
-
-$$
-D_r=\frac1{r^2}\int_0^r\rho(r^{\prime},t)r^{\prime2}\,\mathrm dr^{\prime}
-$$
-
-vid fast observationsradie r, inte längs en laddnings bana.""",
+Tidsändringen av D-flödet ger $4\pi r^2J_{F,r}=\mathrm dQ_{\mathrm{in}}/\mathrm dt$. Strömtätheterna tar därför ut varandra för $r>0$. I centrum används deras reguljära gränsvärden. Tidsderivatan tas vid fast observationsradie, inte längs en laddnings bana.""",
         geometry_hint=r"""Rita en sfär med centrum i laddningsmolnet. J och $\overline J_F$ är radiella och motriktade. Symmetrin gäller hela fördelningen, inte bara en enskild laddning. Appens expanderande Gaussprofil är ett exempel med bevarad total laddning, inte en lösning för partiklarnas Coulombdrivna rörelse.""",
         learning_goal="Använd sfärisk symmetri och kontinuitet för att förstå hur ledningsström och förskjutningsström kan ta ut varandra i Ampère–Maxwells lag.",
         concepts=("sfärisk symmetri", "kontinuitetsekvationen", "Ampère–Maxwells lag"),
         start_here=(
-            'Skriv ∇·B=0, ∇×B=μ₀(J+∂D/∂t), ∇·D=ρ och ∂ρ/∂t+∇·J=0. Identifiera vilka fältriktningar sfärisk symmetri tillåter och kräv regularitet i centrum innan ekvationerna integreras. Del (a) är i första hand en symmetriuppgift. En sfäriskt symmetrisk B-vektor skulle behöva vara radiell, men kombinera det med ∇·B=0 och kravet på ett reguljärt fält utan magnetiska monopoler.'
+            r"""Börja med $\oint_S\overline B\cdot\mathrm d\overline S=0$ på en sfär. Sfärisk symmetri tillåter bara ett radiellt fält, vilket då måste vara noll. För del (b), kombinera laddningsbevarande $\oint_S\overline J\cdot\mathrm d\overline S=-\mathrm dQ_{\mathrm{in}}/\mathrm dt$ med Gauss lag $\oint_S\overline D\cdot\mathrm d\overline S=Q_{\mathrm{in}}$ på samma fasta sfär."""
         ),
-        hint_titles=('Integrera kontinuitetsekvationen', 'D från laddningen innanför sfären', 'Jämför strömtätheterna'),
+        hint_titles=('Strömmen ut ur en sluten sfär', 'D från laddningen innanför sfären', 'Jämför strömmarna i Ampère–Maxwells lag'),
         hints=(
-            r"""För del (b), använd kontinuitetsekvationen i sfärisk symmetri:
+            r"""För del (b), välj en fast sfär med radie $r>0$. Laddningsbevarande säger att utåtriktad ström minskar laddningen innanför:
 
 $$
-\frac{\partial\rho}{\partial t}
-+\frac1{r^2}\frac{\partial(r^2J_r)}{\partial r}=0.
+\oint_S\overline J\cdot\mathrm d\overline S
+=-\frac{\mathrm dQ_{\mathrm{in}}(r,t)}{\mathrm dt}.
 $$
 
-Integrera från centrum till r och använd regularitet vid $r=0$ för att få $J_r$.""",
+Sfärisk symmetri ger därför
+
+$$
+4\pi r^2J_r(r,t)=-\frac{\mathrm dQ_{\mathrm{in}}(r,t)}{\mathrm dt}.
+$$
+
+Bestäm $Q_{\mathrm{in}}$ genom att integrera laddningstätheten från centrum till $r$. Håll sfärens radie fast när tiden varierar.""",
             r"""Gauss lag ger $D_r(r,t)$ från den inneslutna laddningen:
 
 $$
 4\pi r^2D_r=\int_0^r\rho(r^{\prime},t)\,4\pi(r^{\prime})^2\,\mathrm dr^{\prime}.
 $$""",
-            r"""Derivera $D_r$ med avseende på tiden och jämför
+            r"""Gauss lag på samma fasta sfär ger $4\pi r^2D_r=Q_{\mathrm{in}}$. Tidsändringen av D-flödet är förskjutningsströmmen:
 
 $$
-\overline J_F=\frac{\partial\overline D}{\partial t}
+4\pi r^2J_{F,r}=\frac{\mathrm dQ_{\mathrm{in}}}{\mathrm dt}.
 $$
 
-med J. Om deras summa försvinner blir högerledet i
+Jämför med strömmen i första steget: $J_r+J_{F,r}=0$ vid varje radie. Ampère–Maxwells lag i integralform är
 
 $$
-\nabla\times\overline B=\mu_0(\overline J+\overline J_F).
+\oint_C\overline H\cdot\mathrm d\overline\ell
+=\int_S\overline J\cdot\mathrm d\overline S
++\frac{\mathrm d}{\mathrm dt}\int_S\overline D\cdot\mathrm d\overline S.
 $$
 
-noll, vilket gör $B=0$ konsistent med alla ekvationer.""",
+Här är $S$ en fast yta med rand $C$. De två högerleden tar ut varandra. Det är förenligt med $B=0$, som redan följer av sfärisk symmetri och noll B-flöde genom en sluten sfär.""",
         ),
         self_checks=(
             r"""Trots att de verkliga laddningarna rör sig kan $B=0$ vara en lösning eftersom förskjutningsströmmen exakt kompenserar den radiella ledningsströmmen i Ampère–Maxwells lag.""",
