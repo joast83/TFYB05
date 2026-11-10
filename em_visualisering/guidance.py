@@ -2232,38 +2232,85 @@ $\varepsilon_1$ och $\varepsilon_2$ används här som relativa permittiviteter, 
         learning_goal="Härleda fältet från en ändlig rak ledare och se hur Biot–Savart, vektorpotential och Ampères lag hänger ihop.",
         concepts=("Biot–Savarts lag", "vektorpotential", "Ampères lag"),
         start_here='Skriv Biot–Savarts lag B(r)=μ₀I/(4π)∫ dℓ′×(r−r′)/|r−r′|³. Identifiera dℓ′, separationsvektorn, dess belopp och gränserna. För potentialvägen används A(r)=μ₀I/(4π)∫dℓ′/|r−r′| och B=∇×A. Beräkna bidraget från det raka segmentet −L<z′<L, med ström i +z-riktningen. Uppgiften anger att segmentet är en del av en sluten krets; returledningens bidrag ingår inte här.',
-        hint_titles=('Linjeelement och korsprodukt', 'Vägen via vektorpotentialen', 'Gränsen för lång ledare'),
+        hint_titles=(
+            r"""Del (a) · Identifiera integralens delar""",
+            r"""Del (a) · Integrera och ta gränsvärdet""",
+            r"""Del (b) · Beräkna först vektorpotentialen""",
+            r"""Del (b) · Ta rotationen av det beräknade fältet""",
+            r"""Del (c) · Välj Ampereslingan""",
+            r"""Del (c) · Förenkla cirkulationsintegralen""",
+        ),
         hints=(
-            r"""Välj källelement och separationsvektor:
+            r"""Utgå från Biot–Savarts integral i startlagen. Låt källpunkten löpa längs segmentet i strömriktningen:
 
 $$
-\mathrm d\overline\ell^{\prime}=\mathrm dz^{\prime}\,\hat z,
-\qquad
-\overline s=R\hat R+(z-z^{\prime})\hat z.
+\begin{aligned}
+\overline r'&=z'\hat z,\qquad -L\leq z'\leq L,\\
+\mathrm d\overline\ell'&=\mathrm dz'\,\hat z,\\
+\overline r-\overline r'&=R\hat R+(z-z')\hat z,\\
+|\overline r-\overline r'|&=\sqrt{R^2+(z-z')^2}.
+\end{aligned}
 $$
 
-Korsprodukten
+Observationskoordinaterna $R,z$ hålls fasta; $z'$ är integrationsvariabeln.""",
+            r"""Beräkna korsprodukten innan du integrerar:
 
 $$
-\mathrm d\overline\ell^{\prime}\times\overline s=R\,\mathrm dz^{\prime}\,\hat\phi
+\mathrm d\overline\ell'\times(\overline r-\overline r')
+=R\,\mathrm dz'\,\hat\phi.
 $$
 
-bestämmer riktningen och lämnar en skalär integral över $z^{\prime}$.""",
-            r"""För vektorpotentialen:
+Biot–Savart ger därför segmentbidraget
 
 $$
-A_z=\frac{\mu_0 I}{4\pi}
-\int_{-L}^{L}\frac{\mathrm dz^{\prime}}{\sqrt{R^2+(z-z^{\prime})^2}}.
+B_\phi(R,z)=\frac{\mu_0IR}{4\pi}
+\int_{-L}^L\frac{\mathrm dz'}{[R^2+(z-z')^2]^{3/2}}.
 $$
 
-Segmentbidraget har bara z-komponent, så
+Använd exempelvis $u=z'-z$ och sätt in båda gränserna. Ta först därefter $L\to\infty$, som också efterfrågas i del (a).""",
+            r"""Börja om från vektorpotentialens källintegral:
 
 $$
-B_\phi=-\frac{\partial A_z}{\partial R}.
+\overline A(\overline r)=\frac{\mu_0I}{4\pi}
+\int\frac{\mathrm d\overline\ell'}{|\overline r-\overline r'|}.
 $$
 
-I del (b) får du sätta $z=0$ innan denna radialderivata tas.""",
-            r"""Ta $L\to\infty$ i segmentresultatet. För den idealiserade oändliga ledaren i del (c) ger Ampères lag $B_\phi\,2\pi R=\mu_0I$, med strömriktningen bestämd av högerhandsregeln.""",
+Återanvänd linjeelementet och avståndet från (a). Alla linjeelement pekar i $z$-riktningen, så segmentet ger bara $A_z$:
+
+$$
+A_z(R,z)=\frac{\mu_0I}{4\pi}
+\int_{-L}^L\frac{\mathrm dz'}{\sqrt{R^2+(z-z')^2}}.
+$$
+
+Beräkna integralen först. I (b) får du sätta $z=0$, men behåll $R$ som variabel eftersom nästa steg kräver dess radialberoende.""",
+            r"""När $\overline A$ är beräknat används metodens andra steg:
+
+$$
+\overline B=\nabla\times\overline A.
+$$
+
+Här är $A_R=A_\phi=0$ och $A_z$ oberoende av $\phi$. Rotationen i cylindriska koordinater reduceras därför till
+
+$$
+\overline B=-\frac{\partial A_z}{\partial R}\,\hat\phi.
+$$
+
+Derivera ditt färdiga uttryck för $A_z(R,0)$ och jämför med Biot–Savartresultatet vid $z=0$. Rotationssteget är sambandet som gör om den beräknade vektorpotentialen till magnetfält.""",
+            r"""I (c) är ledaren oändligt lång redan från början. Utgå från
+
+$$
+\oint_C\overline B\cdot\mathrm d\overline\ell=\mu_0I_{\mathrm{in}}.
+$$
+
+Välj en cirkel med radie $R$ kring ledaren. Den oändliga ledarens symmetri gör fältet azimutalt och dess komponent $B_\phi$ lika stor över hela cirkeln. Den omslutna strömmen är $I$.""",
+            r"""Skriv linjeelementet på cirkeln som $\mathrm d\overline\ell=R\,\mathrm d\phi\,\hat\phi$. Då blir
+
+$$
+\int_0^{2\pi}B_\phi(R)R\,\mathrm d\phi
+=2\pi R B_\phi(R)=\mu_0I.
+$$
+
+Lös efter $B_\phi$ och jämför med gränsvärdet i (a). Ampères lag gäller det fullständiga stationära strömsystemets fält. För ett ändligt segment kan du inte tillskriva enbart segmentbidraget hela den omslutna strömmen och bortse från returledningen.""",
         ),
         self_checks=(
             r"""Vid $z=0$ ska de två ändpunktsbidragen vara lika. För $L\gg R,|z|$ ska resultatet närma sig $\frac{\mu_0I}{2\pi R}$; vid $I=0$ blir fältet noll.""",
@@ -2271,13 +2318,13 @@ I del (b) får du sätta $z=0$ innan denna radialderivata tas.""",
         ),
         common_pitfall='Att förklara Ampèreproblemet med att ett ändligt segment saknar rotationssymmetri. Segmentbidraget har sådan symmetri, men Ampères magnetostatiska lag gäller den fullständiga stationära strömkretsens fält, inte ett öppet segment isolerat.',
         geometry_hint=r"""R är vinkelrätt avstånd till z-axeln och z är observationspunktens höjd; $z^{\prime}$ är källkoordinat. Markera båda ändarna ±L. Hela ledarens längd är 2L.""",
-        setup_hint=r"""Skriv
+        setup_hint=r"""Välj den del du arbetar med:
 
-$$
-B_\phi=\frac{\mu_0IR}{4\pi}\int_{-L}^L\frac{\mathrm dz^{\prime}}{[R^2+(z-z^{\prime})^2]^{3/2}}.
-$$
+**(a) Biot–Savart:** Sätt in linjeelement, separationsvektor och gränser i fältintegralen; korsprodukten ger riktningen före integrationen.
 
-Kontrollera ändpunkterna med $u=z^{\prime}-z$. I potentialvägen ska curl ge minus radialderivatan av $A_z$.""",
+**(b) Vektorpotential:** Beräkna först $A_z$ från källintegralen. Ta sedan rotationen av det färdiga uttrycket. Här återstår $B_\phi=-\partial A_z/\partial R$.
+
+**(c) Ampère:** Använd den oändliga ledarens symmetri för att förenkla cirkulationsintegralen. Kontrollera resultatet mot gränsen $L\to\infty$ i (a).""",
     ),
     "SquareLoopOnAxis": G(
         problem_id="6.2",
@@ -2559,7 +2606,11 @@ Om v eller a fördubblas vid fast värde på den andra parametern fördubblas |m
         learning_goal="Se hur det lokala kraftbidraget på en strömslinga summeras till det globala momentet m×B.",
         concepts=("Lorentzkraft på ledare", "kraftmoment", "magnetiskt moment"),
         start_here='Skriv dF=I dℓ×B och T=∮r×dF. Identifiera linjeelement, hävarm och det givna fältet innan korsprodukterna beräknas. Beräkna först kraften på ett litet strömelement och sedan dess moment kring centrum. Håll isär dℓ, kraften dF och hävarmen r; de är tre olika vektorer.',
-        hint_titles=('Parametrisera kraften', 'Integrera kraftmomentet', 'Kontrollera med dipolmomentet'),
+        hint_titles=(
+            r"""Del (a) · Kraften på linjeelementet""",
+            r"""Del (a) · Integrera kraftmomentet""",
+            r"""Del (b–c) · Dipolmoment och vridningsriktning""",
+        ),
         hints=(
             r"""Parametrisera
 
@@ -2593,13 +2644,15 @@ $$
 $$
 
 Integrera över ett helt varv: x-bidraget tar ut sig.""",
-            r"""Kontrollera del (b) med $\overline m=I\pi a^2\hat z$ och
+            r"""I (b) börjar du från dipolmetodens allmänna samband:
 
 $$
-\overline T=\overline m\times\overline B.
+\overline m=IA\hat n,\qquad \overline T=\overline m\times\overline B.
 $$
 
-I del (c) ger positivt moment kring y en vridning av m från +z mot +x, alltså mot B.""",
+Identifiera $A=\pi a^2$ och $\hat n=\hat z$ för den givna positiva strömriktningen. Beräkna korsprodukten med $\overline B=B\hat x$ och jämför med integralresultatet i (a).
+
+I (c) tolkar du riktningen: positivt moment kring $y$ vrider $\overline m$ från $+z$ mot $+x$, alltså mot fältet.""",
         ),
         self_checks=(
             r"""Nettokraften
@@ -3221,19 +3274,24 @@ Förenkla produkten innan ändpunkten $u=0$ behandlas.""",
         learning_goal="Se reciprociteten i ömsesidig induktans genom två olika approximativa flödesberäkningar.",
         concepts=("ömsesidig induktans", "dipolapproximation", "reciprocitet"),
         start_here='Skriv M=Φ_mottagare/I_källa och Φ=∫B·n dS. Identifiera vilken slinga som är källa i varje del och var de givna småparameterantagandena får användas. Uppgiften antar a≪b och a≪d. Använd två olika källslingor i del (a) och (b), men håll mottagarens normal och strömriktning konsekventa så att M kan jämföras.',
-        hint_titles=('Den lilla slingan som källa', 'Integrera över den stora skivan', 'Byt källa och mottagare'),
+        hint_titles=(
+            r"""Del (a) · Dipolfältet från den lilla slingan""",
+            r"""Del (a) · Integrera över den stora skivan""",
+            r"""Del (b) · Bestäm den stora slingans fält""",
+            r"""Del (b) · Flöde genom den lilla slingan""",
+        ),
         hints=(
-            r"""I del (a) ersätts den lilla slingan med
+            r"""I (a) börjar du med flödesintegralen i startlagen och identifierar den lilla slingan som källa. Dess dipolmoment är $\overline m=I_{\mathrm{liten}}\pi a^2\hat z$. Använd det allmänna dipolfältet:
 
 $$
-m=I_{\mathrm{liten}}\pi a^2.
+\overline B(\overline r)=\frac{\mu_0}{4\pi r^3}
+\left[3(\overline m\cdot\hat r)\hat r-\overline m\right].
 $$
 
-På den stora slingans skiva, på axialavstånd d, behövs
+På den stora skivan är $\overline r=R\hat R+d\hat z$ och $r=\sqrt{R^2+d^2}$. Projektera på skivans normal $\hat z$. Det ger
 
 $$
-B_z(R)=\frac{\mu_0m(2d^2-R^2)}
-{4\pi(R^2+d^2)^{5/2}}.
+B_z(R)=\frac{\mu_0m(2d^2-R^2)}{4\pi(R^2+d^2)^{5/2}}.
 $$""",
             r"""Integrera flödesbidraget
 
@@ -3241,8 +3299,26 @@ $$
 \mathrm d\Phi=B_z(R)\,2\pi R\,\mathrm dR
 $$
 
-från 0 till b. Använd inte bara dipolfältets axelvärde över hela den stora arean; både belopp och tecken på $B_z$ kan variera.""",
-            r"""I del (b) är den stora slingans exakta axelfält nästan konstant över den lilla arean $\pi a^2$. Beräkna $\Phi_{\mathrm{liten}}\approx B_z(d)\pi a^2$ och dividera med strömmen i den stora slingan. Resultaten ska sammanfalla.""",
+från 0 till b. Använd inte bara dipolfältets axelvärde över hela den stora arean; både belopp och tecken på $B_z$ kan variera. Dividera sedan flödet med källströmmen $I_{\mathrm{liten}}$ för att få $M$.""",
+            r"""I (b) byter du källa och mottagare. Börja från Biot–Savarts integral för den stora slingan:
+
+$$
+\overline B=\frac{\mu_0I_{\mathrm{stor}}}{4\pi}
+\oint\frac{\mathrm d\overline\ell'\times(\overline r-\overline r')}{|\overline r-\overline r'|^3}.
+$$
+
+På axeln väljs $\overline r=d\hat z$, medan $\overline r'=b\hat R(\phi)$ och $\mathrm d\overline\ell'=b\,\mathrm d\phi\,\hat\phi$. Integrera ett helt varv; tvärkomponenterna tar ut varandra. Du kan också använda ringfältet som redan härletts i 6.8(b).""",
+            r"""Använd den lilla slingans normal och area i flödesintegralen:
+
+$$
+\begin{aligned}
+\Phi_{\mathrm{liten}}&=\int_{S_{\mathrm{liten}}}\overline B_{\mathrm{stor}}\cdot\mathrm d\overline S\\
+&\approx B_z(d)\pi a^2,\\
+M&=\frac{\Phi_{\mathrm{liten}}}{I_{\mathrm{stor}}}.
+\end{aligned}
+$$
+
+Här får fältet tas ut ur integralen eftersom $a\ll b$ och $a\ll d$. Detta antagande gällde inte över den stora mottagarskivan i (a). Jämför de två resultaten med samma orientering.""",
         ),
         self_checks=(
             r"""För $d\gg b$ ska M avta som $d^{-3}$. M är proportionell mot den lilla slingans area och är positiv för de samriktade normaler som appen använder.""",
@@ -3255,7 +3331,7 @@ $$
 M=\frac{\Phi_{\mathrm{stor}}}{I_{\mathrm{liten}}}
 $$
 
-och integrera det radiella dipolfältet över skivan. Del (b): skriv
+och integrera dipolfältets normalkomponent över skivan. Del (b): skriv
 
 $$
 M=\frac{\mu_0I_{\mathrm{stor}}b^2}{2(b^2+d^2)^{3/2}}\frac{\pi a^2}{I_{\mathrm{stor}}}.
@@ -3339,46 +3415,51 @@ För hela passagen blir övergångarnas sammanlagda längd $2\min(a,\ell)$.""",
         learning_goal="Visa att tidsvarierande flöde i ett medföljande system och rörelse-emk i ett fast system beskriver samma inducerade spänning.",
         concepts=("Faradays lag", "rörelse-emk", "dipolfält"),
         start_here='Skriv ε_ems=−dΦ/dt med Φ=∫B·n dS, eller ε_ems=∮(v×B)·dℓ för den rörliga slingan i det stationära fältet. Identifiera samma orientering, hastighet och fältkomponenter i båda metoderna. Välj slingnormal +z och positiv omloppsriktning moturs sedd från +z. Slingan befinner sig vid z>0 och v=dz/dt är signerad. Approximationen kräver a≪z.',
-        hint_titles=('Flödet i slingans system', 'Rörelse-emk i dipolens system', 'Jämför tecken och belopp'),
+        hint_titles=(
+            r"""Del (a) · Bestäm flödet""",
+            r"""Del (a) · Flödets tidsändring""",
+            r"""Del (b) · Identifiera rörelseintegralens delar""",
+            r"""Del (b) · Integrera och jämför""",
+        ),
         hints=(
-            r"""I del (a) är flödet genom den lilla slingan ungefär
+            r"""I (a) börjar du med
 
 $$
-\Phi\simeq\pi a^2B_z(z),\qquad
+\varepsilon_{\mathrm{ems}}=-\frac{\mathrm d\Phi}{\mathrm dt},
+\qquad \Phi=\int_S\overline B\cdot\mathrm d\overline S.
+$$
+
+Välj normal $+\hat z$ och positiv omloppsriktning enligt högerhandsregeln. Eftersom $a\ll z$ är dipolfältet ungefär konstant över slingan:
+
+$$
+\Phi(z)\approx\pi a^2B_z(z),\qquad
 B_z(z)=\frac{\mu_0m}{2\pi z^3}.
-$$
-
-Använd kedjeregeln
-
-$$
-\frac{\mathrm d\Phi}{\mathrm dt}=\frac{\mathrm d\Phi}{\mathrm dz}v.
 $$""",
-            r"""I del (b) beräknas
+            r"""Avståndet till dipolen ändras med $\mathrm dz/\mathrm dt=v$. Använd kedjeregeln på flödet du just beräknat:
 
 $$
-\varepsilon_{\mathrm{ems}}=\oint(\overline v\times\overline B)\cdot\mathrm d\overline\ell
+\varepsilon_{\mathrm{ems}}=-\frac{\mathrm d\Phi}{\mathrm dz}\,v.
 $$
 
-i dipolens stillastående system. På slingans rand behövs det lilla radiella fältet
+Behåll minustecknet från Faradays lag. För $m>0$ och $v>0$ minskar det positiva flödet, så den positiva emk:n försöker bevara det enligt Lenz lag.""",
+            r"""I (b) börjar du från rörelse-emk:n i dipolens stillastående system:
 
 $$
-B_R\simeq\frac{3\mu_0ma}{4\pi z^4}.
+\varepsilon_{\mathrm{ems}}=\oint_C(\overline v\times\overline B)\cdot\mathrm d\overline\ell.
 $$
 
-Det axiella fältet ensamt räcker inte.""",
-            r"""Eftersom
+På slingans rand är $\overline v=v\hat z$, $\mathrm d\overline\ell=a\,\mathrm d\phi\,\hat\phi$ och $\overline B=B_R\hat R+B_z\hat z$. Det axiella fältet ger ingen korsprodukt med hastigheten. Bestäm i stället dipolfältets radiella komponent vid $R=a$:
 
 $$
-\hat z\times\hat R=\hat\phi
+B_R\approx\frac{3\mu_0ma}{4\pi z^4}.
+$$""",
+            r"""Använd $\hat z\times\hat R=\hat\phi$. Med samma positiva omloppsriktning som i (a) blir
+
+$$
+\varepsilon_{\mathrm{ems}}=\int_0^{2\pi}vB_R a\,\mathrm d\phi.
 $$
 
-bidrar $vB_R$ längs hela omkretsen $2\pi a$. Jämför med
-
-$$
--\frac{\mathrm d\Phi}{\mathrm dt}.
-$$
-
-För $m>0$ och $v>0$ minskar det positiva flödet, så den positiva emk:n försöker bevara det enligt Lenz lag.""",
+Fältkomponenten $B_R$ är densamma längs randen. Utför integralen och jämför både belopp och tecken med (a). De två metoderna ger samma spänning; bidragen ska inte adderas.""",
         ),
         self_checks=(
             r"""Vid $v=0$ är emk noll. Byt tecken på antingen m eller v och emk:n byter tecken. Fördubblat z minskar beloppet med en faktor 16 i approximationen.""",

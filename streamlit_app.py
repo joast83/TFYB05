@@ -23,7 +23,7 @@ import plotly.io as pio
 import streamlit as st
 from matplotlib.figure import Figure
 
-from em_visualisering.starting_laws import LAWS
+from em_visualisering.starting_laws import STARTING_PATHS, starting_law_choices, starting_law_label
 from em_visualisering.guidance import guidance_for_problem
 from em_visualisering.facit import facit_for_problem
 from em_visualisering.modes import mode_options_for_problem, normalize_mode_for_problem, supports_3d_view
@@ -413,13 +413,17 @@ def _render_solve_mode(problem) -> None:
         return
 
     st.markdown("### Steg 1 · Välj en startlag")
-    st.caption("Osäker på vilken lag du ska använda? Öppna rutan nedan. "
-               "Har du redan en idé kan du börja räkna direkt.")
-    with _problem_expander("Visa startlagen och hur du börjar"):
-        name, equation, prompt = LAWS[guidance.problem_id]
-        st.markdown(f"**{name}**")
-        st.latex(equation)
-        st.write(prompt)
+    if guidance.problem_id in STARTING_PATHS:
+        st.caption("Uppgiften använder flera metoder. Öppna startlagen för den del "
+                   "du arbetar med; ledtrådarna är märkta med samma delbokstav.")
+    else:
+        st.caption("Osäker på vilken lag du ska använda? Öppna rutan nedan. "
+                   "Har du redan en idé kan du börja räkna direkt.")
+    for name, equation, prompt in starting_law_choices(guidance.problem_id):
+        with _problem_expander(starting_law_label(guidance.problem_id, name)):
+            st.markdown(f"**{name}**")
+            st.latex(equation)
+            st.markdown(prompt)
 
     _render_progressive_hints(problem, guidance)
     _render_targeted_help(problem, guidance)

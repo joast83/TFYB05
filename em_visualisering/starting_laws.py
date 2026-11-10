@@ -39,3 +39,45 @@ _law("9.2 9.4", "Ömsesidig induktans", r"M=\Phi_2/I_1,\qquad \Phi_2=\int_{S_2}\
 _law("9.6 9.13 9.14", "Faradays induktionslag", r"\varepsilon_{\mathrm{ems}}=-\frac{\mathrm d(N\Phi)}{\mathrm dt}", "Välj slingnormal och positiv omloppsriktning tillsammans. Vilken del av flödet per varv ändras med tiden?")
 _law("10.2", "Förskjutningsström genom en yta", r"I_F=\frac{\mathrm d}{\mathrm dt}\int_S\overline{D}\cdot\mathrm d\overline{S}", "Välj en fast yta genom plattgapet. Använd Gauss lag för att koppla D-flödet till plattladdningen. För homogent fält är förskjutningsströmtätheten strömmen genom ytan dividerad med arean.")
 _law("10.3", "Gauss lag för magnetfältet", r"\oint_S\overline{B}\cdot\mathrm d\overline{S}=0", "Börja med del (a): vilken riktning skulle fältet kunna ha enligt sfärisk symmetri? Pröva den på en sluten sfär.")
+
+# Explicit alternative methods requested by the original exercise. These are
+# independently expandable; ordinary sequential subproblems keep one start law.
+STARTING_PATHS = {
+    "6.1": (
+        ("Del (a) · Biot–Savarts lag", LAWS["6.1"][1],
+         "Bestäm det ändliga segmentets bidrag. Identifiera linjeelement, separationsvektor, avstånd och gränser innan du integrerar. Ta därefter gränsen för en oändligt lång ledare."),
+        ("Del (b) · Vektorpotential först", r"\overline A(\overline r)=\frac{\mu_0 I}{4\pi}\int\frac{\mathrm d\overline\ell'}{|\overline r-\overline r'|}",
+         r"Återanvänd geometrin från (a), men beräkna först $\overline A$ med integralen. Därefter används $\overline B=\nabla\times\overline A$. Uppgiften tillåter att du sätter $z=0$ före rotationen; behåll beroendet av $R$."),
+        ("Del (c) · Ampères cirkulationslag", r"\oint_C\overline B\cdot\mathrm d\overline\ell=\mu_0 I_{\mathrm{in}}",
+         "Här är ledaren oändligt lång från början. Välj en cirkel kring ledaren och motivera med symmetrin vilka delar av integralen som kan förenklas. Lagen gäller, men ger inte samma enkla genväg för ett ändligt segments bidrag."),
+    ),
+    "7.2": (
+        ("Del (a) · Summera kraftmomenten", LAWS["7.2"][1],
+         "Parametrisera slingan och bestäm först kraften på varje linjeelement. Bilda sedan momentet kring centrum och integrera över hela slingan."),
+        ("Del (b–c) · Kontrollera med dipolmomentet", r"\overline m=IA\hat n,\qquad \overline T=\overline m\times\overline B",
+         "Bestäm slingans orienterade area. Jämför momentet med integralen i (a), och använd dess riktning för att förklara hur slingan vrids i (c)."),
+    ),
+    "9.4": (
+        ("Del (a) · Lilla slingan som källa", r"M=\frac{\Phi_{\mathrm{stor}}}{I_{\mathrm{liten}}},\qquad \Phi_{\mathrm{stor}}=\int_{S_{\mathrm{stor}}}\overline B_{\mathrm{liten}}\cdot\mathrm d\overline S",
+         "Ersätt den lilla slingan med en magnetisk dipol enligt uppgiften. Använd dipolfältet på hela den stora skivan, inte bara på axeln."),
+        ("Del (b) · Stora slingan som källa", r"M=\frac{\Phi_{\mathrm{liten}}}{I_{\mathrm{stor}}},\qquad \Phi_{\mathrm{liten}}=\int_{S_{\mathrm{liten}}}\overline B_{\mathrm{stor}}\cdot\mathrm d\overline S",
+         "Bestäm den stora slingans axelfält med Biot–Savart eller det tidigare härledda ringfältet. Använd sedan att fältet är ungefär konstant över den lilla mottagarslingan. Jämför de två värdena på M med samma orientering."),
+    ),
+    "9.14": (
+        ("Del (a) · Flödets tidsändring", r"\varepsilon_{\mathrm{ems}}=-\frac{\mathrm d\Phi}{\mathrm dt},\qquad \Phi=\int_S\overline B\cdot\mathrm d\overline S",
+         "Följ uppgiftens beskrivning i slingans system. Bestäm flödet genom den lilla slingan och hur separationen ändras med tiden. Välj normal och positiv omloppsriktning tillsammans."),
+        ("Del (b) · Rörelse-emk", r"\varepsilon_{\mathrm{ems}}=\oint_C(\overline v\times\overline B)\cdot\mathrm d\overline\ell",
+         "Arbeta i dipolens stillastående system. Identifiera fältet på slingans rand, hastigheten och linjeelementet. Använd samma orientering som i (a): metoderna beskriver samma spänning och ska inte adderas."),
+    ),
+}
+
+
+def starting_law_choices(problem_id):
+    """Return requested method paths, or the exercise's single starting law."""
+    return STARTING_PATHS.get(problem_id, (LAWS[problem_id],))
+
+
+def starting_law_label(problem_id, name):
+    if problem_id in STARTING_PATHS:
+        return f"Visa startlag · {name}"
+    return "Visa startlagen och hur du börjar"

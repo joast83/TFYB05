@@ -71,3 +71,30 @@ förskjutningsström behövs fortfarande. Derivator för potentialer (uttrycklig
 begärda i 6.1), geometriska normaler och optimering är separata beräkningssteg;
 de innebär inte att Gauss eller Ampères lag byts till differentialform.
 Originaluppgifter och det reproducerade formelbladet behåller originaltexten.
+
+## Uppgifter som uttryckligen jämför metoder
+
+När originaluppgiften begär flera beräkningssätt får varje metod en egen,
+från början stängd startlagsruta. Rubrikerna följer uppgiftens delbokstäver,
+och ledtrådarna använder samma märkning. Varje väg börjar med den allmänna
+formeln, identifierar dess delar och genomför därefter beräkningen.
+
+Genomgången av uppgiftskatalogen ger följande uttryckliga metodjämförelser:
+
+| Uppgift | Beräkningssätt som skiljs åt |
+| --- | --- |
+| 6.1 | (a) Biot–Savart och långledargräns; (b) integral för A, sedan rotation; (c) Ampère för en oändlig ledare. |
+| 7.2 | (a) Summera elementens kraftmoment; (b) kontrollera med dipolmoment; (c) tolka samma moments riktning. |
+| 9.4 | (a) Lilla slingan som dipolkälla, stor mottagaryta; (b) stor källslinga, liten mottagaryta med ungefär konstant fält. |
+| 9.14 | (a) Flödets tidsändring; (b) rörelse-emk, med samma orientering. |
+
+Övriga uppgifter behåller en startlagsruta. Flera deluppgifter som använder
+samma metod behöver inte flera metodval: exempelvis områdesindelningen i
+2.8, materialjämförelsen i 3.18 och magnetiseringsströmmarna i 8.13.
+I 2.5 ska den begärda potentialintegralen fortfarande vara huvudvägen;
+Gauss lag ersätter inte originaluppgiftens metodkrav.
+
+Vektorpotentialmetoden i 6.1 har två obligatoriska steg: beräkna A från
+källintegralen och ta sedan rotationen. Metodernas resultat jämförs först
+för samma geometri och fältpunkt. Ampères lag kan inte användas för att
+isolera ett ändligt segments bidrag från en ospecificerad returledning.
