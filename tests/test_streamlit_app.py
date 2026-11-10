@@ -102,8 +102,12 @@ def test_all_problems_show_specific_help_and_reset_on_navigation(chapter):
         guidance = guidance_for_problem(problem)
         key = f"stuck:{problem.__class__.__name__}"
         assert app.selectbox(key=key).value is None
-        panel = next(e for e in app.expander if e.label == "Visa startlagen och hur du börjar")
-        assert not panel.proto.expanded and panel.latex
+        from em_visualisering.starting_laws import starting_law_choices, starting_law_label
+        for name, equation, _ in starting_law_choices(guidance.problem_id):
+            label = starting_law_label(guidance.problem_id, name)
+            panel = next(e for e in app.expander if e.label == label)
+            assert not panel.proto.expanded
+            assert panel.latex[0].value == f"$$\n{equation}\n$$"
         for index, expected in enumerate((
             guidance.setup_hint,
             guidance.geometry_hint, guidance.self_checks[0],
